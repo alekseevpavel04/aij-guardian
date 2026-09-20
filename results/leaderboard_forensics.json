@@ -1,0 +1,115 @@
+{
+  "snapshot": "results/leaderboard/public_2026-09-20.csv",
+  "snapshot_date": "2026-09-20",
+  "teams_in_snapshot": 10,
+  "positives_minimal": 130,
+  "positives_candidates": [
+    130,
+    260,
+    390,
+    520,
+    650,
+    780,
+    910,
+    1040,
+    1170,
+    1300,
+    1430,
+    1560,
+    1690,
+    1820,
+    1950,
+    2080,
+    2210,
+    2340,
+    2470,
+    2600,
+    2730,
+    2860,
+    2990
+  ],
+  "candidates_are_multiples_of_minimal": true,
+  "min_test_size_lower_bound": 260,
+  "teams": [
+    {
+      "team": "yost49158127",
+      "true_positives": 96,
+      "predicted_positive": 195,
+      "false_positives": 99,
+      "f1_reconstructed": 0.59077,
+      "f1_leaderboard": 0.59077
+    },
+    {
+      "team": "zColdBoy",
+      "true_positives": 89,
+      "predicted_positive": 202,
+      "false_positives": 113,
+      "f1_reconstructed": 0.53614,
+      "f1_leaderboard": 0.53614
+    },
+    {
+      "team": "urion_team",
+      "true_positives": 65,
+      "predicted_positive": 122,
+      "false_positives": 57,
+      "f1_reconstructed": 0.51587,
+      "f1_leaderboard": 0.51587
+    },
+    {
+      "team": "Denisiuskley",
+      "true_positives": 68,
+      "predicted_positive": 137,
+      "false_positives": 69,
+      "f1_reconstructed": 0.50936,
+      "f1_leaderboard": 0.50936
+    },
+    {
+      "team": "moen34251497",
+      "true_positives": 88,
+      "predicted_positive": 219,
+      "false_positives": 131,
+      "f1_reconstructed": 0.5043,
+      "f1_leaderboard": 0.5043
+    },
+    {
+      "team": "renner45446400",
+      "true_positives": 65,
+      "predicted_positive": 128,
+      "false_positives": 63,
+      "f1_reconstructed": 0.50388,
+      "f1_leaderboard": 0.50388
+    },
+    {
+      "team": "mitchell17431311",
+      "true_positives": 96,
+      "predicted_positive": 255,
+      "false_positives": 159,
+      "f1_reconstructed": 0.4987,
+      "f1_leaderboard": 0.4987
+    },
+    {
+      "team": "feeney36348902",
+      "true_positives": 97,
+      "predicted_positive": 260,
+      "false_positives": 163,
+      "f1_reconstructed": 0.49744,
+      "f1_leaderboard": 0.49744
+    },
+    {
+      "team": "luettgen36706277",
+      "true_positives": 96,
+      "predicted_positive": 256,
+      "false_positives": 160,
+      "f1_reconstructed": 0.49741,
+      "f1_leaderboard": 0.49741
+    },
+    {
+      "team": "WFMR2026",
+      "true_positives": 90,
+      "predicted_positive": 236,
+      "false_positives": 146,
+      "f1_reconstructed": 0.4918,
+      "f1_leaderboard": 0.4918
+    }
+  ]
+}
