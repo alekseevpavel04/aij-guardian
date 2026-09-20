@@ -1,7 +1,7 @@
 {
   "snapshot": "results/leaderboard/public_2026-09-20.csv",
   "snapshot_date": "2026-09-20",
-  "teams_in_snapshot": 10,
+  "teams_in_snapshot": 54,
   "positives_minimal": 130,
   "positives_candidates": [
     130,
@@ -29,7 +29,16 @@
     2990
   ],
   "candidates_are_multiples_of_minimal": true,
-  "min_test_size_lower_bound": 260,
+  "test_size_lower_bound": 548,
+  "teams_with_full_recall": [
+    "Utoch",
+    "Валитов Таймас Вадимович",
+    "prohaska75014548"
+  ],
+  "test_size_from_full_recall": [
+    548
+  ],
+  "positive_share": 0.2372,
   "teams": [
     {
       "team": "yost49158127",
@@ -38,6 +47,14 @@
       "false_positives": 99,
       "f1_reconstructed": 0.59077,
       "f1_leaderboard": 0.59077
+    },
+    {
+      "team": "PENZA_AI",
+      "true_positives": 73,
+      "predicted_positive": 131,
+      "false_positives": 58,
+      "f1_reconstructed": 0.55939,
+      "f1_leaderboard": 0.55939
     },
     {
       "team": "zColdBoy",
@@ -110,6 +127,350 @@
       "false_positives": 146,
       "f1_reconstructed": 0.4918,
       "f1_leaderboard": 0.4918
+    },
+    {
+      "team": "67Guardians",
+      "true_positives": 67,
+      "predicted_positive": 143,
+      "false_positives": 76,
+      "f1_reconstructed": 0.49084,
+      "f1_leaderboard": 0.49084
+    },
+    {
+      "team": "Ovadik",
+      "true_positives": 99,
+      "predicted_positive": 274,
+      "false_positives": 175,
+      "f1_reconstructed": 0.4901,
+      "f1_leaderboard": 0.4901
+    },
+    {
+      "team": "Baseline",
+      "true_positives": 94,
+      "predicted_positive": 254,
+      "false_positives": 160,
+      "f1_reconstructed": 0.48958,
+      "f1_leaderboard": 0.48958
+    },
+    {
+      "team": "ЯТут!",
+      "true_positives": 80,
+      "predicted_positive": 199,
+      "false_positives": 119,
+      "f1_reconstructed": 0.48632,
+      "f1_leaderboard": 0.48632
+    },
+    {
+      "team": "egorka23",
+      "true_positives": 107,
+      "predicted_positive": 311,
+      "false_positives": 204,
+      "f1_reconstructed": 0.48526,
+      "f1_leaderboard": 0.48526
+    },
+    {
+      "team": "Евгений Малаховский",
+      "true_positives": 95,
+      "predicted_positive": 262,
+      "false_positives": 167,
+      "f1_reconstructed": 0.48469,
+      "f1_leaderboard": 0.48469
+    },
+    {
+      "team": "herman99940130",
+      "true_positives": 116,
+      "predicted_positive": 352,
+      "false_positives": 236,
+      "f1_reconstructed": 0.48133,
+      "f1_leaderboard": 0.48133
+    },
+    {
+      "team": "baumbach94242945",
+      "true_positives": 79,
+      "predicted_positive": 199,
+      "false_positives": 120,
+      "f1_reconstructed": 0.48024,
+      "f1_leaderboard": 0.48024
+    },
+    {
+      "team": "Potap",
+      "true_positives": 80,
+      "predicted_positive": 210,
+      "false_positives": 130,
+      "f1_reconstructed": 0.47059,
+      "f1_leaderboard": 0.47059
+    },
+    {
+      "team": "bradtke42355357",
+      "true_positives": 112,
+      "predicted_positive": 348,
+      "false_positives": 236,
+      "f1_reconstructed": 0.46862,
+      "f1_leaderboard": 0.46862
+    },
+    {
+      "team": "ISK.CDN",
+      "true_positives": 96,
+      "predicted_positive": 286,
+      "false_positives": 190,
+      "f1_reconstructed": 0.46154,
+      "f1_leaderboard": 0.46154
+    },
+    {
+      "team": "hammes46194570",
+      "true_positives": 64,
+      "predicted_positive": 150,
+      "false_positives": 86,
+      "f1_reconstructed": 0.45714,
+      "f1_leaderboard": 0.45714
+    },
+    {
+      "team": "NSU-TEAM",
+      "true_positives": 65,
+      "predicted_positive": 155,
+      "false_positives": 90,
+      "f1_reconstructed": 0.45614,
+      "f1_leaderboard": 0.45614
+    },
+    {
+      "team": "metz32276273",
+      "true_positives": 79,
+      "predicted_positive": 219,
+      "false_positives": 140,
+      "f1_reconstructed": 0.45272,
+      "f1_leaderboard": 0.45272
+    },
+    {
+      "team": "schoen32598024",
+      "true_positives": 61,
+      "predicted_positive": 141,
+      "false_positives": 80,
+      "f1_reconstructed": 0.45018,
+      "f1_leaderboard": 0.45019
+    },
+    {
+      "team": "ЛЛМошная",
+      "true_positives": 78,
+      "predicted_positive": 224,
+      "false_positives": 146,
+      "f1_reconstructed": 0.44068,
+      "f1_leaderboard": 0.44068
+    },
+    {
+      "team": "ledner57164214",
+      "true_positives": 111,
+      "predicted_positive": 375,
+      "false_positives": 264,
+      "f1_reconstructed": 0.4396,
+      "f1_leaderboard": 0.4396
+    },
+    {
+      "team": "ПайплайнНаПачкеКиреешекОтХипонга",
+      "true_positives": 125,
+      "predicted_positive": 439,
+      "false_positives": 314,
+      "f1_reconstructed": 0.43937,
+      "f1_leaderboard": 0.43937
+    },
+    {
+      "team": "Владимир Калюта",
+      "true_positives": 52,
+      "predicted_positive": 114,
+      "false_positives": 62,
+      "f1_reconstructed": 0.42623,
+      "f1_leaderboard": 0.42623
+    },
+    {
+      "team": "gfdh",
+      "true_positives": 109,
+      "predicted_positive": 387,
+      "false_positives": 278,
+      "f1_reconstructed": 0.42166,
+      "f1_leaderboard": 0.42166
+    },
+    {
+      "team": "ankunding86490622",
+      "true_positives": 109,
+      "predicted_positive": 388,
+      "false_positives": 279,
+      "f1_reconstructed": 0.42085,
+      "f1_leaderboard": 0.42085
+    },
+    {
+      "team": "mohr74509649",
+      "true_positives": 123,
+      "predicted_positive": 470,
+      "false_positives": 347,
+      "f1_reconstructed": 0.41,
+      "f1_leaderboard": 0.41
+    },
+    {
+      "team": "KAI_Major",
+      "true_positives": 83,
+      "predicted_positive": 282,
+      "false_positives": 199,
+      "f1_reconstructed": 0.40291,
+      "f1_leaderboard": 0.40291
+    },
+    {
+      "team": "upton24066334",
+      "true_positives": 40,
+      "predicted_positive": 70,
+      "false_positives": 30,
+      "f1_reconstructed": 0.4,
+      "f1_leaderboard": 0.4
+    },
+    {
+      "team": "NS_Serg",
+      "true_positives": 72,
+      "predicted_positive": 234,
+      "false_positives": 162,
+      "f1_reconstructed": 0.3956,
+      "f1_leaderboard": 0.3956
+    },
+    {
+      "team": "bashirian78150594",
+      "true_positives": 126,
+      "predicted_positive": 510,
+      "false_positives": 384,
+      "f1_reconstructed": 0.39375,
+      "f1_leaderboard": 0.39375
+    },
+    {
+      "team": "Baseline",
+      "true_positives": 66,
+      "predicted_positive": 206,
+      "false_positives": 140,
+      "f1_reconstructed": 0.39286,
+      "f1_leaderboard": 0.39286
+    },
+    {
+      "team": "Millai",
+      "true_positives": 99,
+      "predicted_positive": 379,
+      "false_positives": 280,
+      "f1_reconstructed": 0.389,
+      "f1_leaderboard": 0.389
+    },
+    {
+      "team": "Utoch",
+      "true_positives": 130,
+      "predicted_positive": 548,
+      "false_positives": 418,
+      "f1_reconstructed": 0.38348,
+      "f1_leaderboard": 0.38348
+    },
+    {
+      "team": "Валитов Таймас Вадимович",
+      "true_positives": 130,
+      "predicted_positive": 548,
+      "false_positives": 418,
+      "f1_reconstructed": 0.38348,
+      "f1_leaderboard": 0.38348
+    },
+    {
+      "team": "prohaska75014548",
+      "true_positives": 130,
+      "predicted_positive": 548,
+      "false_positives": 418,
+      "f1_reconstructed": 0.38348,
+      "f1_leaderboard": 0.38348
+    },
+    {
+      "team": "prohaska93759052",
+      "true_positives": 89,
+      "predicted_positive": 356,
+      "false_positives": 267,
+      "f1_reconstructed": 0.36626,
+      "f1_leaderboard": 0.36625
+    },
+    {
+      "team": "json",
+      "true_positives": 68,
+      "predicted_positive": 245,
+      "false_positives": 177,
+      "f1_reconstructed": 0.36267,
+      "f1_leaderboard": 0.36267
+    },
+    {
+      "team": "simonis22950940",
+      "true_positives": 80,
+      "predicted_positive": 313,
+      "false_positives": 233,
+      "f1_reconstructed": 0.36117,
+      "f1_leaderboard": 0.36117
+    },
+    {
+      "team": "ML Clan",
+      "true_positives": 52,
+      "predicted_positive": 164,
+      "false_positives": 112,
+      "f1_reconstructed": 0.35374,
+      "f1_leaderboard": 0.35374
+    },
+    {
+      "team": "stoltenberg46098031",
+      "true_positives": 82,
+      "predicted_positive": 342,
+      "false_positives": 260,
+      "f1_reconstructed": 0.34746,
+      "f1_leaderboard": 0.34746
+    },
+    {
+      "team": "LabSON",
+      "true_positives": 59,
+      "predicted_positive": 253,
+      "false_positives": 194,
+      "f1_reconstructed": 0.30809,
+      "f1_leaderboard": 0.30809
+    },
+    {
+      "team": "xhns-bros",
+      "true_positives": 29,
+      "predicted_positive": 75,
+      "false_positives": 46,
+      "f1_reconstructed": 0.28293,
+      "f1_leaderboard": 0.28293
+    },
+    {
+      "team": "daugherty25212897",
+      "true_positives": 43,
+      "predicted_positive": 200,
+      "false_positives": 157,
+      "f1_reconstructed": 0.26061,
+      "f1_leaderboard": 0.26061
+    },
+    {
+      "team": "murphy95337996",
+      "true_positives": 34,
+      "predicted_positive": 168,
+      "false_positives": 134,
+      "f1_reconstructed": 0.22819,
+      "f1_leaderboard": 0.22819
+    },
+    {
+      "team": "baumbach48449335",
+      "true_positives": 34,
+      "predicted_positive": 168,
+      "false_positives": 134,
+      "f1_reconstructed": 0.22819,
+      "f1_leaderboard": 0.22819
+    },
+    {
+      "team": "romaguera87267616",
+      "true_positives": 29,
+      "predicted_positive": 128,
+      "false_positives": 99,
+      "f1_reconstructed": 0.22481,
+      "f1_leaderboard": 0.22481
+    },
+    {
+      "team": "metz90447988",
+      "true_positives": 10,
+      "predicted_positive": 37,
+      "false_positives": 27,
+      "f1_reconstructed": 0.11976,
+      "f1_leaderboard": 0.11976
     }
   ]
 }

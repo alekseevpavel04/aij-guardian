@@ -14,6 +14,8 @@ import csv
 import json
 from pathlib import Path
 
+from guardian.env import setup
+
 ROOT = Path(__file__).resolve().parents[1]
 TOL = 1e-5  # metrics are published with 5 decimals; convention (round or truncate) is unknown
 
@@ -53,6 +55,7 @@ def reconstruct(rows: list[dict], p: int) -> list[dict] | None:
 
 
 def main() -> None:
+    setup()
     ap = argparse.ArgumentParser()
     ap.add_argument("--snapshot", type=Path, default=ROOT / "results/leaderboard/public_2026-09-20.csv")
     ap.add_argument("--out", type=Path, default=ROOT / "results/leaderboard_forensics.json")
@@ -66,6 +69,9 @@ def main() -> None:
 
     p = min(solutions)
     recon = solutions[p]
+    # A team with recall 1.0 labelled every positive as 1. The cheapest way to do that is to label
+    # every row 1, and then its predicted-positive count is the size of the test set itself.
+    all_ones = [r for r in recon if r["true_positives"] == p]
     result = {
         "snapshot": str(args.snapshot.relative_to(ROOT)).replace("\\", "/"),
         "snapshot_date": args.snapshot.stem.split("_")[-1],
@@ -73,13 +79,23 @@ def main() -> None:
         "positives_minimal": p,
         "positives_candidates": sorted(solutions),
         "candidates_are_multiples_of_minimal": all(c % p == 0 for c in solutions),
-        "min_test_size_lower_bound": max(r["predicted_positive"] for r in recon),
+        "test_size_lower_bound": max(r["predicted_positive"] for r in recon),
+        "teams_with_full_recall": [r["team"] for r in all_ones],
+        "test_size_from_full_recall": sorted({r["predicted_positive"] for r in all_ones}) or None,
+        "positive_share": (
+            round(p / all_ones[0]["predicted_positive"], 4) if all_ones else None
+        ),
         "teams": recon,
     }
     args.out.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
     print(f"positives P = {p} (candidates up to {args.max_p}: {sorted(solutions)[:5]}...)")
     print(f"all {len(rows)} published F1 values reproduced from integer counts")
+    if all_ones:
+        print(
+            f"{len(all_ones)} teams at recall 1.0 predicted {result['test_size_from_full_recall']} positives: "
+            f"test size {result['test_size_from_full_recall'][0]}, share of 1 = {result['positive_share']}"
+        )
     for r in recon:
         print(f"{r['team']:>18}  TP={r['true_positives']:>4}  predicted 1 = {r['predicted_positive']:>4}")
 

@@ -8,6 +8,7 @@ numbers on that same file are optimistic and are reported as such.
 """
 
 import argparse
+import csv
 import json
 from pathlib import Path
 
@@ -20,6 +21,21 @@ from guardian.metrics import binary_scores, bootstrap_ci, clopper_pearson_upper,
 from guardian.rules import CHECKS, Context, evidence
 
 ROOT = Path(__file__).resolve().parents[1]
+FORENSICS = ROOT / "results/leaderboard_forensics.json"
+SNAPSHOT = ROOT / "results/leaderboard/public_2026-09-20.csv"
+
+
+def leaderboard() -> tuple[float | None, list[float]]:
+    """Measured share of positives in the public test, and the published F1 values to rank against."""
+    if not FORENSICS.exists():
+        return None, []
+    share = json.loads(FORENSICS.read_text(encoding="utf-8")).get("positive_share")
+    scores = sorted((float(r["f1"]) for r in csv.DictReader(SNAPSHOT.open(encoding="utf-8"))), reverse=True)
+    return share, scores
+
+
+def rank_of(f1: float, scores: list[float]) -> int:
+    return sum(1 for s in scores if s > f1) + 1
 
 
 def main() -> None:
@@ -97,7 +113,9 @@ def main() -> None:
         ),
         "by_base_rate": {},
     }
-    for base_rate in (0.5, 0.4, 1 / 3, 0.25):
+    share, scores = leaderboard()
+    report["projection"]["measured_share_of_positives"] = share
+    for base_rate in sorted({0.5, 1 / 3, share or 0.25, 0.25}, reverse=True):
         precision_obs, f1_obs = projected_scores(recall, fpr_observed, base_rate)
         precision_up, f1_up = projected_scores(recall, fpr_upper, base_rate)
         _, f1_ones = projected_scores(1.0, 1.0, base_rate)
@@ -107,6 +125,8 @@ def main() -> None:
             "rules_precision_at_upper_fpr": round(precision_up, 4),
             "rules_f1_at_upper_fpr": round(f1_up, 4),
             "always_1_f1": round(f1_ones, 4),
+            "rank_at_observed_fpr": rank_of(f1_obs, scores) if scores else None,
+            "rank_at_upper_fpr": rank_of(f1_up, scores) if scores else None,
         }
 
     args.out.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -135,10 +155,13 @@ def main() -> None:
         f"projection of {pr['detector']} (recall {pr['recall']}, FPR {pr['false_positive_rate_observed']}, "
         f"upper {pr['false_positive_rate_upper95']}) onto other shares of positives:"
     )
-    print(f"{'share of 1':>12} {'rules F1 (FPR=obs)':>20} {'rules F1 (FPR=upper)':>22} {'always-1 F1':>12}")
-    for share, m in pr["by_base_rate"].items():
-        print(f"{float(share):>12.3f} {m['rules_f1_at_observed_fpr']:>20.3f} "
-              f"{m['rules_f1_at_upper_fpr']:>22.3f} {m['always_1_f1']:>12.3f}")
+    print(f"measured share of positives in the public test: {pr['measured_share_of_positives']}")
+    print(f"{'share of 1':>12} {'F1 (FPR=obs)':>14} {'rank':>5} {'F1 (FPR=upper)':>16} {'rank':>5} {'always-1':>9}")
+    for value, m in pr["by_base_rate"].items():
+        print(
+            f"{float(value):>12.4f} {m['rules_f1_at_observed_fpr']:>14.3f} {m['rank_at_observed_fpr']!s:>5} "
+            f"{m['rules_f1_at_upper_fpr']:>16.3f} {m['rank_at_upper_fpr']!s:>5} {m['always_1_f1']:>9.3f}"
+        )
 
 
 if __name__ == "__main__":
