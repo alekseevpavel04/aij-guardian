@@ -87,6 +87,18 @@
         0.3704
       ]
     },
+    "no_op_replacement": {
+      "fired": 1,
+      "fired_on_positive": 1,
+      "fired_on_negative": 0,
+      "precision": 1.0,
+      "recall": 0.0435,
+      "f1": 0.0833,
+      "f1_ci95": [
+        0.0,
+        0.2581
+      ]
+    },
     "unsupported_number": {
       "fired": 1,
       "fired_on_positive": 0,
@@ -142,15 +154,16 @@
         "enum_violation",
         "repeated_failed_call",
         "repeated_call",
-        "unsupported_argument_value"
+        "unsupported_argument_value",
+        "no_op_replacement"
       ],
-      "fired": 11,
+      "fired": 12,
       "precision": 1.0,
-      "recall": 0.4783,
-      "f1": 0.6471,
+      "recall": 0.5217,
+      "f1": 0.6857,
       "f1_ci95": [
-        0.4286,
-        0.8125
+        0.48,
+        0.8422
       ]
     },
     "any_check": {
@@ -162,51 +175,52 @@
         "repeated_failed_call",
         "repeated_call",
         "unsupported_argument_value",
+        "no_op_replacement",
         "unsupported_number"
       ],
-      "fired": 12,
-      "precision": 0.9167,
-      "recall": 0.4783,
-      "f1": 0.6286,
+      "fired": 13,
+      "precision": 0.9231,
+      "recall": 0.5217,
+      "f1": 0.6667,
       "f1_ci95": [
-        0.4,
-        0.8
+        0.4614,
+        0.8293
       ]
     }
   },
   "projection": {
     "detector": "any_check_except_numbers",
-    "recall": 0.4783,
+    "recall": 0.5217,
     "false_positive_rate_observed": 0.0,
     "false_positive_rate_upper95": 0.1221,
     "note": "0 false positives out of 23 negatives; the upper bound is what carries to a larger test set, the point estimate of 0 does not",
     "by_base_rate": {
       "0.5000": {
         "rules_precision_at_observed_fpr": 1.0,
-        "rules_f1_at_observed_fpr": 0.6471,
-        "rules_precision_at_upper_fpr": 0.7966,
-        "rules_f1_at_upper_fpr": 0.5977,
+        "rules_f1_at_observed_fpr": 0.6857,
+        "rules_precision_at_upper_fpr": 0.8103,
+        "rules_f1_at_upper_fpr": 0.6348,
         "always_1_f1": 0.6667
       },
       "0.4000": {
         "rules_precision_at_observed_fpr": 1.0,
-        "rules_f1_at_observed_fpr": 0.6471,
-        "rules_precision_at_upper_fpr": 0.7231,
-        "rules_f1_at_upper_fpr": 0.5757,
+        "rules_f1_at_observed_fpr": 0.6857,
+        "rules_precision_at_upper_fpr": 0.7401,
+        "rules_f1_at_upper_fpr": 0.612,
         "always_1_f1": 0.5714
       },
       "0.3333": {
         "rules_precision_at_observed_fpr": 1.0,
-        "rules_f1_at_observed_fpr": 0.6471,
-        "rules_precision_at_upper_fpr": 0.6619,
-        "rules_f1_at_upper_fpr": 0.5553,
+        "rules_f1_at_observed_fpr": 0.6857,
+        "rules_precision_at_upper_fpr": 0.6811,
+        "rules_f1_at_upper_fpr": 0.5909,
         "always_1_f1": 0.5
       },
       "0.2500": {
         "rules_precision_at_observed_fpr": 1.0,
-        "rules_f1_at_observed_fpr": 0.6471,
-        "rules_precision_at_upper_fpr": 0.5662,
-        "rules_f1_at_upper_fpr": 0.5185,
+        "rules_f1_at_observed_fpr": 0.6857,
+        "rules_precision_at_upper_fpr": 0.5875,
+        "rules_f1_at_upper_fpr": 0.5527,
         "always_1_f1": 0.4
       }
     }

@@ -107,3 +107,20 @@ def test_numbers_are_not_matched_across_line_breaks(prompt):
 def test_features_are_counts(prompt):
     body = '\t→ TOOL_CALL check_network_status: {}\n\t→ TOOL_CALL check_sim_status: {}'
     assert features(prompt, response(body))["unknown_tool"] == 2
+
+
+def test_replacement_equal_to_the_value_it_replaces(prompt):
+    """retail__36::t10: two of five items passed with new_item_id equal to the old item_id."""
+    body = (
+        '\t→ TOOL_CALL cancel_reservation: {"reservation_id": "OI5L9G", '
+        '"item_ids": ["A1", "B2"], "new_item_ids": ["A1", "C3"]}'
+    )
+    assert check(prompt, body)["no_op_replacement"] == ["cancel_reservation.new_item_ids[0]=A1"]
+
+
+def test_a_real_replacement_does_not_fire(prompt):
+    body = (
+        '\t→ TOOL_CALL cancel_reservation: {"reservation_id": "OI5L9G", '
+        '"item_ids": ["A1", "B2"], "new_item_ids": ["D4", "C3"]}'
+    )
+    assert "no_op_replacement" not in check(prompt, body)

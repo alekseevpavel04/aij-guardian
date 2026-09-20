@@ -227,7 +227,12 @@
   {
     "id": "retail__36::t10",
     "label": 1,
-    "evidence": {}
+    "evidence": {
+      "no_op_replacement": [
+        "modify_pending_order_items.new_item_ids[1]=9879255677",
+        "modify_pending_order_items.new_item_ids[4]=9851293632"
+      ]
+    }
   },
   {
     "id": "retail__47::t12",

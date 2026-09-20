@@ -5,7 +5,7 @@
     "contradiction": 14,
     "unsupported": 9
   },
-  "caught_by_checks": 11,
+  "caught_by_checks": 12,
   "by_category": {
     "policy_violation": {
       "examples": 6,
@@ -55,8 +55,10 @@
     },
     "invalid_modification": {
       "examples": 1,
-      "caught_by_checks": 0,
-      "checks_that_fired": []
+      "caught_by_checks": 1,
+      "checks_that_fired": [
+        "no_op_replacement"
+      ]
     },
     "loop_repeat": {
       "examples": 1,

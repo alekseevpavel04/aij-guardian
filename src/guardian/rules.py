@@ -195,6 +195,27 @@ def unsupported_argument_values(calls: list[ToolCall], ctx: Context) -> list[str
     return out
 
 
+def no_op_replacements(calls: list[ToolCall], ctx: Context) -> list[str]:
+    """A replacement argument equal to the value it replaces.
+
+    Modification tools take the old values in `x` and the new ones in `new_x`; passing the same value
+    in both is not a modification, and the agent claims a change that does not happen
+    (retail__36::t10). Positions are compared pairwise, since the arrays are aligned by index.
+    """
+    out = []
+    for call in calls:
+        args = call.args or {}
+        for key, new in args.items():
+            if not key.startswith("new_"):
+                continue
+            old = args.get(key[4:])
+            if isinstance(new, list) and isinstance(old, list) and len(new) == len(old):
+                out += [f"{call.name}.{key}[{i}]={v}" for i, (v, w) in enumerate(zip(old, new, strict=True)) if v == w]
+            elif not isinstance(new, list) and old is not None and old == new:
+                out.append(f"{call.name}.{key}={new}")
+    return out
+
+
 def unsupported_numbers(text: str, ctx: Context, known: set[str] | None = None) -> list[str]:
     """Numbers in the response text that do not occur in the context.
 
@@ -220,6 +241,7 @@ CHECKS = {
     "repeated_failed_call": repeated_failed_calls,
     "repeated_call": repeated_calls,
     "unsupported_argument_value": unsupported_argument_values,
+    "no_op_replacement": no_op_replacements,
 }
 
 
