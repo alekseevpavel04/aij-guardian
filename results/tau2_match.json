@@ -1,0 +1,43 @@
+{
+  "source": "https://github.com/sierra-research/tau2-bench",
+  "license": "MIT",
+  "checked_on": "2026-09-20",
+  "domains": {
+    "airline": {
+      "checked": true,
+      "example_id": "airline__10::t19",
+      "file": "airline/policy.md",
+      "lines_in_data": 120,
+      "lines_upstream": 120,
+      "identical": true,
+      "upstream_lines_all_present": true,
+      "line_similarity": 1.0,
+      "sha256_in_data": "c2c000a9f1a6588f",
+      "sha256_upstream": "c2c000a9f1a6588f"
+    },
+    "retail": {
+      "checked": true,
+      "example_id": "retail__106::t3",
+      "file": "retail/policy.md",
+      "lines_in_data": 77,
+      "lines_upstream": 77,
+      "identical": true,
+      "upstream_lines_all_present": true,
+      "line_similarity": 1.0,
+      "sha256_in_data": "da85cb4a624c8cc4",
+      "sha256_upstream": "da85cb4a624c8cc4"
+    },
+    "telecom": {
+      "checked": true,
+      "example_id": "telecom__mms_issueairplane_mode_on-bad_network_preference-bad_wifi_calling-break_app_sms_p::t7",
+      "file": "telecom/main_policy.md",
+      "lines_in_data": 298,
+      "lines_upstream": 126,
+      "identical": false,
+      "upstream_lines_all_present": true,
+      "line_similarity": 0.5943,
+      "sha256_in_data": "fc5f67cb07c6dd89",
+      "sha256_upstream": "ecacb7d45a2711ee"
+    }
+  }
+}

@@ -151,9 +151,16 @@ def system_turn(turns: list[Turn]) -> Turn | None:
 
 
 def section(text: str, tag: str) -> str | None:
-    """Contents of <tag>…</tag>, used for <policy> and <instructions>."""
-    match = re.search(rf"<{tag}>(.*?)</{tag}>", text, re.DOTALL)
-    return match.group(1).strip() if match else None
+    """Contents of <tag>…</tag>, used for <policy> and <instructions>.
+
+    The opening tag is taken as the last one before the closing tag, because <instructions> mentions
+    "according to the <policy> provided below" and a first-match search starts from that mention.
+    """
+    close = text.find(f"</{tag}>")
+    if close < 0:
+        return None
+    opened = text.rfind(f"<{tag}>", 0, close)
+    return text[opened + len(tag) + 2 : close].strip() if opened >= 0 else None
 
 
 def parse_available_tools(system_text: str) -> dict[str, ToolSpec]:

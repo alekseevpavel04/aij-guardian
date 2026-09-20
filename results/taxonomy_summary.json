@@ -1,0 +1,75 @@
+{
+  "provenance": "categories assigned by the agent from the organizer's explanation field for the 23 positive examples of valid.parquet; not reviewed by the author",
+  "positives": 23,
+  "mechanisms": {
+    "contradiction": 14,
+    "unsupported": 9
+  },
+  "caught_by_checks": 11,
+  "by_category": {
+    "policy_violation": {
+      "examples": 6,
+      "caught_by_checks": 2,
+      "checks_that_fired": [
+        "unknown_argument"
+      ]
+    },
+    "tool_not_available": {
+      "examples": 5,
+      "caught_by_checks": 5,
+      "checks_that_fired": [
+        "repeated_call",
+        "repeated_failed_call",
+        "unknown_tool"
+      ]
+    },
+    "premature_escalation": {
+      "examples": 4,
+      "caught_by_checks": 0,
+      "checks_that_fired": []
+    },
+    "fabricated_value": {
+      "examples": 2,
+      "caught_by_checks": 2,
+      "checks_that_fired": [
+        "unsupported_argument_value"
+      ]
+    },
+    "arg_schema_violation": {
+      "examples": 1,
+      "caught_by_checks": 1,
+      "checks_that_fired": [
+        "missing_required_argument",
+        "unknown_argument"
+      ]
+    },
+    "wrong_aggregation": {
+      "examples": 1,
+      "caught_by_checks": 0,
+      "checks_that_fired": []
+    },
+    "stale_request": {
+      "examples": 1,
+      "caught_by_checks": 0,
+      "checks_that_fired": []
+    },
+    "invalid_modification": {
+      "examples": 1,
+      "caught_by_checks": 0,
+      "checks_that_fired": []
+    },
+    "loop_repeat": {
+      "examples": 1,
+      "caught_by_checks": 1,
+      "checks_that_fired": [
+        "repeated_call",
+        "repeated_failed_call"
+      ]
+    },
+    "claimed_unperformed_action": {
+      "examples": 1,
+      "caught_by_checks": 0,
+      "checks_that_fired": []
+    }
+  }
+}

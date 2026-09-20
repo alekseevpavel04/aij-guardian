@@ -1,0 +1,24 @@
+id,category,mechanism,note
+airline__21::t7,policy_violation,contradiction,free baggage count for silver + economy ignored and no confirmation before the update
+airline__23::t10,arg_schema_violation,contradiction,payment objects passed with id / source instead of the required payment_id / amount
+airline__44::t22,policy_violation,contradiction,cancellation rules not satisfied for either reservation
+airline__7::t6,wrong_aggregation,contradiction,already flown segments included in the total of upcoming flights
+airline__8::t7,stale_request,unsupported,asked for a date of birth that is already in the profile from an earlier turn
+airline__9::t6,premature_escalation,unsupported,transferred to a human although get_flight_status could answer the question
+banking_knowledge__task_003::t7,premature_escalation,unsupported,transferred without trying KB_search_bm25 or a workable grep pattern
+banking_knowledge__task_005::t6,policy_violation,contradiction,only one of the two required verification items was actually provided by the customer
+banking_knowledge__task_018::t6,premature_escalation,unsupported,transferred after one search in Cyrillic only while the policy demands names as they appear
+banking_knowledge__task_051::t15,policy_violation,contradiction,credit limit increase unlocked with the utilisation criterion failing
+banking_knowledge__task_068::t11,fabricated_value,unsupported,account_id passed as light_blue_account_id_placeholder
+banking_knowledge__task_083::t10,tool_not_available,contradiction,discoverable tool called directly without unlock
+retail__106::t3,fabricated_value,unsupported,zip taken from the digits inside the email address
+retail__27::t10,policy_violation,contradiction,return and exchange issued for the same delivered order in one turn
+retail__29::t13,premature_escalation,unsupported,refused an exchange the policy and the available tool allow
+retail__36::t10,invalid_modification,contradiction,two items passed with new_item_id equal to the old item_id
+retail__48::t4,loop_repeat,unsupported,repeated a lookup that already returned User not found with identical arguments
+telecom__mms_issueairplane_mode_on-bad_network_preference-bad_wifi_calling-data_usage_exce::t7,tool_not_available,contradiction,called check_network_status which is a user device action
+telecom__mms_issueairplane_mode_on-bad_network_preference-break_apn_mms_setting-break_app_::t10,tool_not_available,contradiction,called four device diagnostics that are not agent tools
+telecom__mms_issuebreak_apn_mms_setting-user_abroad_roaming_enabled_offPERSONA_Hard::t27,claimed_unperformed_action,unsupported,text reports an APN reset and a diagnostic that were never called
+telecom__mobile_data_issuebad_network_preference-bad_vpn-data_mode_off-data_saver_mode_onP::t6,tool_not_available,contradiction,called run_speed_test which is a user device action and had already failed
+telecom__service_issueairplane_mode_on-break_apn_settings-lock_sim_card_pin-overdue_bill_s::t15,tool_not_available,contradiction,called check_sim_status and check_network_status which are user device actions
+telecom__service_issuebreak_apn_settings-contract_end_suspension-lock_sim_card_pin-unseat_::t13,policy_violation,contradiction,resumed a line whose contract end date is in the past

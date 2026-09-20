@@ -23,7 +23,9 @@ GENERATED = {
     "eda.json": ("eda.py", lambda tmp: ["--out-dir", str(tmp)]),
     "trivial_baselines.json": ("eda.py", lambda tmp: ["--out-dir", str(tmp)]),
     "rules_baseline.json": ("rules_baseline.py", lambda tmp: ["--out", str(tmp / "x.json")]),
+    "taxonomy_summary.json": ("taxonomy_summary.py", lambda tmp: ["--out", str(tmp / "x.json")]),
 }
+# runtime.json is a timing and tau2_match.json needs the network, so neither is re-checked here
 NEEDS_DATA = {"eda.json", "trivial_baselines.json", "rules_baseline.json"}
 DATA = ROOT / "data/raw/valid.parquet"
 
