@@ -1,0 +1,11 @@
+numpy
+pandas
+pyarrow
+pyyaml
+scikit-learn
+torch
+transformers
+
+[dev]
+pytest
+ruff

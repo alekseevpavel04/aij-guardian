@@ -1,0 +1,16 @@
+Metadata-Version: 2.4
+Name: guardian
+Version: 0.1.0
+Summary: Guardrail for contextual hallucination detection in LLM agent turns (AI Journey 2026)
+License: MIT
+Requires-Python: <3.12,>=3.11
+Requires-Dist: numpy
+Requires-Dist: pandas
+Requires-Dist: pyarrow
+Requires-Dist: pyyaml
+Requires-Dist: scikit-learn
+Requires-Dist: torch
+Requires-Dist: transformers
+Provides-Extra: dev
+Requires-Dist: pytest; extra == "dev"
+Requires-Dist: ruff; extra == "dev"
