@@ -12,9 +12,10 @@ import json
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 
 from guardian.env import setup
-from guardian.io import read_table
+from guardian.io import read_rows
 from guardian.metrics import binary_scores, bootstrap_ci, clopper_pearson_upper, projected_scores
 from guardian.rules import CHECKS, Context, evidence
 
@@ -28,7 +29,7 @@ def main() -> None:
     ap.add_argument("--out", type=Path, default=ROOT / "results/rules_baseline.json")
     args = ap.parse_args()
 
-    frame = read_table(args.input)
+    frame = pd.DataFrame(read_rows(args.input))
     y = frame["label"].to_numpy().astype(int)
 
     names = [*CHECKS, "unsupported_number"]

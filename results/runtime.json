@@ -1,0 +1,15 @@
+{
+  "strategy": "rules",
+  "rows": 46,
+  "mean_chars_per_row": 43133,
+  "repeats": 3,
+  "seconds_best_pass": 0.194,
+  "ms_per_row": 4.21,
+  "rows_per_30_min_limit": 427239,
+  "machine": {
+    "cpu": "AMD64 Family 25 Model 33 Stepping 0, AuthenticAMD",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "python": "3.11.4"
+  },
+  "note": "CPU only, single process; the competition runs on one A100 with a 30 minute limit"
+}

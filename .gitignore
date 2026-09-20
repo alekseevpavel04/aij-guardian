@@ -19,3 +19,4 @@ scratch/
 submissions/*.zip
 *.egg-info/
 .ruff_cache/
+submission/

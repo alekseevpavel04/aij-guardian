@@ -14,9 +14,10 @@ from collections import Counter
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 
 from guardian.env import setup
-from guardian.io import read_table
+from guardian.io import read_rows
 from guardian.metrics import binary_scores, bootstrap_ci
 from guardian.parsing import MARKER_LIKE_RE, TURN_INDEX_RE, parse_transcript, unknown_roles, unparsed_markers
 
@@ -100,7 +101,7 @@ def main() -> None:
     ap.add_argument("--out-dir", type=Path, default=ROOT / "results")
     args = ap.parse_args()
 
-    frame = read_table(args.input)
+    frame = pd.DataFrame(read_rows(args.input))
     missing = {"id", "prompt", "response", "label"} - set(frame.columns)
     if missing:
         raise SystemExit(f"missing columns: {sorted(missing)}; found {list(frame.columns)}")
