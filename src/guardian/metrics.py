@@ -7,6 +7,7 @@ a difference of 0.01 F1 on that sample size is noise.
 from dataclasses import dataclass
 
 import numpy as np
+from scipy.stats import beta
 
 
 @dataclass(frozen=True)
@@ -90,3 +91,31 @@ def bootstrap_diff_ci(
     lo, hi = np.quantile(stats, [alpha / 2, 1 - alpha / 2])
     point = binary_scores(y_true, y_pred_a).f1 - binary_scores(y_true, y_pred_b).f1
     return point, float(lo), float(hi)
+
+
+def clopper_pearson_upper(successes: int, trials: int, alpha: float = 0.05) -> float:
+    """Upper bound of the one-sided 95% interval for a rate, used when nothing was observed.
+
+    With 0 false positives out of 23 negatives the point estimate is 0, which is not a claim that
+    can be carried over to a test set of a different size: this is the number to carry instead.
+    """
+    if trials == 0:
+        return 1.0
+    if successes == trials:
+        return 1.0
+    return float(beta.ppf(1 - alpha, successes + 1, trials - successes))
+
+
+def projected_scores(recall: float, false_positive_rate: float, base_rate: float) -> tuple[float, float]:
+    """Precision and F1 a detector would show at a given share of positives.
+
+    Recall and the false positive rate are properties of the detector and do not depend on how
+    frequent hallucinations are; precision does. The share of positives in the competition test is
+    unknown, so the numbers measured on a balanced file are re-expressed for other shares instead of
+    being quoted as if they transferred unchanged.
+    """
+    tp = base_rate * recall
+    fp = (1 - base_rate) * false_positive_rate
+    precision = tp / (tp + fp) if tp + fp else 0.0
+    f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
+    return precision, f1

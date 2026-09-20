@@ -1,0 +1,351 @@
+[
+  {
+    "id": "airline__10::t19",
+    "label": 0,
+    "evidence": {
+      "unsupported_number": [
+        "660",
+        "1980",
+        "1980",
+        "1185"
+      ]
+    }
+  },
+  {
+    "id": "airline__10::t21",
+    "label": 0,
+    "evidence": {}
+  },
+  {
+    "id": "airline__21::t7",
+    "label": 1,
+    "evidence": {
+      "unknown_argument": [
+        "update_reservation_flights.destination",
+        "update_reservation_flights.origin",
+        "update_reservation_flights.price",
+        "update_reservation_flights.destination",
+        "update_reservation_flights.origin",
+        "update_reservation_flights.price",
+        "update_reservation_flights.destination",
+        "update_reservation_flights.origin",
+        "update_reservation_flights.price",
+        "update_reservation_flights.destination",
+        "update_reservation_flights.origin",
+        "update_reservation_flights.price"
+      ]
+    }
+  },
+  {
+    "id": "airline__23::t10",
+    "label": 1,
+    "evidence": {
+      "unknown_argument": [
+        "book_reservation.id",
+        "book_reservation.source",
+        "book_reservation.id",
+        "book_reservation.source",
+        "book_reservation.id",
+        "book_reservation.source",
+        "book_reservation.id",
+        "book_reservation.source",
+        "book_reservation.id",
+        "book_reservation.source",
+        "book_reservation.id",
+        "book_reservation.source",
+        "book_reservation.id",
+        "book_reservation.source",
+        "book_reservation.id",
+        "book_reservation.source"
+      ],
+      "missing_required_argument": [
+        "book_reservation.payment_methods.amount",
+        "book_reservation.payment_methods.payment_id",
+        "book_reservation.payment_methods.amount",
+        "book_reservation.payment_methods.payment_id",
+        "book_reservation.payment_methods.amount",
+        "book_reservation.payment_methods.payment_id",
+        "book_reservation.payment_methods.amount",
+        "book_reservation.payment_methods.payment_id",
+        "book_reservation.payment_methods.amount",
+        "book_reservation.payment_methods.payment_id",
+        "book_reservation.payment_methods.amount",
+        "book_reservation.payment_methods.payment_id",
+        "book_reservation.payment_methods.amount",
+        "book_reservation.payment_methods.payment_id",
+        "book_reservation.payment_methods.amount",
+        "book_reservation.payment_methods.payment_id"
+      ]
+    }
+  },
+  {
+    "id": "airline__24::t14",
+    "label": 0,
+    "evidence": {}
+  },
+  {
+    "id": "airline__3::t4",
+    "label": 0,
+    "evidence": {}
+  },
+  {
+    "id": "airline__44::t22",
+    "label": 1,
+    "evidence": {
+      "unknown_argument": [
+        "update_reservation_flights.destination",
+        "update_reservation_flights.origin",
+        "update_reservation_flights.destination",
+        "update_reservation_flights.origin",
+        "update_reservation_flights.destination",
+        "update_reservation_flights.origin"
+      ]
+    }
+  },
+  {
+    "id": "airline__47::t1",
+    "label": 0,
+    "evidence": {}
+  },
+  {
+    "id": "airline__5::t1",
+    "label": 0,
+    "evidence": {}
+  },
+  {
+    "id": "airline__7::t6",
+    "label": 1,
+    "evidence": {}
+  },
+  {
+    "id": "airline__8::t7",
+    "label": 1,
+    "evidence": {}
+  },
+  {
+    "id": "airline__9::t6",
+    "label": 1,
+    "evidence": {}
+  },
+  {
+    "id": "banking_knowledge__task_003::t7",
+    "label": 1,
+    "evidence": {}
+  },
+  {
+    "id": "banking_knowledge__task_005::t6",
+    "label": 1,
+    "evidence": {}
+  },
+  {
+    "id": "banking_knowledge__task_018::t6",
+    "label": 1,
+    "evidence": {}
+  },
+  {
+    "id": "banking_knowledge__task_033::t2",
+    "label": 0,
+    "evidence": {}
+  },
+  {
+    "id": "banking_knowledge__task_051::t15",
+    "label": 1,
+    "evidence": {}
+  },
+  {
+    "id": "banking_knowledge__task_057::t2",
+    "label": 0,
+    "evidence": {}
+  },
+  {
+    "id": "banking_knowledge__task_063::t8",
+    "label": 0,
+    "evidence": {}
+  },
+  {
+    "id": "banking_knowledge__task_068::t11",
+    "label": 1,
+    "evidence": {
+      "unsupported_argument_value": [
+        "call_discoverable_agent_tool.account_id=light_blue_account_id_placeholder"
+      ]
+    }
+  },
+  {
+    "id": "banking_knowledge__task_080::t30",
+    "label": 0,
+    "evidence": {}
+  },
+  {
+    "id": "banking_knowledge__task_081::t35",
+    "label": 0,
+    "evidence": {}
+  },
+  {
+    "id": "banking_knowledge__task_083::t10",
+    "label": 1,
+    "evidence": {
+      "unknown_tool": [
+        "get_bank_account_transactions_9173"
+      ]
+    }
+  },
+  {
+    "id": "retail__106::t3",
+    "label": 1,
+    "evidence": {
+      "unsupported_argument_value": [
+        "find_user_id_by_name_zip.zip=3019"
+      ]
+    }
+  },
+  {
+    "id": "retail__108::t1",
+    "label": 0,
+    "evidence": {}
+  },
+  {
+    "id": "retail__12::t4",
+    "label": 0,
+    "evidence": {}
+  },
+  {
+    "id": "retail__14::t1",
+    "label": 0,
+    "evidence": {}
+  },
+  {
+    "id": "retail__27::t10",
+    "label": 1,
+    "evidence": {}
+  },
+  {
+    "id": "retail__29::t13",
+    "label": 1,
+    "evidence": {}
+  },
+  {
+    "id": "retail__36::t10",
+    "label": 1,
+    "evidence": {}
+  },
+  {
+    "id": "retail__47::t12",
+    "label": 0,
+    "evidence": {}
+  },
+  {
+    "id": "retail__48::t4",
+    "label": 1,
+    "evidence": {
+      "repeated_failed_call": [
+        "find_user_id_by_name_zip"
+      ],
+      "repeated_call": [
+        "find_user_id_by_name_zip"
+      ]
+    }
+  },
+  {
+    "id": "retail__78::t1",
+    "label": 0,
+    "evidence": {}
+  },
+  {
+    "id": "retail__87::t6",
+    "label": 0,
+    "evidence": {}
+  },
+  {
+    "id": "telecom__mms_issueairplane_mode_on-bad_network_preference-bad_wifi_calling-break_app_sms_p::t7",
+    "label": 0,
+    "evidence": {}
+  },
+  {
+    "id": "telecom__mms_issueairplane_mode_on-bad_network_preference-bad_wifi_calling-data_usage_exce::t7",
+    "label": 1,
+    "evidence": {
+      "unknown_tool": [
+        "check_network_status"
+      ]
+    }
+  },
+  {
+    "id": "telecom__mms_issueairplane_mode_on-bad_network_preference-break_apn_mms_setting-break_app_::t10",
+    "label": 1,
+    "evidence": {
+      "unknown_tool": [
+        "check_status_bar",
+        "check_network_status",
+        "check_sim_status",
+        "check_apn_settings"
+      ],
+      "repeated_failed_call": [
+        "check_network_status"
+      ],
+      "repeated_call": [
+        "check_network_status"
+      ]
+    }
+  },
+  {
+    "id": "telecom__mms_issueairplane_mode_on-bad_network_preference-break_app_both_permissions-data_::t12",
+    "label": 0,
+    "evidence": {}
+  },
+  {
+    "id": "telecom__mms_issueairplane_mode_on-bad_wifi_calling-break_app_both_permissions-data_mode_o::t15",
+    "label": 0,
+    "evidence": {}
+  },
+  {
+    "id": "telecom__mms_issueairplane_mode_on-break_app_both_permissionsPERSONA_Hard::t8",
+    "label": 0,
+    "evidence": {}
+  },
+  {
+    "id": "telecom__mms_issuebad_network_preference-bad_wifi_calling-break_apn_mms_setting-break_app_::t7",
+    "label": 0,
+    "evidence": {}
+  },
+  {
+    "id": "telecom__mms_issuebreak_apn_mms_setting-user_abroad_roaming_enabled_offPERSONA_Hard::t27",
+    "label": 1,
+    "evidence": {}
+  },
+  {
+    "id": "telecom__mobile_data_issueairplane_mode_on-bad_network_preference-bad_vpn-data_saver_mode_::t7",
+    "label": 0,
+    "evidence": {}
+  },
+  {
+    "id": "telecom__mobile_data_issuebad_network_preference-bad_vpn-data_mode_off-data_saver_mode_onP::t6",
+    "label": 1,
+    "evidence": {
+      "unknown_tool": [
+        "run_speed_test"
+      ],
+      "repeated_failed_call": [
+        "run_speed_test"
+      ],
+      "repeated_call": [
+        "run_speed_test"
+      ]
+    }
+  },
+  {
+    "id": "telecom__service_issueairplane_mode_on-break_apn_settings-lock_sim_card_pin-overdue_bill_s::t15",
+    "label": 1,
+    "evidence": {
+      "unknown_tool": [
+        "check_sim_status",
+        "check_network_status"
+      ]
+    }
+  },
+  {
+    "id": "telecom__service_issuebreak_apn_settings-contract_end_suspension-lock_sim_card_pin-unseat_::t13",
+    "label": 1,
+    "evidence": {}
+  }
+]

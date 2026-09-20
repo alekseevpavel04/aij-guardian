@@ -1,0 +1,170 @@
+{
+  "input": "D:\\VScode_projects\\aij-guardian\\data\\raw\\valid.parquet",
+  "format": {
+    "columns": [
+      "id",
+      "prompt",
+      "response",
+      "label",
+      "explanation"
+    ],
+    "rows": 46,
+    "markers": [
+      [
+        "⟦ASSISTANT · ход N⟧",
+        449
+      ],
+      [
+        "⟦USER⟧",
+        267
+      ],
+      [
+        "⟦SYSTEM⟧",
+        46
+      ],
+      [
+        "⟦ASSISTANT⟧",
+        46
+      ]
+    ],
+    "markers_documented_on_data_tab": {
+      "→ TOOL_CALL": 393,
+      "← TOOL_RESPONSE": 393,
+      "[AVAILABLE TOOLS]": 46,
+      "⟦ASSISTANT_TOOL_CALL": 0
+    },
+    "unparsed_markers": {},
+    "unexpected_roles": {},
+    "tools_called_in_response": [
+      [
+        "transfer_to_human_agents",
+        6
+      ],
+      [
+        "cancel_reservation",
+        4
+      ],
+      [
+        "update_reservation_flights",
+        3
+      ],
+      [
+        "book_reservation",
+        3
+      ],
+      [
+        "check_network_status",
+        3
+      ],
+      [
+        "log_verification",
+        2
+      ],
+      [
+        "find_user_id_by_name_zip",
+        2
+      ],
+      [
+        "check_sim_status",
+        2
+      ],
+      [
+        "update_reservation_baggages",
+        1
+      ],
+      [
+        "calculate",
+        1
+      ],
+      [
+        "unlock_discoverable_agent_tool",
+        1
+      ],
+      [
+        "call_discoverable_agent_tool",
+        1
+      ],
+      [
+        "get_bank_account_transactions_9173",
+        1
+      ],
+      [
+        "return_delivered_order_items",
+        1
+      ],
+      [
+        "exchange_delivered_order_items",
+        1
+      ],
+      [
+        "modify_pending_order_items",
+        1
+      ],
+      [
+        "check_status_bar",
+        1
+      ],
+      [
+        "check_apn_settings",
+        1
+      ],
+      [
+        "run_speed_test",
+        1
+      ],
+      [
+        "resume_line",
+        1
+      ]
+    ],
+    "calls_in_response": {
+      "0": 23,
+      "1": 15,
+      "2": 5,
+      "4": 3
+    }
+  },
+  "lengths": {
+    "prompt": {
+      "chars_mean": 42614,
+      "chars_p50": 30498,
+      "chars_p90": 75354,
+      "chars_max": 233104
+    },
+    "response": {
+      "chars_mean": 519,
+      "chars_p50": 428,
+      "chars_p90": 906,
+      "chars_max": 2339
+    }
+  },
+  "label_counts": {
+    "0": 23,
+    "1": 23
+  },
+  "positive_rate": 0.5,
+  "by_domain": {
+    "airline": {
+      "rows": 12,
+      "positives": 6
+    },
+    "banking_knowledge": {
+      "rows": 11,
+      "positives": 6
+    },
+    "retail": {
+      "rows": 11,
+      "positives": 5
+    },
+    "telecom": {
+      "rows": 12,
+      "positives": 6
+    }
+  },
+  "explanation_non_empty_by_label": {
+    "0": 0,
+    "1": 23
+  },
+  "duplicate_prompts": 0,
+  "duplicate_prompt_response_pairs": 0
+}

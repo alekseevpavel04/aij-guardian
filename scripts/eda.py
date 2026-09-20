@@ -1,4 +1,4 @@
-"""First look at the public labelled file: format, class balance, trivial baselines.
+"""First look at the labelled file: format, class balance, trivial baselines.
 
 Writes results/eda.json and results/trivial_baselines.json. Everything printed here is meant to be
 read before any modelling: if a trivial predictor is already near the top of the leaderboard, that
@@ -18,32 +18,41 @@ import numpy as np
 from guardian.env import setup
 from guardian.io import read_table
 from guardian.metrics import binary_scores, bootstrap_ci
-from guardian.parsing import parse_transcript, tool_calls, unknown_roles
+from guardian.parsing import MARKER_LIKE_RE, TURN_INDEX_RE, parse_transcript, unknown_roles, unparsed_markers
 
 ROOT = Path(__file__).resolve().parents[1]
-MARKER_RE = re.compile(r"⟦[^⟧\n]{0,60}⟧")
-ALT_MARKER_RE = re.compile(r"(→ TOOL_CALL|← TOOL_RESPONSE|\[AVAILABLE TOOLS\])")
+ALT_MARKERS = ("→ TOOL_CALL", "← TOOL_RESPONSE", "[AVAILABLE TOOLS]", "⟦ASSISTANT_TOOL_CALL")
+
+
+def domain_of(example_id: str) -> str:
+    return example_id.split("__")[0]
 
 
 def format_report(frame) -> dict:
-    """Which marker convention the data actually uses: the rules describe one, the Data tab another."""
-    text = "\n".join(frame["prompt"].head(200).tolist() + frame["response"].head(200).tolist())
-    markers = Counter(m.group(0) for m in MARKER_RE.finditer(text))
-    unknown = Counter()
-    tool_names = Counter()
-    for t in frame["prompt"].head(200):
-        turns = parse_transcript(t)
-        unknown.update(unknown_roles(turns))
-        tool_names.update(c.name for c in tool_calls(turns) if c.name)
+    """What the transcripts actually look like: the rules PDF and the Data tab disagree about it."""
+    markers, unexpected, unparsed, tool_names = Counter(), Counter(), Counter(), Counter()
+    calls_in_response = []
+    for row in frame.itertuples():
+        for column, text in (("prompt", row.prompt), ("response", row.response)):
+            markers.update(TURN_INDEX_RE.sub("N", m.group(0)) for m in MARKER_LIKE_RE.finditer(text))
+            unparsed.update(unparsed_markers(text))
+            turns = parse_transcript(text)
+            unexpected.update(f"{column}:{role}" for role in unknown_roles(turns))
+            if column == "response":
+                calls = [c for t in turns for c in t.calls]
+                tool_names.update(c.name for c in calls)
+                calls_in_response.append(len(calls))
     return {
         "columns": list(frame.columns),
         "rows": len(frame),
-        "bracket_markers_top": markers.most_common(20),
-        "alt_markers_from_data_tab": Counter(m.group(0) for m in ALT_MARKER_RE.finditer(text)).most_common(),
-        "unknown_roles": dict(unknown),
-        "tool_names_top": tool_names.most_common(30),
-        "prompt_has_block_tags": int(frame["prompt"].str.contains("<prompt>", regex=False).sum()),
-        "response_has_block_tags": int(frame["response"].str.contains("<response>", regex=False).sum()),
+        "markers": markers.most_common(20),
+        "markers_documented_on_data_tab": {
+            marker: int(frame.prompt.str.count(re.escape(marker)).sum()) for marker in ALT_MARKERS
+        },
+        "unparsed_markers": dict(unparsed),
+        "unexpected_roles": dict(unexpected),
+        "tools_called_in_response": tool_names.most_common(20),
+        "calls_in_response": dict(sorted(Counter(calls_in_response).items())),
     }
 
 
@@ -52,10 +61,9 @@ def length_report(frame) -> dict:
     for col in ("prompt", "response"):
         chars = frame[col].str.len().to_numpy()
         out[col] = {
-            "chars_mean": float(chars.mean()),
-            "chars_p50": float(np.percentile(chars, 50)),
-            "chars_p90": float(np.percentile(chars, 90)),
-            "chars_p99": float(np.percentile(chars, 99)),
+            "chars_mean": round(float(chars.mean())),
+            "chars_p50": round(float(np.percentile(chars, 50))),
+            "chars_p90": round(float(np.percentile(chars, 90))),
             "chars_max": int(chars.max()),
         }
     return out
@@ -63,26 +71,23 @@ def length_report(frame) -> dict:
 
 def trivial_baselines(y: np.ndarray, frame, seed: int = 42) -> dict:
     rng = np.random.default_rng(seed)
-    rate = float(y.mean())
     response_len = frame["response"].str.len().to_numpy()
-
     predictors = {
         "always_1": np.ones_like(y),
         "always_0": np.zeros_like(y),
-        "random_at_base_rate": (rng.random(len(y)) < rate).astype(int),
+        "random_at_base_rate": (rng.random(len(y)) < float(y.mean())).astype(int),
         "long_response": (response_len > np.median(response_len)).astype(int),
-        "response_has_tool_call": frame["response"].str.contains("TOOL_CALL", regex=False).astype(int).to_numpy(),
+        "response_has_tool_call": frame["response"].str.contains("→ TOOL_CALL", regex=False).astype(int).to_numpy(),
     }
-
     out = {}
     for name, pred in predictors.items():
         f1, lo, hi = bootstrap_ci(y, pred)
         s = binary_scores(y, pred)
         out[name] = {
-            "f1": round(f1, 5),
-            "f1_ci95": [round(lo, 5), round(hi, 5)],
-            "precision": round(s.precision, 5),
-            "recall": round(s.recall, 5),
+            "f1": round(f1, 4),
+            "f1_ci95": [round(lo, 4), round(hi, 4)],
+            "precision": round(s.precision, 4),
+            "recall": round(s.recall, 4),
             "predicted_positive": s.predicted_positive,
         }
     return out
@@ -101,15 +106,21 @@ def main() -> None:
         raise SystemExit(f"missing columns: {sorted(missing)}; found {list(frame.columns)}")
 
     y = frame["label"].to_numpy().astype(int)
+    domains = frame["id"].map(domain_of).to_numpy()
+    explanations = frame["explanation"].fillna("").astype(str).str.strip() if "explanation" in frame else None
+
     eda = {
         "input": str(args.input),
         "format": format_report(frame),
         "lengths": length_report(frame),
-        "label_counts": {str(k): int(v) for k, v in Counter(y.tolist()).items()},
-        "positive_rate": round(float(y.mean()), 5),
-        "has_explanation": "explanation" in frame.columns,
-        "explanation_non_empty": (
-            int(frame["explanation"].astype(str).str.strip().ne("").sum()) if "explanation" in frame.columns else 0
+        "label_counts": {str(k): int(v) for k, v in sorted(Counter(y.tolist()).items())},
+        "positive_rate": round(float(y.mean()), 4),
+        "by_domain": {
+            domain: {"rows": int((domains == domain).sum()), "positives": int(y[domains == domain].sum())}
+            for domain in sorted(set(domains))
+        },
+        "explanation_non_empty_by_label": (
+            {str(k): int(explanations[y == k].ne("").sum()) for k in (0, 1)} if explanations is not None else None
         ),
         "duplicate_prompts": int(frame["prompt"].duplicated().sum()),
         "duplicate_prompt_response_pairs": int(frame.duplicated(subset=["prompt", "response"]).sum()),
@@ -122,10 +133,13 @@ def main() -> None:
         json.dumps(baselines, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
 
-    print(f"rows: {eda['format']['rows']}, positive rate: {eda['positive_rate']}")
-    print(f"markers: {eda['format']['bracket_markers_top'][:6]}")
-    print(f"markers from the Data tab: {eda['format']['alt_markers_from_data_tab']}")
-    print(f"unknown roles: {eda['format']['unknown_roles']}")
+    fmt = eda["format"]
+    print(f"rows: {fmt['rows']}, positive rate: {eda['positive_rate']}, by domain: {eda['by_domain']}")
+    print(f"markers: {fmt['markers'][:6]}")
+    print(f"markers documented on the Data tab: {fmt['markers_documented_on_data_tab']}")
+    print(f"unparsed markers: {fmt['unparsed_markers']}, unexpected roles: {fmt['unexpected_roles']}")
+    print(f"explanation non-empty by label: {eda['explanation_non_empty_by_label']}")
+    print(f"prompt length in chars: {eda['lengths']['prompt']}")
     for name, m in baselines.items():
         lo, hi = m["f1_ci95"]
         print(f"{name:>24}  F1 {m['f1']:.4f} [{lo:.4f}; {hi:.4f}]  P {m['precision']:.3f}  R {m['recall']:.3f}")

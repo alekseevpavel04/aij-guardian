@@ -1,0 +1,214 @@
+{
+  "input": "D:\\VScode_projects\\aij-guardian\\data\\raw\\valid.parquet",
+  "rows": 46,
+  "positives": 23,
+  "checks": {
+    "unknown_tool": {
+      "fired": 5,
+      "fired_on_positive": 5,
+      "fired_on_negative": 0,
+      "precision": 1.0,
+      "recall": 0.2174,
+      "f1": 0.3571,
+      "f1_ci95": [
+        0.0952,
+        0.5714
+      ]
+    },
+    "unknown_argument": {
+      "fired": 3,
+      "fired_on_positive": 3,
+      "fired_on_negative": 0,
+      "precision": 1.0,
+      "recall": 0.1304,
+      "f1": 0.2308,
+      "f1_ci95": [
+        0.0,
+        0.4375
+      ]
+    },
+    "missing_required_argument": {
+      "fired": 1,
+      "fired_on_positive": 1,
+      "fired_on_negative": 0,
+      "precision": 1.0,
+      "recall": 0.0435,
+      "f1": 0.0833,
+      "f1_ci95": [
+        0.0,
+        0.2502
+      ]
+    },
+    "enum_violation": {
+      "fired": 0,
+      "fired_on_positive": 0,
+      "fired_on_negative": 0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "f1_ci95": [
+        0.0,
+        0.0
+      ]
+    },
+    "repeated_failed_call": {
+      "fired": 3,
+      "fired_on_positive": 3,
+      "fired_on_negative": 0,
+      "precision": 1.0,
+      "recall": 0.1304,
+      "f1": 0.2308,
+      "f1_ci95": [
+        0.0,
+        0.4375
+      ]
+    },
+    "repeated_call": {
+      "fired": 3,
+      "fired_on_positive": 3,
+      "fired_on_negative": 0,
+      "precision": 1.0,
+      "recall": 0.1304,
+      "f1": 0.2308,
+      "f1_ci95": [
+        0.0,
+        0.4375
+      ]
+    },
+    "unsupported_argument_value": {
+      "fired": 2,
+      "fired_on_positive": 2,
+      "fired_on_negative": 0,
+      "precision": 1.0,
+      "recall": 0.087,
+      "f1": 0.16,
+      "f1_ci95": [
+        0.0,
+        0.3704
+      ]
+    },
+    "unsupported_number": {
+      "fired": 1,
+      "fired_on_positive": 0,
+      "fired_on_negative": 1,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "f1_ci95": [
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "combinations": {
+    "any_schema_check": {
+      "members": [
+        "unknown_tool",
+        "unknown_argument",
+        "missing_required_argument",
+        "enum_violation"
+      ],
+      "fired": 8,
+      "precision": 1.0,
+      "recall": 0.3478,
+      "f1": 0.5161,
+      "f1_ci95": [
+        0.2609,
+        0.7059
+      ]
+    },
+    "any_schema_or_repeat": {
+      "members": [
+        "unknown_tool",
+        "unknown_argument",
+        "missing_required_argument",
+        "enum_violation",
+        "repeated_failed_call"
+      ],
+      "fired": 9,
+      "precision": 1.0,
+      "recall": 0.3913,
+      "f1": 0.5625,
+      "f1_ci95": [
+        0.3125,
+        0.7392
+      ]
+    },
+    "any_check_except_numbers": {
+      "members": [
+        "unknown_tool",
+        "unknown_argument",
+        "missing_required_argument",
+        "enum_violation",
+        "repeated_failed_call",
+        "repeated_call",
+        "unsupported_argument_value"
+      ],
+      "fired": 11,
+      "precision": 1.0,
+      "recall": 0.4783,
+      "f1": 0.6471,
+      "f1_ci95": [
+        0.4286,
+        0.8125
+      ]
+    },
+    "any_check": {
+      "members": [
+        "unknown_tool",
+        "unknown_argument",
+        "missing_required_argument",
+        "enum_violation",
+        "repeated_failed_call",
+        "repeated_call",
+        "unsupported_argument_value",
+        "unsupported_number"
+      ],
+      "fired": 12,
+      "precision": 0.9167,
+      "recall": 0.4783,
+      "f1": 0.6286,
+      "f1_ci95": [
+        0.4,
+        0.8
+      ]
+    }
+  },
+  "projection": {
+    "detector": "any_check_except_numbers",
+    "recall": 0.4783,
+    "false_positive_rate_observed": 0.0,
+    "false_positive_rate_upper95": 0.1221,
+    "note": "0 false positives out of 23 negatives; the upper bound is what carries to a larger test set, the point estimate of 0 does not",
+    "by_base_rate": {
+      "0.5000": {
+        "rules_precision_at_observed_fpr": 1.0,
+        "rules_f1_at_observed_fpr": 0.6471,
+        "rules_precision_at_upper_fpr": 0.7966,
+        "rules_f1_at_upper_fpr": 0.5977,
+        "always_1_f1": 0.6667
+      },
+      "0.4000": {
+        "rules_precision_at_observed_fpr": 1.0,
+        "rules_f1_at_observed_fpr": 0.6471,
+        "rules_precision_at_upper_fpr": 0.7231,
+        "rules_f1_at_upper_fpr": 0.5757,
+        "always_1_f1": 0.5714
+      },
+      "0.3333": {
+        "rules_precision_at_observed_fpr": 1.0,
+        "rules_f1_at_observed_fpr": 0.6471,
+        "rules_precision_at_upper_fpr": 0.6619,
+        "rules_f1_at_upper_fpr": 0.5553,
+        "always_1_f1": 0.5
+      },
+      "0.2500": {
+        "rules_precision_at_observed_fpr": 1.0,
+        "rules_f1_at_observed_fpr": 0.6471,
+        "rules_precision_at_upper_fpr": 0.5662,
+        "rules_f1_at_upper_fpr": 0.5185,
+        "always_1_f1": 0.4
+      }
+    }
+  }
+}

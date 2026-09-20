@@ -1,115 +1,108 @@
-import pytest
-
+from conftest import response
 from guardian.parsing import (
-    Turn,
     flatten,
+    parse_available_tools,
     parse_transcript,
-    strip_block_tags,
-    tool_calls,
-    tool_results,
+    section,
+    system_turn,
     unknown_roles,
+    unparsed_markers,
 )
 
-TRANSCRIPT = """<prompt>
-⟦SYSTEM⟧
-You are an airline agent. <policy>Never cancel without confirmation.</policy>
-⟦USER⟧
-Cancel my flight please.
-⟦ASSISTANT⟧
-Let me look you up.
-⟦ASSISTANT_TOOL_CALL name="get_user_details"⟧
-{"user_id": "noah_muller_9847"}
-⟦TOOL_RESULT name="get_user_details" requestor="assistant"⟧
-{"user_id": "noah_muller_9847", "reservations": [{"id": "ABC123", "price": 512.5}]}
-</prompt>"""
+
+def test_roles_and_turn_numbers(prompt):
+    turns = parse_transcript(prompt)
+    assert [(t.role, t.index) for t in turns] == [
+        ("SYSTEM", None),
+        ("ASSISTANT", None),
+        ("USER", None),
+        ("ASSISTANT", 1),
+        ("ASSISTANT", 2),
+    ]
 
 
-def test_roles_and_order():
-    turns = parse_transcript(TRANSCRIPT)
-    assert [t.role for t in turns] == ["SYSTEM", "USER", "ASSISTANT", "ASSISTANT_TOOL_CALL", "TOOL_RESULT"]
-    assert unknown_roles(turns) == set()
+def test_every_marker_is_consumed(prompt):
+    assert unparsed_markers(prompt) == []
 
 
-def test_block_tags_stripped():
-    assert "<prompt>" not in parse_transcript(TRANSCRIPT)[0].text
-    assert strip_block_tags("no tags here") == "no tags here"
+def test_only_the_four_roles_of_the_data_are_expected(prompt):
+    assert unknown_roles(parse_transcript(prompt)) == set()
 
 
-def test_attributes_and_payload():
-    call = tool_calls(parse_transcript(TRANSCRIPT))[0]
-    assert call.name == "get_user_details"
-    assert call.payload == {"user_id": "noah_muller_9847"}
-
-    result = tool_results(parse_transcript(TRANSCRIPT))[0]
-    assert result.attrs == {"name": "get_user_details", "requestor": "assistant"}
-    assert result.payload["reservations"][0]["price"] == 512.5
+def test_a_marker_of_the_rules_pdf_format_shows_up_as_an_unexpected_role(prompt):
+    """The rules PDF documents ⟦ASSISTANT_TOOL_CALL name="X"⟧, which valid.parquet does not use."""
+    stray = prompt + '\n⟦ASSISTANT_TOOL_CALL name="x"⟧\n{}'
+    assert unparsed_markers(stray) == []
+    assert unknown_roles(parse_transcript(stray)) == {"ASSISTANT_TOOL_CALL"}
 
 
-def test_text_content_keeps_policy_markup():
-    system = parse_transcript(TRANSCRIPT)[0]
-    assert "<policy>Never cancel without confirmation.</policy>" in system.text
+def test_tool_calls_and_results(prompt):
+    turn = parse_transcript(prompt)[3]
+    assert [c.name for c in turn.calls] == ["get_user_details"]
+    assert turn.calls[0].args == {"user_id": "sofia_kim_7287"}
+    assert turn.results[0].value["reservations"] == ["OI5L9G"]
+    assert turn.results[0].is_error is False
 
 
-def test_response_block():
-    response = """<response>
-⟦ASSISTANT⟧
-Cancelled, refund is 512.50 USD.
-⟦ASSISTANT_TOOL_CALL name="cancel_reservation"⟧
-{"reservation_id": "ABC123"}
-</response>"""
-    turns = parse_transcript(response)
-    assert len(turns) == 2
-    assert tool_calls(turns)[0].payload == {"reservation_id": "ABC123"}
+def test_error_results_are_flagged(prompt):
+    turn = parse_transcript(prompt)[4]
+    assert turn.results[0].is_error is True
+    assert turn.results[0].value is None
 
 
-def test_text_before_first_marker_is_kept():
-    turns = parse_transcript("stray header\n⟦USER⟧\nhi")
-    assert turns[0] == Turn("PREAMBLE", "stray header")
-    assert turns[1].role == "USER"
+def test_tool_lines_are_removed_from_turn_text(prompt):
+    turn = parse_transcript(prompt)[3]
+    assert "TOOL_CALL" not in turn.text
+    assert "TOOL_RESPONSE" not in turn.text
+    assert turn.text == ""
+
+
+def test_response_with_text_and_a_call():
+    body = 'Перевожу вас на оператора.\n\t→ TOOL_CALL transfer_to_human_agents: {"summary": "x"}'
+    turns = parse_transcript(response(body))
+    assert turns[0].text == "Перевожу вас на оператора."
+    assert turns[0].calls[0].name == "transfer_to_human_agents"
 
 
 def test_text_without_markers_is_kept():
-    assert parse_transcript("just text") == [Turn("PREAMBLE", "just text")]
+    turns = parse_transcript("just text")
+    assert (turns[0].role, turns[0].text) == ("PREAMBLE", "just text")
     assert parse_transcript("   ") == []
 
 
-def test_unknown_marker_is_reported_not_dropped():
-    turns = parse_transcript("⟦TOOL_CALL⟧\nsomething")
-    assert unknown_roles(turns) == {"TOOL_CALL"}
-    assert turns[0].text == "something"
+def test_policy_and_instructions(prompt):
+    system = system_turn(parse_transcript(prompt))
+    assert "The current time is 2024-05-15 15:00:00 EST." in section(system.text, "policy")
+    assert "customer service agent" in section(system.text, "instructions")
+    assert section(system.text, "missing") is None
 
 
-def test_user_tool_call_is_a_tool_call():
-    turns = parse_transcript('⟦USER_TOOL_CALL name="send_photo"⟧\n{}')
-    assert tool_calls(turns)[0].name == "send_photo"
+def test_tool_schema(system_text):
+    tools = parse_available_tools(system_text)
+    assert set(tools) == {
+        "get_user_details",
+        "cancel_reservation",
+        "update_reservation_flights",
+        "transfer_to_human_agents",
+    }
+    update = tools["update_reservation_flights"]
+    assert update.top_level == {"reservation_id", "cabin", "flights"}
+    assert update.required == {"reservation_id", "cabin", "flights"}
+    assert update.params["cabin"].enum == ["business", "economy", "basic_economy"]
+    assert update.params["flights.flight_number"].parent == "flights"
+    assert update.params["flights.date"].type == "string"
 
 
-def test_payload_of_non_json_body():
-    turns = parse_transcript('⟦TOOL_RESULT name="ping" requestor="user"⟧\nError: connection refused')
-    assert turns[0].payload is None
+def test_wrapped_description_lines_are_not_parsed_as_parameters(system_text):
+    update = parse_available_tools(system_text)["update_reservation_flights"]
+    assert "Even if a flight segment is not changed" not in update.params
+    assert all(":" not in name for name in update.params)
 
 
-def test_payload_of_python_literal_body():
-    turns = parse_transcript("⟦TOOL_RESULT name=\"f\" requestor=\"assistant\"⟧\n{'ok': True, 'x': None}")
-    assert turns[0].payload == {"ok": True, "x": None}
-
-
-def test_marker_like_text_inside_body_is_not_a_marker():
-    turns = parse_transcript("⟦USER⟧\nthe agent printed ⟦not a marker⟧ in its answer")
-    assert len(turns) == 1
-    assert "⟦not a marker⟧" in turns[0].text
-
-
-@pytest.mark.parametrize("blob", ["⟦ASSISTANT⟧", "⟦ ASSISTANT ⟧"])
-def test_marker_spacing(blob):
-    assert parse_transcript(f"{blob}\nhello")[0].role == "ASSISTANT"
+def test_no_tools_section():
+    assert parse_available_tools("⟦SYSTEM⟧\nnothing here") == {}
 
 
 def test_flatten_paths():
     payload = {"user": {"name": "Noah", "ids": [7, 8]}, "ok": True}
     assert flatten(payload) == {"user.name": "Noah", "user.ids[0]": 7, "user.ids[1]": 8, "ok": True}
-
-
-def test_flatten_scalar_and_empty():
-    assert flatten(5) == {"": 5}
-    assert flatten({"a": {}}) == {}
