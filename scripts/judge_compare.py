@@ -17,6 +17,7 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score
 
+from guardian import journal
 from guardian.env import setup
 from guardian.predictor import DEFAULT_CHECKS
 from guardian.rules import Context, evidence
@@ -40,7 +41,7 @@ def rules_fire(row) -> bool:
 
 def scores(name: str) -> pd.Series:
     path = ROOT / "data/interim/judge" / f"{name}.jsonl"
-    records = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+    records = journal.read(path)
     return pd.DataFrame(records).drop_duplicates("id", keep="last").set_index("id").score
 
 

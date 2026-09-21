@@ -21,6 +21,7 @@ from pathlib import Path
 import pandas as pd
 from sklearn.metrics import roc_auc_score
 
+from guardian import journal
 from guardian.env import setup
 from guardian.judge import JudgeClient
 from guardian.metrics import best_threshold, binary_scores
@@ -107,35 +108,34 @@ def main() -> None:
         system_prompt = system_prompt.rstrip() + "\n\n" + args.append_prompt.read_text(encoding="utf-8").strip()
     log = ROOT / "data/interim/judge" / f"{args.name}.jsonl"
     log.parent.mkdir(parents=True, exist_ok=True)
-    done = {json.loads(line)["id"] for line in log.read_text(encoding="utf-8").splitlines()} if log.exists() else set()
+    journal.repair(log)  # a power cut may have left half a line
+    done = {r["id"] for r in journal.read(log)}
     client = JudgeClient(args.server, thinking=args.thinking, thinking_tokens=args.thinking_tokens)
 
     todo = frame[~frame.id.isin(done)]
     if args.max_rows:
         todo = todo.head(args.max_rows)
     started = time.monotonic()
-    with log.open("a", encoding="utf-8") as f:
-        for i, row in enumerate(todo.itertuples(), 1):
-            verdict = client.score(system_prompt, row.prompt, row.response)
-            record = {
-                "id": row.id,
-                "score": verdict.score,
-                "prompt_tokens": verdict.prompt_tokens,
-                "cached_tokens": verdict.cached_tokens,
-                "completion_tokens": verdict.completion_tokens,
-                "seconds": round(verdict.seconds, 2),
-            }
-            f.write(json.dumps(record) + "\n")
-            f.flush()
-            elapsed = time.monotonic() - started
-            print(
-                f"{len(done) + i}/{len(frame)} {row.id[:48]:<48} tokens {verdict.prompt_tokens} "
-                f"cached {verdict.cached_tokens} {verdict.seconds:.1f} s, eta "
-                f"{elapsed / i * (len(todo) - i) / 60:.0f} min",
-                flush=True,
-            )
+    for i, row in enumerate(todo.itertuples(), 1):
+        verdict = client.score(system_prompt, row.prompt, row.response)
+        record = {
+            "id": row.id,
+            "score": verdict.score,
+            "prompt_tokens": verdict.prompt_tokens,
+            "cached_tokens": verdict.cached_tokens,
+            "completion_tokens": verdict.completion_tokens,
+            "seconds": round(verdict.seconds, 2),
+        }
+        journal.append(log, record)
+        elapsed = time.monotonic() - started
+        print(
+            f"{len(done) + i}/{len(frame)} {row.id[:48]:<48} tokens {verdict.prompt_tokens} "
+            f"cached {verdict.cached_tokens} {verdict.seconds:.1f} s, eta "
+            f"{elapsed / i * (len(todo) - i) / 60:.0f} min",
+            flush=True,
+        )
 
-    records = pd.DataFrame([json.loads(line) for line in log.read_text(encoding="utf-8").splitlines()])
+    records = pd.DataFrame(journal.read(log))
     scored = frame.drop(columns=["prompt", "response"]).merge(records, on="id")
     if len(scored) < len(frame):
         print(f"{len(scored)} of {len(frame)} rows scored so far; no summary written")
@@ -158,7 +158,7 @@ def main() -> None:
         **summarise(scored),
     }
     out = args.out or ROOT / "results" / f"judge_{args.name}.json"
-    out.write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    journal.write_atomic(out, json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
     print(json.dumps(summary, ensure_ascii=False, indent=2))
 
 
