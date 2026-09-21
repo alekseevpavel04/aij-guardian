@@ -24,5 +24,5 @@ def test_rows_nearest_the_cut_come_first():
     assert closest_to_cut([None, 0.2], 0.5) == [1]
 
 
-def test_reasoned_scores_replace_quick_ones_where_present():
-    assert merge([0.4, 0.6, None], [0.99, None, 0.01]) == [0.99, 0.6, 0.01]
+def test_reasoned_and_quick_scores_are_averaged_where_both_exist():
+    assert merge([0.4, 0.6, None], [1.0, None, 0.01]) == [0.7, 0.6, 0.01]

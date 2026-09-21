@@ -114,6 +114,21 @@ JUDGE_RUNS = {
         "--system-prompt",
         "data/raw/baseline/baseline/src/hallucination_detector/prompt.md",
     ],
+    "baseline_prompt_think1024_q4_extval400_trajerr": [
+        "--data",
+        "ext_val",
+        "--limit",
+        "400",
+        "--seed",
+        "0",
+        "--source",
+        "trajerrbench",
+        "--system-prompt",
+        "data/raw/baseline/baseline/src/hallucination_detector/prompt.md",
+        "--thinking",
+        "--thinking-tokens",
+        "1024",
+    ],
 }
 JUDGE_COMPARES = {
     "v1_q4_valid__baseline_prompt_q4_valid": ["--a", "v1_q4_valid", "--b", "baseline_prompt_q4_valid"],
@@ -154,6 +169,14 @@ JUDGE_COMPARES = {
         "baseline_prompt_think1024_q4_valid",
         "--b",
         "baseline_prompt_q4_valid",
+    ],
+    "baseline_prompt_think1024_q4_extval400_trajerr__baseline_prompt_q4_extval400__trajerrbench": [
+        "--a",
+        "baseline_prompt_think1024_q4_extval400_trajerr",
+        "--b",
+        "baseline_prompt_q4_extval400",
+        "--source",
+        "trajerrbench",
     ],
 }
 for _name, _args in JUDGE_RUNS.items():

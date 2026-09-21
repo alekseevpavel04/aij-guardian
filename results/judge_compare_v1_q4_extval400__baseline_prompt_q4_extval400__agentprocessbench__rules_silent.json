@@ -8,6 +8,7 @@
   "trajectories": 20,
   "auroc_a": 0.8946,
   "auroc_b": 0.7734,
+  "auroc_mean_of_a_and_b": 0.8217,
   "difference": 0.1212,
   "difference_ci95": [
     -0.0453,

@@ -1,0 +1,38 @@
+{
+  "name": "baseline_prompt_think1024_q4_extval400_trajerr",
+  "data": "ext_val",
+  "limit": 400,
+  "seed": 0,
+  "source": "trajerrbench",
+  "system_prompt": "prompt.md",
+  "thinking": true,
+  "thinking_tokens": 1024,
+  "rows_without_a_verdict_token": 0,
+  "mean_seconds_per_row": 30.23,
+  "mean_prompt_tokens": 6704,
+  "rows": 103,
+  "positives": 14,
+  "auroc": 0.8162,
+  "at_threshold_0_5": {
+    "predicted_positive": 12,
+    "true_positives": 4,
+    "precision": 0.3333,
+    "recall": 0.2857,
+    "f1": 0.3077
+  },
+  "optimistic_best_threshold": {
+    "threshold": 0.0003,
+    "f1": 0.6286
+  },
+  "mean_score_by_label": {
+    "0": 0.0928,
+    "1": 0.3179
+  },
+  "auroc_by_source": {
+    "trajerrbench": 0.8162
+  },
+  "auroc_by_domain": {
+    "airline": 0.8841,
+    "retail": 0.7222
+  }
+}

@@ -84,6 +84,8 @@ def main() -> None:
         "trajectories": len(keys),
         "auroc_a": round(float(roc_auc_score(y, a)), 4),
         "auroc_b": round(float(roc_auc_score(y, b)), 4),
+        # the cascade averages a quick and a reasoned score where it has both (guardian/cascade.py)
+        "auroc_mean_of_a_and_b": round(float(roc_auc_score(y, (a + b) / 2)), 4),
         "difference": round(float(roc_auc_score(y, a) - roc_auc_score(y, b)), 4),
         "difference_ci95": [round(float(lo), 4), round(float(hi), 4)],
         "resamples": len(diffs),
