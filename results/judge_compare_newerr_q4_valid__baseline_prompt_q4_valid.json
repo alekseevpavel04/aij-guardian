@@ -1,0 +1,18 @@
+{
+  "a": "newerr_q4_valid",
+  "b": "baseline_prompt_q4_valid",
+  "source": null,
+  "where_rules_silent": false,
+  "rows": 46,
+  "positives": 23,
+  "trajectories": 45,
+  "auroc_a": 0.828,
+  "auroc_b": 0.8166,
+  "auroc_mean_of_a_and_b": 0.8355,
+  "difference": 0.0113,
+  "difference_ci95": [
+    -0.0431,
+    0.0658
+  ],
+  "resamples": 2000
+}

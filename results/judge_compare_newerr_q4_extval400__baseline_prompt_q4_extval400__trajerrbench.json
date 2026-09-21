@@ -1,0 +1,18 @@
+{
+  "a": "newerr_q4_extval400",
+  "b": "baseline_prompt_q4_extval400",
+  "source": "trajerrbench",
+  "where_rules_silent": false,
+  "rows": 103,
+  "positives": 14,
+  "trajectories": 14,
+  "auroc_a": 0.939,
+  "auroc_b": 0.9422,
+  "auroc_mean_of_a_and_b": 0.9414,
+  "difference": -0.0032,
+  "difference_ci95": [
+    -0.014,
+    0.0084
+  ],
+  "resamples": 2000
+}

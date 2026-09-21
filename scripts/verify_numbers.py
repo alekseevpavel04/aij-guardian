@@ -129,6 +129,26 @@ JUDGE_RUNS = {
         "--thinking-tokens",
         "1024",
     ],
+    "newerr_q4_valid": [
+        "--data",
+        "valid",
+        "--system-prompt",
+        "data/raw/baseline/baseline/src/hallucination_detector/prompt.md",
+        "--append-prompt",
+        "configs/prompts/only_new_errors.md",
+    ],
+    "newerr_q4_extval400": [
+        "--data",
+        "ext_val",
+        "--limit",
+        "400",
+        "--seed",
+        "0",
+        "--system-prompt",
+        "data/raw/baseline/baseline/src/hallucination_detector/prompt.md",
+        "--append-prompt",
+        "configs/prompts/only_new_errors.md",
+    ],
 }
 JUDGE_COMPARES = {
     "v1_q4_valid__baseline_prompt_q4_valid": ["--a", "v1_q4_valid", "--b", "baseline_prompt_q4_valid"],
@@ -173,6 +193,21 @@ JUDGE_COMPARES = {
     "baseline_prompt_think1024_q4_extval400_trajerr__baseline_prompt_q4_extval400__trajerrbench": [
         "--a",
         "baseline_prompt_think1024_q4_extval400_trajerr",
+        "--b",
+        "baseline_prompt_q4_extval400",
+        "--source",
+        "trajerrbench",
+    ],
+    "newerr_q4_valid__baseline_prompt_q4_valid": ["--a", "newerr_q4_valid", "--b", "baseline_prompt_q4_valid"],
+    "newerr_q4_extval400__baseline_prompt_q4_extval400": [
+        "--a",
+        "newerr_q4_extval400",
+        "--b",
+        "baseline_prompt_q4_extval400",
+    ],
+    "newerr_q4_extval400__baseline_prompt_q4_extval400__trajerrbench": [
+        "--a",
+        "newerr_q4_extval400",
         "--b",
         "baseline_prompt_q4_extval400",
         "--source",

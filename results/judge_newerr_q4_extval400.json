@@ -1,0 +1,41 @@
+{
+  "name": "newerr_q4_extval400",
+  "data": "ext_val",
+  "limit": 400,
+  "seed": 0,
+  "source": null,
+  "system_prompt": "prompt.md",
+  "append_prompt": "only_new_errors.md",
+  "thinking": false,
+  "thinking_tokens": null,
+  "rows_without_a_verdict_token": 0,
+  "mean_seconds_per_row": 2.99,
+  "mean_prompt_tokens": 9335,
+  "rows": 405,
+  "positives": 161,
+  "auroc": 0.8152,
+  "at_threshold_0_5": {
+    "predicted_positive": 81,
+    "true_positives": 46,
+    "precision": 0.5679,
+    "recall": 0.2857,
+    "f1": 0.3802
+  },
+  "optimistic_best_threshold": {
+    "threshold": 0.1093,
+    "f1": 0.7661
+  },
+  "mean_score_by_label": {
+    "0": 0.1709,
+    "1": 0.428
+  },
+  "auroc_by_source": {
+    "agentprocessbench": 0.7612,
+    "trajerrbench": 0.939
+  },
+  "auroc_by_domain": {
+    "airline": 0.916,
+    "retail": 0.8923,
+    "telecom": 0.7255
+  }
+}

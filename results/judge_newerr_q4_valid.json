@@ -1,0 +1,41 @@
+{
+  "name": "newerr_q4_valid",
+  "data": "valid",
+  "limit": null,
+  "seed": 0,
+  "source": null,
+  "system_prompt": "prompt.md",
+  "append_prompt": "only_new_errors.md",
+  "thinking": false,
+  "thinking_tokens": null,
+  "rows_without_a_verdict_token": 0,
+  "mean_seconds_per_row": 8.47,
+  "mean_prompt_tokens": 13156,
+  "rows": 46,
+  "positives": 23,
+  "auroc": 0.828,
+  "at_threshold_0_5": {
+    "predicted_positive": 20,
+    "true_positives": 16,
+    "precision": 0.8,
+    "recall": 0.6957,
+    "f1": 0.7442
+  },
+  "optimistic_best_threshold": {
+    "threshold": 0.3512,
+    "f1": 0.7843
+  },
+  "mean_score_by_label": {
+    "0": 0.2842,
+    "1": 0.6241
+  },
+  "auroc_by_source": {
+    "valid": 0.828
+  },
+  "auroc_by_domain": {
+    "airline": 0.7778,
+    "banking_knowledge": 0.5333,
+    "retail": 0.9,
+    "telecom": 0.9167
+  }
+}
