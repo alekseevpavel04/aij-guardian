@@ -1,9 +1,10 @@
 """Reading the evaluation input and writing predictions.
 
-The platform passes `--input <path_to_test.csv>`, but organizers said in the comments that both
-parquet and CSV are accepted, and at least one participant only got past the pipeline by reading
-parquet first and falling back to CSV. So the format is decided by content,
-not by extension.
+The platform passes `--input <path_to_test.csv>` and `--output <path_to_predictions.csv>`, but the
+extensions do not describe the formats. Input is accepted in both formats (organizer, 07.09.2026),
+so it is read by content. Output is read back by the metric stage with pyarrow as parquet: a CSV
+there fails stage 22 with "Parquet magic bytes not found in footer" (organizer's log quoted in the
+comments, 01.09.2026). So predictions are always written as parquet, whatever the extension says.
 
 Nothing here needs pandas: this module runs inside the submission, where every dependency is one
 more thing that can fail at `pip install .` on a machine without network.
@@ -51,18 +52,32 @@ def _read_parquet(path: Path) -> list[dict[str, str]]:
     ]
 
 
-def write_predictions(ids: list, labels: list, path: str | Path) -> None:
-    """Write id,label with one row per input row, in input order, labels as int 0/1."""
+def write_predictions(ids: list, labels: list, path: str | Path) -> str:
+    """Write id,label with one row per input row, in input order, labels as int 0/1.
+
+    Returns the format written. Parquet is the one the platform reads; CSV is written only when
+    pyarrow is missing, so that a broken environment still leaves an output to look at.
+    """
     if len(ids) != len(labels):
         raise ValueError(f"{len(ids)} ids but {len(labels)} labels")
     values = [int(v) for v in labels]
     bad = sorted(set(values) - {0, 1})
     if bad:
         raise ValueError(f"labels must be 0 or 1, got {bad}")
-    with Path(path).open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.writer(handle)
-        writer.writerow(["id", "label"])
-        writer.writerows(zip(ids, values, strict=True))
+    ids = [str(i) for i in ids]
+    try:
+        import pyarrow as pa
+        import pyarrow.parquet as pq
+    except ImportError:
+        print("pyarrow is not installed, writing CSV instead of parquet", file=sys.stderr)
+        with Path(path).open("w", encoding="utf-8", newline="") as handle:
+            writer = csv.writer(handle)
+            writer.writerow(["id", "label"])
+            writer.writerows(zip(ids, values, strict=True))
+        return "csv"
+    table = pa.table({"id": pa.array(ids, pa.string()), "label": pa.array(values, pa.int64())})
+    pq.write_table(table, path)
+    return "parquet"
 
 
 def main_argv(argv: list[str] | None = None) -> tuple[Path, Path]:

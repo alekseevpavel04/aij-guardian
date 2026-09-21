@@ -6,11 +6,20 @@
 Builds `submission/` with the structure the rules require (pyproject.toml, model/, src/, scripts/)
 and zips it. The archive is rebuilt from scratch every time, so what is sent is always what is in
 the repository.
+
+Three details come from failures other participants reported in the task comments:
+
+- the files sit at the root of the zip, without a top-level folder: the platform runs
+  `<unpacked>/scripts/predict.py`;
+- every entry carries explicit Unix permissions (755 for directories, 644 for files): a zip built
+  on Windows can unpack on Linux into directories the runner cannot enter, which fails at stage 08;
+- zip, not tar, and no directory named `metrics` (organizer's request, 08.09.2026).
 """
 
 import argparse
 import json
 import shutil
+import stat
 import zipfile
 from pathlib import Path
 
@@ -18,7 +27,7 @@ ROOT = Path(__file__).resolve().parents[1]
 MODULES = ("__init__.py", "io.py", "parsing.py", "predictor.py", "rules.py")
 
 PYPROJECT = """[build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -26,7 +35,9 @@ name = "guardian"
 version = "{version}"
 description = "Guardrail for contextual hallucination detection in LLM agent turns"
 requires-python = ">=3.10"
-dependencies = ["pyarrow"]
+# No dependencies: pip runs without network on the platform. pyarrow is already there (the metric
+# stage reads predictions with it), and predict.py falls back to CSV if it is not.
+dependencies = []
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -64,12 +75,44 @@ def build(out_dir: Path, strategy: str, label: int, version: str) -> None:
     (out_dir / "model/config.json").write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
 
 
+DIR_MODE = stat.S_IFDIR | 0o755
+FILE_MODE = stat.S_IFREG | 0o644
+
+
 def zip_dir(out_dir: Path, archive: Path) -> None:
     archive.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as zf:
         for path in sorted(out_dir.rglob("*")):
-            if path.is_file() and "__pycache__" not in path.parts:
-                zf.write(path, path.relative_to(out_dir.parent))
+            if "__pycache__" in path.parts:
+                continue
+            name = path.relative_to(out_dir).as_posix()
+            info = zipfile.ZipInfo(name + "/" if path.is_dir() else name)
+            info.create_system = 3  # Unix, so that external_attr is read as permission bits
+            info.external_attr = (DIR_MODE if path.is_dir() else FILE_MODE) << 16
+            if path.is_dir():
+                zf.writestr(info, b"")
+            else:
+                info.compress_type = zipfile.ZIP_DEFLATED
+                zf.writestr(info, path.read_bytes())
+
+
+def check_archive(archive: Path) -> list[str]:
+    """Problems that would stop the platform before our code runs; empty when the archive is fine."""
+    problems = []
+    with zipfile.ZipFile(archive) as zf:
+        infos = zf.infolist()
+    names = [i.filename for i in infos]
+    for required in ("pyproject.toml", "scripts/predict.py", "model/config.json"):
+        if required not in names:
+            problems.append(f"{required} is not at the root of the archive")
+    if any(n.split("/")[0] == "metrics" or "/metrics/" in f"/{n}" for n in names):
+        problems.append("archive contains a directory named metrics")
+    for info in infos:
+        mode = info.external_attr >> 16
+        needed = 0o755 if info.is_dir() else 0o644
+        if info.create_system != 3 or mode & needed != needed:
+            problems.append(f"{info.filename}: permissions {oct(mode)} from system {info.create_system}")
+    return problems
 
 
 def main() -> None:
@@ -85,8 +128,11 @@ def main() -> None:
     name = f"guardian_{args.strategy}{'_' + str(args.label) if args.strategy == 'constant' else ''}.zip"
     archive = args.archive or ROOT / "submissions" / name
     zip_dir(args.out, archive)
+    problems = check_archive(archive)
+    if problems:
+        raise SystemExit("archive is not valid:\n  " + "\n  ".join(problems))
     size = archive.stat().st_size
-    print(f"{args.out} built, archive {archive} ({size / 1024:.1f} KiB)")
+    print(f"{args.out} built, archive {archive} ({size / 1024:.1f} KiB), layout and permissions checked")
 
 
 if __name__ == "__main__":
