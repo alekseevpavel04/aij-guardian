@@ -92,6 +92,7 @@ def main() -> None:
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--source", default=None, help="keep one external source after sampling")
     ap.add_argument("--system-prompt", type=Path, required=True)
+    ap.add_argument("--append-prompt", type=Path, default=None, help="text added after the system prompt")
     ap.add_argument("--server", default="http://127.0.0.1:8080/v1")
     ap.add_argument("--thinking", action="store_true")
     ap.add_argument("--thinking-tokens", type=int, default=1024)
@@ -102,6 +103,8 @@ def main() -> None:
 
     frame = load(args.data, args.limit, args.seed, args.source)
     system_prompt = args.system_prompt.read_text(encoding="utf-8")
+    if args.append_prompt:
+        system_prompt = system_prompt.rstrip() + "\n\n" + args.append_prompt.read_text(encoding="utf-8").strip()
     log = ROOT / "data/interim/judge" / f"{args.name}.jsonl"
     log.parent.mkdir(parents=True, exist_ok=True)
     done = {json.loads(line)["id"] for line in log.read_text(encoding="utf-8").splitlines()} if log.exists() else set()
@@ -146,6 +149,7 @@ def main() -> None:
         "seed": args.seed,
         "source": args.source,
         "system_prompt": args.system_prompt.name,
+        "append_prompt": args.append_prompt.name if args.append_prompt else None,
         "thinking": args.thinking,
         "thinking_tokens": args.thinking_tokens if args.thinking else None,
         "rows_without_a_verdict_token": missing,

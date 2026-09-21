@@ -82,6 +82,7 @@ def build(
     share: float | None = None,
     prompt: Path | None = None,
     thinking_tokens: int = 0,
+    append_prompt: Path | None = None,
 ) -> None:
     if out_dir.exists():
         shutil.rmtree(out_dir)
@@ -100,7 +101,10 @@ def build(
         config["checks"] = [c for c in DEFAULT_CHECKS if c not in without]
     if strategy == "cascade":
         config |= CASCADE | {"share": share, "prompt": "judge_prompt.md", "thinking_tokens": thinking_tokens}
-        shutil.copy(prompt, out_dir / "model/judge_prompt.md")
+        text = prompt.read_text(encoding="utf-8")
+        if append_prompt:
+            text = text.rstrip() + "\n\n" + append_prompt.read_text(encoding="utf-8").strip()
+        (out_dir / "model/judge_prompt.md").write_text(text, encoding="utf-8")
     # model/config.json belongs to the Hugging Face checkpoint in a cascade archive
     (out_dir / "model/guardian.json").write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
 
@@ -174,6 +178,7 @@ def main() -> None:
     ap.add_argument("--prompt", type=Path, default=ROOT / "configs/prompts/judge_v1.md")
     ap.add_argument("--model-dir", type=Path, default=MODEL_DIR)
     ap.add_argument("--thinking-tokens", type=int, default=0, help="cascade: reasoning budget, 0 for none")
+    ap.add_argument("--append-prompt", type=Path, default=None, help="cascade: text added after the prompt")
     ap.add_argument("--label", type=int, default=1, help="label for the constant strategy")
     ap.add_argument("--version", default="0.1.0")
     ap.add_argument("--out", type=Path, default=ROOT / "submission")
@@ -190,10 +195,12 @@ def main() -> None:
         args.share,
         args.prompt,
         args.thinking_tokens,
+        args.append_prompt,
     )
     suffix = f"_{args.label}" if args.strategy == "constant" else "".join(f"_no_{c}" for c in args.without)
     if args.strategy == "cascade":
-        suffix += f"_{args.prompt.stem}_share{args.share}_think{args.thinking_tokens}"
+        prompt_name = args.prompt.stem + (f"+{args.append_prompt.stem}" if args.append_prompt else "")
+        suffix += f"_{prompt_name}_share{args.share}_think{args.thinking_tokens}"
     name = f"guardian_{args.strategy}{suffix}.zip"
     archive = args.archive or ROOT / "submissions" / name
     if args.strategy == "cascade":
