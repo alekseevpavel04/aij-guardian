@@ -89,6 +89,7 @@ def main() -> None:
     ap.add_argument("--system-prompt", type=Path, required=True)
     ap.add_argument("--server", default="http://127.0.0.1:8080/v1")
     ap.add_argument("--thinking", action="store_true")
+    ap.add_argument("--thinking-tokens", type=int, default=1024)
     ap.add_argument("--name", required=True)
     ap.add_argument("--max-rows", type=int, default=None, help="stop after this many new rows (speed probes)")
     args = ap.parse_args()
@@ -98,7 +99,7 @@ def main() -> None:
     log = ROOT / "data/interim/judge" / f"{args.name}.jsonl"
     log.parent.mkdir(parents=True, exist_ok=True)
     done = {json.loads(line)["id"] for line in log.read_text(encoding="utf-8").splitlines()} if log.exists() else set()
-    client = JudgeClient(args.server, thinking=args.thinking)
+    client = JudgeClient(args.server, thinking=args.thinking, thinking_tokens=args.thinking_tokens)
 
     todo = frame[~frame.id.isin(done)]
     if args.max_rows:
@@ -112,6 +113,7 @@ def main() -> None:
                 "score": verdict.score,
                 "prompt_tokens": verdict.prompt_tokens,
                 "cached_tokens": verdict.cached_tokens,
+                "completion_tokens": verdict.completion_tokens,
                 "seconds": round(verdict.seconds, 2),
             }
             f.write(json.dumps(record) + "\n")
@@ -138,6 +140,7 @@ def main() -> None:
         "seed": args.seed,
         "system_prompt": args.system_prompt.name,
         "thinking": args.thinking,
+        "thinking_tokens": args.thinking_tokens if args.thinking else None,
         "rows_without_a_verdict_token": missing,
         "mean_seconds_per_row": round(float(records.seconds.mean()), 2),
         "mean_prompt_tokens": round(float(records.prompt_tokens.mean())),

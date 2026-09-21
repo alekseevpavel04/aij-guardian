@@ -42,22 +42,32 @@ class Verdict:
     score: float | None
     prompt_tokens: int | None
     cached_tokens: int | None
+    completion_tokens: int | None
     seconds: float
 
 
 class JudgeClient:
-    def __init__(self, base_url: str, model: str = "judge", timeout: float = 3600, thinking: bool = False):
+    def __init__(
+        self,
+        base_url: str,
+        model: str = "judge",
+        timeout: float = 3600,
+        thinking: bool = False,
+        thinking_tokens: int = 1024,
+    ):
         self.url = base_url.rstrip("/") + "/chat/completions"
         self.model = model
         self.timeout = timeout
         self.thinking = thinking
+        # with reasoning, the verdict comes after the thoughts; the server caps the thoughts themselves
+        self.max_tokens = thinking_tokens + 16 if thinking else 1
 
     def score(self, messages: list[dict]) -> Verdict:
         body = {
             "model": self.model,
             "messages": messages,
             "temperature": 0.0,
-            "max_tokens": 1,
+            "max_tokens": self.max_tokens,
             "logprobs": True,
             "top_logprobs": 20,
             "chat_template_kwargs": {"enable_thinking": self.thinking},
@@ -70,15 +80,15 @@ class JudgeClient:
             data = json.loads(reply.read().decode("utf-8"))
         seconds = time.monotonic() - started
         content = (data["choices"][0].get("logprobs") or {}).get("content") or []
+        # the verdict is the last "0" or "1" the model emits; without reasoning it is also the first
+        verdicts = [position for position in content if position["token"].strip() in ("0", "1")]
         score = None
-        for position in content:
-            if position["token"].strip() in ("0", "1"):
-                score = p_one([(t["token"], t["logprob"]) for t in position["top_logprobs"]])
-                break
-        if score is None and content:
+        if verdicts:
+            score = p_one([(t["token"], t["logprob"]) for t in verdicts[-1]["top_logprobs"]])
+        elif content and not self.thinking:
             score = p_one([(t["token"], t["logprob"]) for t in content[0]["top_logprobs"]])
         usage = data.get("usage") or {}
         cached = (usage.get("prompt_tokens_details") or {}).get("cached_tokens")
         if cached is None:
             cached = (data.get("timings") or {}).get("cache_n")
-        return Verdict(score, usage.get("prompt_tokens"), cached, seconds)
+        return Verdict(score, usage.get("prompt_tokens"), cached, usage.get("completion_tokens"), seconds)

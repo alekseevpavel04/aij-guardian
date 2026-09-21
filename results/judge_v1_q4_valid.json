@@ -1,0 +1,38 @@
+{
+  "name": "v1_q4_valid",
+  "data": "valid",
+  "limit": null,
+  "seed": 0,
+  "system_prompt": "judge_v1.md",
+  "thinking": false,
+  "rows_without_a_verdict_token": 0,
+  "mean_seconds_per_row": 8.55,
+  "mean_prompt_tokens": 12554,
+  "rows": 46,
+  "positives": 23,
+  "auroc": 0.8847,
+  "at_threshold_0_5": {
+    "predicted_positive": 27,
+    "true_positives": 20,
+    "precision": 0.7407,
+    "recall": 0.8696,
+    "f1": 0.8
+  },
+  "optimistic_best_threshold": {
+    "threshold": 0.5594,
+    "f1": 0.8085
+  },
+  "mean_score_by_label": {
+    "0": 0.3125,
+    "1": 0.7876
+  },
+  "auroc_by_source": {
+    "valid": 0.8847
+  },
+  "auroc_by_domain": {
+    "airline": 0.9444,
+    "banking_knowledge": 0.5667,
+    "retail": 1.0,
+    "telecom": 0.9722
+  }
+}
