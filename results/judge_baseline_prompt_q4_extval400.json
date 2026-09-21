@@ -8,6 +8,7 @@
   "append_prompt": null,
   "thinking": false,
   "thinking_tokens": null,
+  "answer_prefix": null,
   "rows_without_a_verdict_token": 0,
   "mean_seconds_per_row": 3.17,
   "mean_prompt_tokens": 9274,

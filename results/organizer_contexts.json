@@ -1,0 +1,43 @@
+{
+  "contexts": 385,
+  "tasks": 40,
+  "by_split": {
+    "train": 212,
+    "check": 172,
+    "labelled": 1
+  },
+  "by_domain_and_split": {
+    "airline/check": 22,
+    "airline/labelled": 1,
+    "airline/train": 65,
+    "banking_knowledge/check": 45,
+    "banking_knowledge/train": 76,
+    "retail/check": 22,
+    "retail/train": 32,
+    "telecom/check": 83,
+    "telecom/train": 39
+  },
+  "with_calls": 219,
+  "with_reference": 327,
+  "check_tasks": [
+    "airline__21",
+    "airline__7",
+    "airline__8",
+    "airline__9",
+    "banking_knowledge__task_005",
+    "banking_knowledge__task_033",
+    "banking_knowledge__task_057",
+    "banking_knowledge__task_080",
+    "banking_knowledge__task_083",
+    "retail__12",
+    "retail__47",
+    "retail__48",
+    "retail__87",
+    "telecom__mms_issueairplane_mode_on-bad_network_preference-break_app_both_permissions-data_",
+    "telecom__mms_issueairplane_mode_on-bad_wifi_calling-break_app_both_permissions-data_mode_o",
+    "telecom__mms_issuebad_network_preference-bad_wifi_calling-break_apn_mms_setting-break_app_",
+    "telecom__mms_issuebreak_apn_mms_setting-user_abroad_roaming_enabled_offPERSONA_Hard",
+    "telecom__service_issueairplane_mode_on-break_apn_settings-lock_sim_card_pin-overdue_bill_s",
+    "telecom__service_issuebreak_apn_settings-contract_end_suspension-lock_sim_card_pin-unseat_"
+  ]
+}

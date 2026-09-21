@@ -8,6 +8,7 @@
   "append_prompt": "only_new_errors.md",
   "thinking": false,
   "thinking_tokens": null,
+  "answer_prefix": null,
   "rows_without_a_verdict_token": 0,
   "mean_seconds_per_row": 2.99,
   "mean_prompt_tokens": 9335,

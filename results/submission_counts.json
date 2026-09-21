@@ -17,6 +17,24 @@
         "fp": 7,
         "predicted_share": 0.0365
       }
+    },
+    {
+      "date": "2026-09-21",
+      "archive_sha256": "3c82152905326cedca9fdb837613bbe17edf83e8a63e16cbff918fe28d8c8c9d",
+      "strategy": "cascade think0: rules + baseline prompt top 30% (818ad8e)",
+      "f1": "0.46865",
+      "precision": "0.41041",
+      "recall": "0.54615",
+      "note": "public leaderboard, place 26",
+      "counts": {
+        "tp": 71,
+        "predicted_positive": 173,
+        "fp": 102,
+        "predicted_share": 0.3157,
+        "delta_tp": 58,
+        "delta_fp": 95,
+        "precision_of_added": 0.3791
+      }
     }
   ]
 }
