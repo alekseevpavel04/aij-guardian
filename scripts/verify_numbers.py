@@ -180,6 +180,20 @@ JUDGE_RUNS = {
         "--answer-prefix",
         "Метка: ",
     ],
+    "labeler_v1s_think2048_valid": [
+        "--data",
+        "valid",
+        "--system-prompt",
+        "configs/prompts/labeler_v1.md",
+        "--reference",
+        "tau2",
+        "--thinking",
+        "--thinking-tokens",
+        "2048",
+        "--answer-prefix",
+        "Метка: ",
+        "--strip-one-call-rule",
+    ],
 }
 JUDGE_COMPARES = {
     "v1_q4_valid__baseline_prompt_q4_valid": ["--a", "v1_q4_valid", "--b", "baseline_prompt_q4_valid"],

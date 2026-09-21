@@ -12,6 +12,7 @@
     "--threads": 6,
     "--port": 8080,
     "--alias": "judge",
-    "--reasoning": "off"
+    "--reasoning": "off",
+    "--cache-ram": 0
   }
 }

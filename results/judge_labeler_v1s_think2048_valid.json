@@ -1,0 +1,58 @@
+{
+  "name": "labeler_v1s_think2048_valid",
+  "data": "valid",
+  "limit": null,
+  "seed": 0,
+  "source": null,
+  "system_prompt": "labeler_v1.md",
+  "append_prompt": null,
+  "thinking": true,
+  "thinking_tokens": 2048,
+  "answer_prefix": "Метка: ",
+  "rows_without_a_verdict_token": 0,
+  "mean_seconds_per_row": 69.09,
+  "mean_prompt_tokens": 14803,
+  "rows": 46,
+  "positives": 23,
+  "auroc": 0.845,
+  "at_threshold_0_5": {
+    "predicted_positive": 20,
+    "true_positives": 19,
+    "precision": 0.95,
+    "recall": 0.8261,
+    "f1": 0.8837
+  },
+  "optimistic_best_threshold": {
+    "threshold": 0.0008,
+    "f1": 0.8889
+  },
+  "mean_score_by_label": {
+    "0": 0.0438,
+    "1": 0.7972
+  },
+  "auroc_by_source": {
+    "valid": 0.845
+  },
+  "auroc_by_domain": {
+    "airline": 0.8611,
+    "banking_knowledge": 0.6667,
+    "retail": 0.8,
+    "telecom": 1.0
+  },
+  "strip_one_call_rule": true,
+  "reference": "tau2",
+  "agreement_at_0_5": {
+    "all": {
+      "agree": 41,
+      "rows": 46
+    },
+    "with_reference": {
+      "agree": 34,
+      "rows": 39
+    },
+    "without_reference": {
+      "agree": 7,
+      "rows": 7
+    }
+  }
+}
