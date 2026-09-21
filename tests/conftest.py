@@ -1,5 +1,8 @@
 """Fixtures shaped like the real transcripts in valid.parquet, small enough to read."""
 
+import json
+import re
+
 import pytest
 
 SYSTEM = """⟦SYSTEM⟧
@@ -61,3 +64,20 @@ def system_text():
 
 def response(body: str) -> str:
     return f"⟦ASSISTANT · ход 3⟧\n{body}"
+
+
+def to_rules_pdf_format(text: str, wrapper: str | None = None) -> str:
+    """The same transcript written the way the rules PDF describes it: a marker per call and result,
+    unnumbered agent turns, arguments pretty-printed on the lines below, optional <prompt> wrapper."""
+
+    def call(m: re.Match) -> str:
+        args = json.dumps(json.loads(m.group(2)), ensure_ascii=False, indent=2)
+        return f'⟦ASSISTANT_TOOL_CALL name="{m.group(1)}"⟧\n{args}'
+
+    def result(m: re.Match) -> str:
+        return f'⟦TOOL_RESULT name="{m.group(1)}" requestor="assistant"⟧\n{m.group(3)}'
+
+    text = re.sub(r"⟦ASSISTANT · ход \d+⟧", "⟦ASSISTANT⟧", text)
+    text = re.sub(r"^[ \t]*→ TOOL_CALL ([\w.\-]+): (.*)$", call, text, flags=re.MULTILINE)
+    text = re.sub(r"^[ \t]*← TOOL_RESPONSE ([\w.\-]+)( \[ERROR\])?: (.*)$", result, text, flags=re.MULTILINE)
+    return f"<{wrapper}>\n{text}\n</{wrapper}>" if wrapper else text

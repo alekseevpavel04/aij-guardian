@@ -21,6 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from guardian.io import main_argv, read_rows, write_predictions  # noqa: E402
+from guardian.parsing import format_recognised  # noqa: E402
 from guardian.predictor import Predictor  # noqa: E402
 
 CONFIG = ROOT / "model" / "config.json"
@@ -33,10 +34,13 @@ def main() -> None:
 
     rows = read_rows(input_path)
     ids, labels = [], []
-    failures = 0
+    failures = unrecognised = 0
     for i, row in enumerate(rows):
         ids.append(row.get("id", str(i)))
         try:
+            # A row with no system turn or no tool list is one no check can fire on: a share near 1
+            # means the test uses a transcript format the parser does not know.
+            unrecognised += not format_recognised(row.get("prompt", ""))
             labels.append(predictor.predict(row.get("prompt", ""), row.get("response", "")))
         except Exception as error:  # one bad example must not cost the whole run
             failures += 1
@@ -46,7 +50,8 @@ def main() -> None:
     written = write_predictions(ids, labels, output_path)
     elapsed = time.monotonic() - started
     print(
-        f"{len(rows)} rows, {sum(labels)} predicted 1, {failures} failed, {written} written, {elapsed:.1f} s "
+        f"{len(rows)} rows, {sum(labels)} predicted 1, {failures} failed, {unrecognised} with unrecognised format, "
+        f"{written} written, {elapsed:.1f} s "
         f"({elapsed / max(len(rows), 1) * 1000:.1f} ms per row)",
         file=sys.stderr,
     )

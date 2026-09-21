@@ -15,6 +15,7 @@ from guardian.parsing import (
     ToolCall,
     ToolSpec,
     Turn,
+    normalize_format,
     parse_available_tools,
     parse_payload,
     parse_transcript,
@@ -41,6 +42,7 @@ class Context:
 
     @classmethod
     def from_prompt(cls, prompt: str) -> "Context":
+        prompt = normalize_format(prompt)
         turns = parse_transcript(prompt)
         system = system_turn(turns)
         tools = parse_available_tools(system.text) if system else {}

@@ -13,6 +13,16 @@ PDF (which lists markers like ⟦ASSISTANT_TOOL_CALL name="X"⟧ that do not occ
 
 Markers are matched on their own line and roles are kept verbatim, so a marker the parser does not
 recognise shows up in `unparsed_markers` instead of being silently swallowed into a neighbour turn.
+
+The rules PDF and the organiser baseline's prompt describe a second format, with calls and results
+as markers of their own and the argument or result JSON on the lines below:
+
+    ⟦ASSISTANT_TOOL_CALL name="X"⟧      (the baseline prompt writes ⟦TOOL_CALL name="X"⟧)
+    ⟦USER_TOOL_CALL name="X"⟧
+    ⟦TOOL_RESULT name="X" requestor="assistant"⟧
+
+No example in valid.parquet uses it, but nobody has said which one the test uses, so
+`normalize_format` rewrites it into the first before parsing and both give the same turns.
 """
 
 import ast
@@ -27,6 +37,12 @@ RESULT_RE = re.compile(
     r"^[ \t]*← TOOL_RESPONSE (?P<name>[\w.\-]+)(?P<error>[ \t]*\[ERROR\])?:[ ]?(?P<body>.*)$", re.MULTILINE
 )
 TURN_INDEX_RE = re.compile(r"(\d+)")
+ALT_MARKER_RE = re.compile(
+    r"^[ \t]*⟦(?P<kind>ASSISTANT_TOOL_CALL|USER_TOOL_CALL|TOOL_CALL|TOOL_RESULT)(?P<attrs>[^⟧\n]*)⟧[ \t]*$",
+    re.MULTILINE,
+)
+ATTR_RE = re.compile(r'(\w+)\s*=\s*"([^"]*)"')
+WRAPPER_RE = re.compile(r"^[ \t]*</?(?:prompt|response)>[ \t]*\n?", re.MULTILINE)
 
 KNOWN_ROLES = frozenset({"SYSTEM", "USER", "ASSISTANT", "PREAMBLE"})
 TOOLS_HEADER = "[AVAILABLE TOOLS]"
@@ -108,7 +124,57 @@ def parse_payload(text: str) -> object | None:
         return None
 
 
+def normalize_format(text: str) -> str:
+    """Rewrite the marker-per-call format of the rules PDF into the format of the data.
+
+    A call or result becomes an indented `→ TOOL_CALL` / `← TOOL_RESPONSE` line under the turn it
+    belongs to. A user's own tool call opens a ⟦USER⟧ turn if it is not already in one, and a
+    following agent call opens an ⟦ASSISTANT⟧ turn back, so that user-side calls are never counted
+    as the agent's. Text in the data format passes through unchanged.
+    """
+    if not ALT_MARKER_RE.search(text) and not WRAPPER_RE.search(text):
+        return text
+    text = WRAPPER_RE.sub("", text)
+    alt_kinds = {"ASSISTANT_TOOL_CALL", "USER_TOOL_CALL", "TOOL_CALL", "TOOL_RESULT"}
+    boundaries = sorted(
+        [(m, True) for m in ALT_MARKER_RE.finditer(text)]
+        + [(m, False) for m in ROLE_RE.finditer(text) if m.group("role") not in alt_kinds],
+        key=lambda b: b[0].start(),
+    )
+    out = [text[: boundaries[0][0].start()] if boundaries else text]
+    role = None
+    for i, (marker, is_alt) in enumerate(boundaries):
+        body = text[marker.end() : boundaries[i + 1][0].start() if i + 1 < len(boundaries) else len(text)]
+        if not is_alt:
+            role = marker.group("role")
+            out.append(marker.group(0) + body)
+            continue
+        attrs = dict(ATTR_RE.findall(marker.group("attrs")))
+        name, kind = attrs.get("name", "unknown"), marker.group("kind")
+        owner = "USER" if kind == "USER_TOOL_CALL" or attrs.get("requestor") == "user" else "ASSISTANT"
+        if role != owner:
+            out.append(f"\n⟦{owner}⟧\n")
+            role = owner
+        payload = _one_line(body)
+        if kind == "TOOL_RESULT":
+            error = attrs.get("error", "").lower() in ("true", "1") or payload.startswith("Error")
+            out.append(f"\t← TOOL_RESPONSE {name}{' [ERROR]' if error else ''}: {payload}\n")
+        else:
+            out.append(f"\t→ TOOL_CALL {name}: {payload}\n")
+    return "".join(out)
+
+
+def _one_line(body: str) -> str:
+    """JSON re-serialised on one line in the data's spacing, anything else with its lines joined."""
+    body = body.strip()
+    try:
+        return json.dumps(json.loads(body), ensure_ascii=False)
+    except json.JSONDecodeError:
+        return " ".join(line.strip() for line in body.splitlines() if line.strip())
+
+
 def parse_transcript(text: str) -> list[Turn]:
+    text = normalize_format(text)
     markers = list(ROLE_RE.finditer(text))
     turns: list[Turn] = []
 
@@ -137,6 +203,7 @@ def parse_args(raw: str) -> dict | None:
 
 def unparsed_markers(text: str) -> list[str]:
     """Marker-like substrings the parser did not turn into a turn: a format drift alarm."""
+    text = normalize_format(text)
     consumed = {m.group(0).strip() for m in ROLE_RE.finditer(text)}
     return [m.group(0) for m in MARKER_LIKE_RE.finditer(text) if m.group(0) not in consumed]
 
@@ -144,6 +211,12 @@ def unparsed_markers(text: str) -> list[str]:
 def unknown_roles(turns: list[Turn]) -> set[str]:
     """Roles outside the four the data uses: the other half of the format drift alarm."""
     return {t.role for t in turns} - KNOWN_ROLES
+
+
+def format_recognised(prompt: str) -> bool:
+    """Whether the prompt has a system turn with a parseable tool list: without one no check can fire."""
+    system = system_turn(parse_transcript(prompt))
+    return system is not None and bool(parse_available_tools(system.text))
 
 
 def system_turn(turns: list[Turn]) -> Turn | None:

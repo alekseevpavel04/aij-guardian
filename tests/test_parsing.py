@@ -1,6 +1,12 @@
-from conftest import response
+from pathlib import Path
+
+import pytest
+
+from conftest import response, to_rules_pdf_format
 from guardian.parsing import (
     flatten,
+    format_recognised,
+    normalize_format,
     parse_available_tools,
     parse_transcript,
     section,
@@ -29,11 +35,67 @@ def test_only_the_four_roles_of_the_data_are_expected(prompt):
     assert unknown_roles(parse_transcript(prompt)) == set()
 
 
-def test_a_marker_of_the_rules_pdf_format_shows_up_as_an_unexpected_role(prompt):
-    """The rules PDF documents ⟦ASSISTANT_TOOL_CALL name="X"⟧, which valid.parquet does not use."""
-    stray = prompt + '\n⟦ASSISTANT_TOOL_CALL name="x"⟧\n{}'
-    assert unparsed_markers(stray) == []
-    assert unknown_roles(parse_transcript(stray)) == {"ASSISTANT_TOOL_CALL"}
+def test_an_unknown_marker_shows_up_as_an_unexpected_role(prompt):
+    stray = prompt + "\n⟦CRITIC⟧\nlooks fine"
+    assert unknown_roles(parse_transcript(stray)) == {"CRITIC"}
+
+
+def test_rules_pdf_format_parses_to_the_same_turns(prompt):
+    pdf = to_rules_pdf_format(prompt, wrapper="prompt")
+    assert "→ TOOL_CALL" not in pdf
+    expected = [(t.role, t.text, t.calls, t.results) for t in parse_transcript(prompt)]
+    assert [(t.role, t.text, t.calls, t.results) for t in parse_transcript(pdf)] == expected
+    assert unparsed_markers(pdf) == []
+    assert unknown_roles(parse_transcript(pdf)) == set()
+
+
+def test_rules_pdf_format_error_result_without_error_attribute_is_flagged(prompt):
+    turn = parse_transcript(to_rules_pdf_format(prompt))[4]
+    assert turn.results[0].is_error is True
+
+
+def test_user_tool_calls_are_not_the_agents():
+    text = (
+        "⟦ASSISTANT⟧\nПроверьте статус сети.\n"
+        '⟦USER_TOOL_CALL name="check_network_status"⟧\n{}\n'
+        '⟦TOOL_RESULT name="check_network_status" requestor="user"⟧\n{"signal": "none"}\n'
+        '⟦ASSISTANT_TOOL_CALL name="get_details_by_id"⟧\n{"id": "L1001"}\n'
+    )
+    turns = parse_transcript(text)
+    assert [(t.role, [c.name for c in t.calls]) for t in turns] == [
+        ("ASSISTANT", []),
+        ("USER", ["check_network_status"]),
+        ("ASSISTANT", ["get_details_by_id"]),
+    ]
+    assert turns[1].results[0].value == {"signal": "none"}
+
+
+def test_data_format_passes_through_unchanged(prompt):
+    assert normalize_format(prompt) is prompt
+
+
+def test_format_recognised(prompt):
+    assert format_recognised(prompt)
+    assert format_recognised(to_rules_pdf_format(prompt, wrapper="prompt"))
+    assert not format_recognised("⟦USER⟧\nno system turn")
+
+
+VALID = Path(__file__).resolve().parents[1] / "data" / "raw" / "valid.parquet"
+
+
+@pytest.mark.skipif(not VALID.exists(), reason="valid.parquet is not in the repository")
+def test_rules_pdf_format_gives_the_same_evidence_on_the_labelled_file():
+    import pandas as pd
+
+    from guardian.rules import CHECKS, evidence
+
+    # unsupported_number is left out: it reads turn numbers ("ход 3") as context numbers, and the PDF
+    # format has none, so it differs on retail__47::t12. It is not one of the predictor's checks.
+    frame = pd.read_parquet(VALID)
+    for row in frame.itertuples():
+        pdf = evidence(to_rules_pdf_format(row.prompt, "prompt"), to_rules_pdf_format(row.response, "response"))
+        data = evidence(row.prompt, row.response)
+        assert {k: pdf[k] for k in CHECKS} == {k: data[k] for k in CHECKS}, row.id
 
 
 def test_tool_calls_and_results(prompt):
