@@ -76,3 +76,14 @@ def test_client_falls_back_to_the_chat_endpoint_when_completions_are_rejected():
         assert abs(client.score("S", "P", "R").score - 0.8) < 1e-9
     finally:
         server.shutdown()
+
+
+def test_a_missing_reference_never_becomes_a_block():
+    for missing in (None, "", "  ", float("nan")):
+        assert "<reference>" not in user_text("P", "R", missing)
+    assert user_text("P", "R", "gold").endswith("<reference>\ngold\n</reference>")
+
+
+def test_verdict_tokens_are_read_through_markdown_wrappers():
+    assert p_one([("`", -0.1), ("`0", -0.5), ("1", -3.0)]) < 0.5
+    assert p_one([("**1", -0.2), ("0", -2.0)]) > 0.5

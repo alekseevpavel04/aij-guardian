@@ -25,15 +25,17 @@ from dataclasses import dataclass
 CLOSE_THINK = "\n</think>\n\n"
 
 
-def user_text(prompt: str, response: str) -> str:
-    return f"<prompt>\n{prompt}\n</prompt>\n<response>\n{response}\n</response>"
+def user_text(prompt: str, response: str, reference: str | None = None) -> str:
+    """The baseline's layout; a labeller also gets the task's reference solution after the response."""
+    tail = f"\n<reference>\n{reference}\n</reference>" if isinstance(reference, str) and reference.strip() else ""
+    return f"<prompt>\n{prompt}\n</prompt>\n<response>\n{response}\n</response>{tail}"
 
 
-def render(system_prompt: str, prompt: str, response: str, thinking: bool) -> str:
+def render(system_prompt: str, prompt: str, response: str, thinking: bool, reference: str | None = None) -> str:
     """The chat as the Qwen3.6 template renders it with add_generation_prompt (tests/test_judge.py)."""
     text = (
         f"<|im_start|>system\n{system_prompt}<|im_end|>\n"
-        f"<|im_start|>user\n{user_text(prompt, response)}<|im_end|>\n"
+        f"<|im_start|>user\n{user_text(prompt, response, reference)}<|im_end|>\n"
         "<|im_start|>assistant\n<think>\n"
     )
     return text if thinking else text + CLOSE_THINK
@@ -43,7 +45,7 @@ def p_one(top: list[tuple[str, float]]) -> float | None:
     """P("1") from the top log-probabilities of the verdict position, renormalised over "1" and "0"."""
 
     def best(label: str) -> float | None:
-        values = [lp for token, lp in top if token.strip() == label]
+        values = [lp for token, lp in top if token.strip(" `*\"'") == label]
         return max(values) if values else None
 
     one, zero = best("1"), best("0")
@@ -75,6 +77,7 @@ class Verdict:
     cached_tokens: int | None
     completion_tokens: int | None
     seconds: float
+    reasoning: str | None = None
 
 
 class JudgeClient:
@@ -85,6 +88,7 @@ class JudgeClient:
         timeout: float = 3600,
         thinking: bool = False,
         thinking_tokens: int = 1024,
+        answer_prefix: str = "",
     ):
         self.base_url = base_url.rstrip("/")
         self.model = model
@@ -92,6 +96,8 @@ class JudgeClient:
         self.thinking = thinking
         self.thinking_tokens = thinking_tokens
         self.use_chat = False
+        # written after the (closed) reasoning so that the next token is the verdict and not more prose
+        self.answer_prefix = answer_prefix
 
     def _post(self, endpoint: str, body: dict) -> dict:
         request = urllib.request.Request(
@@ -105,10 +111,10 @@ class JudgeClient:
     def _complete(self, prompt: str, **params) -> dict:
         return self._post("completions", {"prompt": prompt, **params})
 
-    def _chat_verdict(self, system_prompt: str, prompt: str, response: str) -> dict:
+    def _chat_verdict(self, system_prompt: str, prompt: str, response: str, reference: str | None = None) -> dict:
         messages = [
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_text(prompt, response)},
+            {"role": "user", "content": user_text(prompt, response, reference)},
         ]
         body = {
             "messages": messages,
@@ -121,27 +127,31 @@ class JudgeClient:
         # chat logprobs have the llama-server layout, so the same reader handles them
         return {"choices": [{"logprobs": data["choices"][0].get("logprobs")}], "usage": data.get("usage")}
 
-    def score(self, system_prompt: str, prompt: str, response: str) -> Verdict:
+    def score(self, system_prompt: str, prompt: str, response: str, reference: str | None = None) -> Verdict:
         started = time.monotonic()
         if self.use_chat and not self.thinking:
-            data = self._chat_verdict(system_prompt, prompt, response)
+            data = self._chat_verdict(system_prompt, prompt, response, reference)
             return self._verdict(data, None, started)
-        text = render(system_prompt, prompt, response, self.thinking)
-        reasoning_tokens = None
+        text = render(system_prompt, prompt, response, self.thinking, reference)
+        reasoning_tokens, reasoning = None, None
         if self.thinking:
             thought = self._complete(text, max_tokens=self.thinking_tokens, stop=["</think>"])
-            text += thought["choices"][0]["text"].rstrip() + CLOSE_THINK
+            reasoning = thought["choices"][0]["text"].rstrip()
+            text += reasoning + CLOSE_THINK
             reasoning_tokens = (thought.get("usage") or {}).get("completion_tokens")
+        text += self.answer_prefix
         try:
             data = self._complete(text, max_tokens=1, logprobs=20)
         except urllib.error.HTTPError:
             if self.thinking:
                 raise
             self.use_chat = True
-            data = self._chat_verdict(system_prompt, prompt, response)
-        return self._verdict(data, reasoning_tokens, started)
+            data = self._chat_verdict(system_prompt, prompt, response, reference)
+        return self._verdict(data, reasoning_tokens, started, reasoning)
 
-    def _verdict(self, data: dict, reasoning_tokens: int | None, started: float) -> Verdict:
+    def _verdict(
+        self, data: dict, reasoning_tokens: int | None, started: float, reasoning: str | None = None
+    ) -> Verdict:
         top = first_top_logprobs(data["choices"][0].get("logprobs"))
         usage = data.get("usage") or {}
         cached = (usage.get("prompt_tokens_details") or {}).get("cached_tokens")
@@ -151,4 +161,5 @@ class JudgeClient:
             cached,
             reasoning_tokens,
             time.monotonic() - started,
+            reasoning,
         )

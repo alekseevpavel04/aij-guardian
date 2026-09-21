@@ -25,6 +25,7 @@ from guardian import journal
 from guardian.env import setup
 from guardian.judge import JudgeClient
 from guardian.metrics import best_threshold, binary_scores
+from guardian.tau2_tasks import reference_text, unique_task
 
 ROOT = Path(__file__).resolve().parents[1]
 EXTERNAL = (ROOT / "data/external/apb_tau2.parquet", ROOT / "data/external/trajerr_tau2.parquet")
@@ -99,10 +100,19 @@ def main() -> None:
     ap.add_argument("--thinking-tokens", type=int, default=1024)
     ap.add_argument("--name", required=True)
     ap.add_argument("--max-rows", type=int, default=None, help="stop after this many new rows (speed probes)")
+    ap.add_argument("--answer-prefix", default="", help="text written before the verdict token, e.g. 'Метка: '")
+    ap.add_argument("--only", default=None, help="comma-separated ids to score (probes on chosen cases)")
     ap.add_argument("--out", type=Path, default=None, help="summary file, results/judge_<name>.json by default")
+    ap.add_argument(
+        "--reference", choices=("tau2",), default=None, help="give a labeller the τ² task of each row (valid only)"
+    )
     args = ap.parse_args()
 
     frame = load(args.data, args.limit, args.seed, args.source)
+    # a plain dict, not a DataFrame column: pandas turns a missing reference into NaN, which is truthy
+    references = {}
+    if args.reference:
+        references = {i: reference_text(t) for i in frame.id if (t := unique_task(i)) is not None}
     system_prompt = args.system_prompt.read_text(encoding="utf-8")
     if args.append_prompt:
         system_prompt = system_prompt.rstrip() + "\n\n" + args.append_prompt.read_text(encoding="utf-8").strip()
@@ -110,14 +120,18 @@ def main() -> None:
     log.parent.mkdir(parents=True, exist_ok=True)
     journal.repair(log)  # a power cut may have left half a line
     done = {r["id"] for r in journal.read(log)}
-    client = JudgeClient(args.server, thinking=args.thinking, thinking_tokens=args.thinking_tokens)
+    client = JudgeClient(
+        args.server, thinking=args.thinking, thinking_tokens=args.thinking_tokens, answer_prefix=args.answer_prefix
+    )
 
     todo = frame[~frame.id.isin(done)]
+    if args.only:
+        todo = todo[todo.id.isin(args.only.split(","))]
     if args.max_rows:
         todo = todo.head(args.max_rows)
     started = time.monotonic()
     for i, row in enumerate(todo.itertuples(), 1):
-        verdict = client.score(system_prompt, row.prompt, row.response)
+        verdict = client.score(system_prompt, row.prompt, row.response, references.get(row.id))
         record = {
             "id": row.id,
             "score": verdict.score,
@@ -126,6 +140,10 @@ def main() -> None:
             "completion_tokens": verdict.completion_tokens,
             "seconds": round(verdict.seconds, 2),
         }
+        if args.reference:
+            record["has_reference"] = row.id in references
+        if verdict.reasoning is not None:
+            record["reasoning"] = verdict.reasoning
         journal.append(log, record)
         elapsed = time.monotonic() - started
         print(
@@ -152,11 +170,24 @@ def main() -> None:
         "append_prompt": args.append_prompt.name if args.append_prompt else None,
         "thinking": args.thinking,
         "thinking_tokens": args.thinking_tokens if args.thinking else None,
+        "answer_prefix": args.answer_prefix or None,
         "rows_without_a_verdict_token": missing,
         "mean_seconds_per_row": round(float(records.seconds.mean()), 2),
         "mean_prompt_tokens": round(float(records.prompt_tokens.mean())),
         **summarise(scored),
     }
+    if args.reference:
+        summary["reference"] = args.reference
+        # for a labeller the question is agreement with the organiser's label, with and without the task
+        agree = (scored.score >= 0.5).astype(int) == scored.label
+        summary["agreement_at_0_5"] = {
+            name: {"agree": int(agree[mask].sum()), "rows": int(mask.sum())}
+            for name, mask in (
+                ("all", scored.label.notna()),
+                ("with_reference", scored.has_reference),
+                ("without_reference", ~scored.has_reference),
+            )
+        }
     out = args.out or ROOT / "results" / f"judge_{args.name}.json"
     journal.write_atomic(out, json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
     print(json.dumps(summary, ensure_ascii=False, indent=2))

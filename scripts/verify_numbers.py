@@ -58,6 +58,10 @@ GENERATED = {
         ],
     ),
     "source_match.json": ("source_match.py", lambda tmp: ["--out", str(tmp / "x.json")]),
+    "organizer_contexts.json": (
+        "extract_contexts.py",
+        lambda tmp: ["--out", str(tmp / "contexts.parquet"), "--summary", str(tmp / "x.json")],
+    ),
     "budget_model.json": ("budget_model.py", lambda tmp: ["--out", str(tmp / "x.json")]),
 }
 # runtime.json is a timing, tau2_match.json needs the network, baseline_inventory.json the unpacked
@@ -75,6 +79,7 @@ REQUIRES = {
     "external_splits.json": [DATA, *EXTERNAL],
     "rules_external.json": [DATA, *EXTERNAL],
     "source_match.json": [DATA, *LEADERBOARD],
+    "organizer_contexts.json": [DATA],
 }
 # judge runs: the summary is recomputed from the jsonl of scores, no server call is made
 JUDGE_RUNS = {
@@ -148,6 +153,19 @@ JUDGE_RUNS = {
         "data/raw/baseline/baseline/src/hallucination_detector/prompt.md",
         "--append-prompt",
         "configs/prompts/only_new_errors.md",
+    ],
+    "labeler_v1_think2048_valid": [
+        "--data",
+        "valid",
+        "--system-prompt",
+        "configs/prompts/labeler_v1.md",
+        "--reference",
+        "tau2",
+        "--thinking",
+        "--thinking-tokens",
+        "2048",
+        "--answer-prefix",
+        "Метка: ",
     ],
 }
 JUDGE_COMPARES = {
