@@ -13,6 +13,7 @@ Turns are separated by a blank line and the system block by two, as in valid.par
 """
 
 import json
+import re
 from dataclasses import dataclass
 
 AGENT_INSTRUCTION = (
@@ -24,6 +25,7 @@ AGENT_INSTRUCTION = (
     "\n"
     "Try to be helpful and always follow the policy. Always make sure you generate valid JSON only."
 )  # tau2-bench src/tau2/agent/llm_agent.py; the competition data adds a paragraph about Russian
+TAU2_USER_ID_RE = re.compile(r"[a-z]+(?:_[a-z]+)+_\d{3,5}")  # mei_brown_7075
 
 
 def _resolve(schema: dict, defs: dict) -> dict:
@@ -69,10 +71,11 @@ def render_tools(tools: list[dict]) -> str:
     return "\n".join(out)
 
 
-def render_system(policy: str, tools: list[dict], instruction: str = AGENT_INSTRUCTION) -> str:
+def render_system(policy: str, tools_block: str, instruction: str = AGENT_INSTRUCTION) -> str:
+    """The ⟦SYSTEM⟧ turn; `tools_block` is render_tools() output or a block taken from the data."""
     return (
         f"⟦SYSTEM⟧\n<instructions>\n{instruction}\n</instructions>\n<policy>\n{policy.strip()}\n</policy>\n\n"
-        + render_tools(tools)
+        + tools_block.strip()
     )
 
 
@@ -146,3 +149,20 @@ def render_trajectory(messages: list[dict], system: str) -> list[RenderedStep]:
         blocks.append("\n".join([response, *results]))
         i = j
     return steps
+
+
+TAU2_USER_ID_RE = re.compile(r"\b[a-z]+(?:_[a-z]+)+_\d{3,5}\b")
+
+
+def tau2_user(messages: list[dict]) -> str | None:
+    """The τ² user id of a trajectory (e.g. mei_brown_7075), the first one mentioned anywhere.
+
+    External sets are split by it rather than by trajectory: several trajectories of one task, and
+    several tasks of one user, share the same database records and would leak between the parts.
+    """
+    for m in messages:
+        calls = [json.dumps(c, ensure_ascii=False) for c in m.get("tool_calls") or []]
+        found = TAU2_USER_ID_RE.search(" ".join([m.get("content") or "", *calls]))
+        if found:
+            return found.group(0)
+    return None

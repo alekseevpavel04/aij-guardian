@@ -76,7 +76,7 @@ def test_tools_block_layout():
 
 
 def test_rendered_tools_parse_back_to_the_schema():
-    tools = parse_available_tools(render_system("# Policy", TOOLS))
+    tools = parse_available_tools(render_system("# Policy", render_tools(TOOLS)))
     flights = tools["update_reservation_flights"]
     assert flights.required == {"cabin", "flights"}
     assert flights.params["cabin"].enum == ["business", "economy"]
@@ -84,7 +84,7 @@ def test_rendered_tools_parse_back_to_the_schema():
 
 
 def test_trajectory_steps():
-    steps = render_trajectory(MESSAGES, render_system(MESSAGES[0]["content"], TOOLS))
+    steps = render_trajectory(MESSAGES, render_system(MESSAGES[0]["content"], render_tools(TOOLS)))
     assert [(s.message_index, s.turn) for s in steps] == [(3, 1), (5, 2)]
     call = steps[0]
     assert call.response == (

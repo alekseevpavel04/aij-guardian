@@ -21,7 +21,7 @@ import pandas as pd
 
 from guardian.env import setup
 from guardian.parsing import format_recognised, parse_transcript, unknown_roles, unparsed_markers
-from guardian.render import render_system, render_trajectory
+from guardian.render import render_system, render_tools, render_trajectory, tau2_user
 
 ROOT = Path(__file__).resolve().parents[1]
 REPO = "LulaCola/AgentProcessBench"
@@ -48,9 +48,12 @@ def main() -> None:
     records, greetings = [], 0
     for t in trajectories:
         domain = t["data_source"].removeprefix("tau2_")
-        system = render_system(t["messages"][0]["content"], t["tools"])
+        system = render_system(t["messages"][0]["content"], render_tools(t["tools"]))
         steps = {s.message_index: s for s in render_trajectory(t["messages"], system)}
         labels = {int(k): v for k, v in t["step_labels"].items()}
+        # telecom tasks share one customer, so its trajectories are grouped by task instead of by user
+        user = tau2_user(t["messages"][1:]) if domain != "telecom" else None
+        group = f"{domain}:{user}" if user else f"{domain}:task{t['query_index']}"
         first_error = min((k for k, v in labels.items() if v == -1), default=None)
         for index, value in sorted(labels.items()):
             step = steps.get(index)
@@ -69,11 +72,11 @@ def main() -> None:
                     "response": step.response,
                     "weak_label": LABELS[value],
                     "source": "agentprocessbench",
-                    "source_label": value,
+                    "source_label": str(value),
                     "domain": domain,
                     "label_quality": "human_step_label",
                     "first_error": index == first_error,
-                    "group": f"{domain}:{t['query_index']}",
+                    "group": group,
                     "tau2_task": tau2_task(t),
                     "sample_index": t["sample_index"],
                 }
@@ -107,6 +110,7 @@ def main() -> None:
         "negatives": int((frame.weak_label == 0).sum()),
         "first_error_rows": int(frame.first_error.sum()),
         "trajectories_with_an_error": int(sum(any(v == -1 for v in t["step_labels"].values()) for t in trajectories)),
+        "groups": int(frame.group.nunique()),
         "by_domain": {d: {"rows": len(g), "positives": int(g.weak_label.sum())} for d, g in frame.groupby("domain")},
         "rows_the_parser_does_not_fully_recognise": int(parse_failures),
         "prompt_chars_p50": int(frame.prompt.str.len().median()),
