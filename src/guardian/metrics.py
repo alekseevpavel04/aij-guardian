@@ -119,3 +119,20 @@ def projected_scores(recall: float, false_positive_rate: float, base_rate: float
     precision = tp / (tp + fp) if tp + fp else 0.0
     f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
     return precision, f1
+
+
+def counts_from_published(f1: float, precision: float, recall: float, positives: int, tol: float = 1e-5) -> Scores:
+    """Integer counts behind a leaderboard row: TP = recall * P, predicted positives = TP / precision.
+
+    The leaderboard shows three rounded rates; the counts are what submissions are compared by, since a
+    difference in F1 alone does not say whether a change added true or false positives. A row whose
+    counts do not reproduce all three published rates within `tol` is rejected rather than rounded.
+    """
+    tp = round(recall * positives)
+    if tp == 0:
+        raise ValueError("no true positives: the number of predicted positives cannot be recovered")
+    predicted = round(tp / precision)
+    s = Scores(2 * tp / (positives + predicted), tp / predicted, tp / positives, tp, predicted, positives)
+    if max(abs(s.f1 - f1), abs(s.precision - precision), abs(s.recall - recall)) > tol:
+        raise ValueError(f"no integer counts reproduce F1 {f1}, precision {precision}, recall {recall}")
+    return s

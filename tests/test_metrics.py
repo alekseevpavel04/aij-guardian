@@ -1,6 +1,7 @@
 import numpy as np
+import pytest
 
-from guardian.metrics import best_threshold, binary_scores, bootstrap_ci, bootstrap_diff_ci
+from guardian.metrics import best_threshold, binary_scores, bootstrap_ci, bootstrap_diff_ci, counts_from_published
 
 
 def test_all_ones_baseline_matches_the_closed_form():
@@ -65,3 +66,13 @@ def test_paired_difference_of_identical_predictions_is_exactly_zero():
     pred = np.array([1, 1, 0, 1, 0, 1])
     point, lo, hi = bootstrap_diff_ci(y, pred, pred, n_resamples=200, seed=5)
     assert (point, lo, hi) == (0.0, 0.0, 0.0)
+
+
+def test_counts_from_the_leaders_published_row():
+    s = counts_from_published(0.59077, 0.49231, 0.73846, positives=130)
+    assert (s.true_positives, s.predicted_positive) == (96, 195)
+
+
+def test_counts_reject_rates_no_integers_reproduce():
+    with pytest.raises(ValueError):
+        counts_from_published(0.6, 0.49231, 0.73846, positives=130)
