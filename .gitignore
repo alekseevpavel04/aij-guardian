@@ -9,6 +9,7 @@ __pycache__/
 data/raw/
 data/interim/
 data/synthetic/
+data/external/
 *.parquet
 *.gguf
 

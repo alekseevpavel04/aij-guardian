@@ -1,0 +1,39 @@
+{
+  "agentprocessbench_tau2": {
+    "source": "https://huggingface.co/datasets/LulaCola/AgentProcessBench",
+    "revision": "cd81f326aece8b0a3f6359e20df370690d3a98bf",
+    "file": "tau2/test.jsonl",
+    "file_sha256": "6f22818ff88822512767fe735f56e7b78bed4b9aaf26959144feb92f127e1e95",
+    "license": "MIT",
+    "trajectories": 250,
+    "tasks": 50,
+    "labelled_steps": 3557,
+    "source_labels": {
+      "-1": 1110,
+      "1": 2070
+    },
+    "neutral_steps_dropped": 127,
+    "greeting_steps_skipped": 250,
+    "rows": 3180,
+    "positives": 1110,
+    "negatives": 2070,
+    "first_error_rows": 143,
+    "trajectories_with_an_error": 143,
+    "by_domain": {
+      "airline": {
+        "rows": 879,
+        "positives": 302
+      },
+      "retail": {
+        "rows": 980,
+        "positives": 103
+      },
+      "telecom": {
+        "rows": 1321,
+        "positives": 705
+      }
+    },
+    "rows_the_parser_does_not_fully_recognise": 0,
+    "prompt_chars_p50": 25277
+  }
+}
