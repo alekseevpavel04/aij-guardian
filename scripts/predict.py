@@ -45,7 +45,7 @@ def per_row(rows: list[dict], predictor: Predictor) -> tuple[list[int], int]:
 
 
 def cascade(rows: list[dict], config: dict, started: float) -> list[int]:
-    from guardian.cascade import combine, judge_scores, rule_labels, top_share
+    from guardian.cascade import closest_to_cut, combine, judge_scores, merge, rule_labels, top_share
     from guardian.judge import JudgeClient
     from guardian.serving import start_vllm, stop, wait_ready
 
@@ -61,20 +61,40 @@ def cascade(rows: list[dict], config: dict, started: float) -> list[int]:
             stop(process)
             return rules
         url = f"http://127.0.0.1:{port}/v1"
+    deadline = started + 60 * config["total_minutes"]
+    prompt = (ROOT / "model" / config["prompt"]).read_text(encoding="utf-8")
     try:
-        client = JudgeClient(url, model=config["served_name"], timeout=60 * config["total_minutes"])
-        prompt = (ROOT / "model" / config["prompt"]).read_text(encoding="utf-8")
-        run = judge_scores(rows, client, prompt, started + 60 * config["total_minutes"], config["workers"])
+        quick = JudgeClient(url, model=config["served_name"], timeout=60 * config["total_minutes"])
+        run = judge_scores(rows, quick, prompt, deadline, config["workers"])
+        scores = run.scores
+        print(
+            f"quick pass scored {sum(s is not None for s in scores)} of {len(rows)} rows in {run.seconds:.0f} s, "
+            f"{run.errors} errors",
+            file=sys.stderr,
+        )
+        if config.get("thinking_tokens"):
+            # the reasoned pass runs only in the time left and starts where it can change the most labels
+            reasoned = JudgeClient(
+                url,
+                model=config["served_name"],
+                timeout=60 * config["total_minutes"],
+                thinking=True,
+                thinking_tokens=config["thinking_tokens"],
+            )
+            order = closest_to_cut(scores, config["share"])
+            second = judge_scores(rows, reasoned, prompt, deadline, config["workers"], order)
+            scores = merge(scores, second.scores)
+            print(
+                f"reasoned pass scored {sum(s is not None for s in second.scores)} of {len(rows)} rows in "
+                f"{second.seconds:.0f} s, {second.errors} errors",
+                file=sys.stderr,
+            )
     finally:
         stop(process)
-    judge = top_share(run.scores, config["share"])
-    scored = sum(s is not None for s in run.scores)
-    print(
-        f"judge scored {scored} of {len(rows)} rows in {run.seconds:.0f} s, {run.errors} errors, "
-        f"top {config['share']} gives {sum(judge)}; rules add {sum(combine(rules, judge)) - sum(judge)}",
-        file=sys.stderr,
-    )
-    return combine(rules, judge)
+    judge = top_share(scores, config["share"])
+    labels = combine(rules, judge)
+    print(f"top {config['share']} of judge scores: {sum(judge)}; rules add {sum(labels) - sum(judge)}", file=sys.stderr)
+    return labels
 
 
 def main() -> None:

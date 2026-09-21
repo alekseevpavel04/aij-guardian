@@ -39,7 +39,7 @@ MODEL_DIR = ROOT / "data/raw/baseline/baseline/model"
 # vLLM start and the whole run must fit the platform's 30 minutes; what is not scored by then is
 # left to the rules (scripts/predict.py)
 CASCADE = {"served_name": "judge", "port": 8000, "max_model_len": 131072, "workers": 32, "server_minutes": 15}
-CASCADE["total_minutes"] = 27
+CASCADE["total_minutes"] = 25
 
 PYPROJECT = """[build-system]
 requires = ["setuptools"]
@@ -81,6 +81,7 @@ def build(
     without: tuple[str, ...] = (),
     share: float | None = None,
     prompt: Path | None = None,
+    thinking_tokens: int = 0,
 ) -> None:
     if out_dir.exists():
         shutil.rmtree(out_dir)
@@ -98,7 +99,7 @@ def build(
     if without or strategy == "cascade":
         config["checks"] = [c for c in DEFAULT_CHECKS if c not in without]
     if strategy == "cascade":
-        config |= CASCADE | {"share": share, "prompt": "judge_prompt.md"}
+        config |= CASCADE | {"share": share, "prompt": "judge_prompt.md", "thinking_tokens": thinking_tokens}
         shutil.copy(prompt, out_dir / "model/judge_prompt.md")
     # model/config.json belongs to the Hugging Face checkpoint in a cascade archive
     (out_dir / "model/guardian.json").write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
@@ -172,6 +173,7 @@ def main() -> None:
     ap.add_argument("--share", type=float, default=0.3, help="cascade: share of rows the judge labels 1")
     ap.add_argument("--prompt", type=Path, default=ROOT / "configs/prompts/judge_v1.md")
     ap.add_argument("--model-dir", type=Path, default=MODEL_DIR)
+    ap.add_argument("--thinking-tokens", type=int, default=0, help="cascade: reasoning budget, 0 for none")
     ap.add_argument("--label", type=int, default=1, help="label for the constant strategy")
     ap.add_argument("--version", default="0.1.0")
     ap.add_argument("--out", type=Path, default=ROOT / "submission")
@@ -179,10 +181,19 @@ def main() -> None:
     ap.add_argument("--without", nargs="+", default=[], choices=DEFAULT_CHECKS, help="checks left out of the predictor")
     args = ap.parse_args()
 
-    build(args.out, args.strategy, args.label, args.version, tuple(args.without), args.share, args.prompt)
+    build(
+        args.out,
+        args.strategy,
+        args.label,
+        args.version,
+        tuple(args.without),
+        args.share,
+        args.prompt,
+        args.thinking_tokens,
+    )
     suffix = f"_{args.label}" if args.strategy == "constant" else "".join(f"_no_{c}" for c in args.without)
     if args.strategy == "cascade":
-        suffix += f"_{args.prompt.stem}_share{args.share}"
+        suffix += f"_{args.prompt.stem}_share{args.share}_think{args.thinking_tokens}"
     name = f"guardian_{args.strategy}{suffix}.zip"
     archive = args.archive or ROOT / "submissions" / name
     if args.strategy == "cascade":

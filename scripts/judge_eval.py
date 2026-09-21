@@ -20,7 +20,7 @@ import pandas as pd
 from sklearn.metrics import roc_auc_score
 
 from guardian.env import setup
-from guardian.judge import JudgeClient, build_messages
+from guardian.judge import JudgeClient
 from guardian.metrics import best_threshold, binary_scores
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -107,7 +107,7 @@ def main() -> None:
     started = time.monotonic()
     with log.open("a", encoding="utf-8") as f:
         for i, row in enumerate(todo.itertuples(), 1):
-            verdict = client.score(build_messages(system_prompt, row.prompt, row.response))
+            verdict = client.score(system_prompt, row.prompt, row.response)
             record = {
                 "id": row.id,
                 "score": verdict.score,

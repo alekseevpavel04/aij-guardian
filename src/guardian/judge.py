@@ -1,10 +1,16 @@
 """An LLM judge scored by the probability of its one-token verdict.
 
 The organiser's baseline asks a chat model for a single character, "1" (hallucination) or "0", and
-turns the log-probabilities of the two tokens into P("1"). The same scoring works against any
-OpenAI-compatible server: llama-server locally, vLLM on the platform. The client uses only the
-standard library, because `pip install .` on the platform runs without network and a dependency
-that is not already installed would not arrive.
+turns the log-probabilities of the two tokens into P("1"). This client does the same over the plain
+completions endpoint of any OpenAI-compatible server (llama-server locally, vLLM on the platform),
+with the prompt rendered in the model's own ChatML template. Rendering it here, instead of letting
+the server do it, is what makes a reasoning budget possible on a server that has none:
+
+1. the reasoning is generated after "<think>\\n" until the model closes it or the budget runs out;
+2. "</think>" is then written by us and the verdict is read as one token after it.
+
+Without reasoning the template's empty think block is written directly and only step 2 runs. The
+client uses only the standard library: `pip install .` on the platform runs without network.
 """
 
 import json
@@ -13,10 +19,21 @@ import time
 import urllib.request
 from dataclasses import dataclass
 
+CLOSE_THINK = "\n</think>\n\n"
 
-def build_messages(system_prompt: str, prompt: str, response: str) -> list[dict]:
-    user = f"<prompt>\n{prompt}\n</prompt>\n<response>\n{response}\n</response>"
-    return [{"role": "system", "content": system_prompt}, {"role": "user", "content": user}]
+
+def user_text(prompt: str, response: str) -> str:
+    return f"<prompt>\n{prompt}\n</prompt>\n<response>\n{response}\n</response>"
+
+
+def render(system_prompt: str, prompt: str, response: str, thinking: bool) -> str:
+    """The chat as the Qwen3.6 template renders it with add_generation_prompt (tests/test_judge.py)."""
+    text = (
+        f"<|im_start|>system\n{system_prompt}<|im_end|>\n"
+        f"<|im_start|>user\n{user_text(prompt, response)}<|im_end|>\n"
+        "<|im_start|>assistant\n<think>\n"
+    )
+    return text if thinking else text + CLOSE_THINK
 
 
 def p_one(top: list[tuple[str, float]]) -> float | None:
@@ -37,6 +54,17 @@ def p_one(top: list[tuple[str, float]]) -> float | None:
     return math.exp(one - m) / (math.exp(one - m) + math.exp(zero - m))
 
 
+def first_top_logprobs(logprobs: dict | None) -> list[tuple[str, float]]:
+    """Top candidates of the first generated token, in llama-server's or vLLM's layout."""
+    if not logprobs:
+        return []
+    if logprobs.get("content"):  # llama-server: [{"token", "logprob", "top_logprobs": [...]}]
+        return [(t["token"], t["logprob"]) for t in logprobs["content"][0]["top_logprobs"]]
+    if logprobs.get("top_logprobs"):  # OpenAI legacy completions (vLLM): [{token: logprob}]
+        return list(logprobs["top_logprobs"][0].items())
+    return []
+
+
 @dataclass(frozen=True)
 class Verdict:
     score: float | None
@@ -55,40 +83,36 @@ class JudgeClient:
         thinking: bool = False,
         thinking_tokens: int = 1024,
     ):
-        self.url = base_url.rstrip("/") + "/chat/completions"
+        self.url = base_url.rstrip("/") + "/completions"
         self.model = model
         self.timeout = timeout
         self.thinking = thinking
-        # with reasoning, the verdict comes after the thoughts; the server caps the thoughts themselves
-        self.max_tokens = thinking_tokens + 16 if thinking else 1
+        self.thinking_tokens = thinking_tokens
 
-    def score(self, messages: list[dict]) -> Verdict:
-        body = {
-            "model": self.model,
-            "messages": messages,
-            "temperature": 0.0,
-            "max_tokens": self.max_tokens,
-            "logprobs": True,
-            "top_logprobs": 20,
-            "chat_template_kwargs": {"enable_thinking": self.thinking},
-        }
+    def _complete(self, prompt: str, **params) -> dict:
+        body = {"model": self.model, "prompt": prompt, "temperature": 0.0, **params}
         request = urllib.request.Request(
             self.url, data=json.dumps(body).encode("utf-8"), headers={"Content-Type": "application/json"}
         )
-        started = time.monotonic()
         with urllib.request.urlopen(request, timeout=self.timeout) as reply:
-            data = json.loads(reply.read().decode("utf-8"))
-        seconds = time.monotonic() - started
-        content = (data["choices"][0].get("logprobs") or {}).get("content") or []
-        # the verdict is the last "0" or "1" the model emits; without reasoning it is also the first
-        verdicts = [position for position in content if position["token"].strip() in ("0", "1")]
-        score = None
-        if verdicts:
-            score = p_one([(t["token"], t["logprob"]) for t in verdicts[-1]["top_logprobs"]])
-        elif content and not self.thinking:
-            score = p_one([(t["token"], t["logprob"]) for t in content[0]["top_logprobs"]])
+            return json.loads(reply.read().decode("utf-8"))
+
+    def score(self, system_prompt: str, prompt: str, response: str) -> Verdict:
+        started = time.monotonic()
+        text = render(system_prompt, prompt, response, self.thinking)
+        reasoning_tokens = None
+        if self.thinking:
+            thought = self._complete(text, max_tokens=self.thinking_tokens, stop=["</think>"])
+            text += thought["choices"][0]["text"].rstrip() + CLOSE_THINK
+            reasoning_tokens = (thought.get("usage") or {}).get("completion_tokens")
+        data = self._complete(text, max_tokens=1, logprobs=20)
+        top = first_top_logprobs(data["choices"][0].get("logprobs"))
         usage = data.get("usage") or {}
         cached = (usage.get("prompt_tokens_details") or {}).get("cached_tokens")
-        if cached is None:
-            cached = (data.get("timings") or {}).get("cache_n")
-        return Verdict(score, usage.get("prompt_tokens"), cached, usage.get("completion_tokens"), seconds)
+        return Verdict(
+            p_one(top) if top else None,
+            usage.get("prompt_tokens"),
+            cached,
+            reasoning_tokens,
+            time.monotonic() - started,
+        )
