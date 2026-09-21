@@ -1,0 +1,85 @@
+{
+  "archive_parts": [
+    {
+      "name": "baseline.tar.gz.00",
+      "bytes": 4718592000,
+      "sha256": "d7e5e2e8a77a08de87d815614ec3a2e4cf3ccc3491925430943b90e96f6764d2"
+    },
+    {
+      "name": "baseline.tar.gz.01",
+      "bytes": 4718592000,
+      "sha256": "9c3b57335d99de6b85e94156589babeab9cdf349b41d315bb1b9097c51936517"
+    },
+    {
+      "name": "baseline.tar.gz.02",
+      "bytes": 4718592000,
+      "sha256": "c4144a01fb8fa661f5ab95cd225601e9676c632badda14944e7a657ccfdbba97"
+    },
+    {
+      "name": "baseline.tar.gz.03",
+      "bytes": 4718592000,
+      "sha256": "5fcd652cc2bba08fd8123c423d0331e6a7e4f94038fedf85e1970b9115921909"
+    },
+    {
+      "name": "baseline.tar.gz.04",
+      "bytes": 4718592000,
+      "sha256": "2b27de1289071a3d5fed12bec134a350f4cc870198156a4e3b4b2c84ae3521fa"
+    },
+    {
+      "name": "baseline.tar.gz.05",
+      "bytes": 4718592000,
+      "sha256": "5043bcc5149cd5428f4514c842d73252cba581e17a29e1ddee012fdc44e65904"
+    },
+    {
+      "name": "baseline.tar.gz.06",
+      "bytes": 2284545612,
+      "sha256": "9569a61b78747b20fae2f9ca9fac7a0db93f4eb90813e6a5c4c23e12a8a31cd4"
+    }
+  ],
+  "archive_bytes": 30596097612,
+  "unpacked_files": 62,
+  "unpacked_bytes": 37493032376,
+  "weights_files": 42,
+  "weights_bytes": 37463662160,
+  "non_model_files": [
+    "README.md",
+    "pyproject.toml",
+    "scripts/predict.py",
+    "src/hallucination_detector/__init__.py",
+    "src/hallucination_detector/client.py",
+    "src/hallucination_detector/prompt.md",
+    "src/hallucination_detector/server.py"
+  ],
+  "model": {
+    "base_model": "Qwen/Qwen3.6-35B-A3B",
+    "license": "apache-2.0",
+    "architecture": "Qwen3_5MoeForConditionalGeneration",
+    "quantization": "fp8",
+    "layers": 40,
+    "experts": 256,
+    "experts_per_token": 8,
+    "hidden_size": 2048,
+    "max_position_embeddings": 262144
+  },
+  "predict_contract": {
+    "wraps_input_in_prompt_response_tags": true,
+    "reads_parquet_by_extension_else_csv": true,
+    "writes_parquet_by_extension_else_csv": true,
+    "default_threshold": 0.5,
+    "default_concurrency": 32,
+    "vllm_max_model_len": 131072,
+    "vllm_prefix_caching": true,
+    "vllm_language_model_only": true
+  },
+  "prompt_markers": [
+    "ASSISTANT",
+    "SYSTEM",
+    "TOOL_CALL",
+    "TOOL_RESULT",
+    "USER"
+  ],
+  "local_run": {
+    "ran": false,
+    "why": "the FP8 weights take 34.9 GiB, the RTX 3070 has 8 GiB; vLLM, which predict.py starts, does not run on Windows"
+  }
+}

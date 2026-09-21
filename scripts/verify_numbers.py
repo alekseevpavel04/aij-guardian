@@ -26,8 +26,8 @@ GENERATED = {
     "taxonomy_summary.json": ("taxonomy_summary.py", lambda tmp: ["--out", str(tmp / "x.json")]),
     "submission_counts.json": ("submission_counts.py", lambda tmp: ["--out", str(tmp / "x.json")]),
 }
-# runtime.json is a timing, tau2_match.json needs the network and tau2_reference.json a local clone of
-# tau2-bench, so none of them is re-checked here
+# runtime.json is a timing, tau2_match.json needs the network, baseline_inventory.json the unpacked
+# organiser archive and tau2_reference.json a local clone of tau2-bench, so none of them is re-checked here
 NEEDS_DATA = {"eda.json", "trivial_baselines.json", "rules_baseline.json"}
 DATA = ROOT / "data/raw/valid.parquet"
 
