@@ -27,7 +27,8 @@ def main() -> None:
         options[f"--{flag}"] = value
     command = [config["binary"], "--model", config["model"]]
     for flag, value in options.items():
-        command += [flag, str(value)]
+        # an empty value is a switch without an argument, e.g. --set embeddings=
+        command += [flag] if value == "" else [flag, str(value)]
     print(" ".join(command), flush=True)
     subprocess.run(command, check=True)
 
