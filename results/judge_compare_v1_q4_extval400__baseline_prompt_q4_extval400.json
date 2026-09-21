@@ -1,0 +1,15 @@
+{
+  "a": "v1_q4_extval400",
+  "b": "baseline_prompt_q4_extval400",
+  "rows": 405,
+  "positives": 161,
+  "trajectories": 34,
+  "auroc_a": 0.8981,
+  "auroc_b": 0.8199,
+  "difference": 0.0782,
+  "difference_ci95": [
+    -0.0392,
+    0.1723
+  ],
+  "resamples": 2000
+}

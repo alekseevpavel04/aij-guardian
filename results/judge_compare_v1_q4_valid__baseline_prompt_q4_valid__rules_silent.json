@@ -1,0 +1,17 @@
+{
+  "a": "v1_q4_valid",
+  "b": "baseline_prompt_q4_valid",
+  "source": null,
+  "where_rules_silent": true,
+  "rows": 36,
+  "positives": 13,
+  "trajectories": 35,
+  "auroc_a": 0.8528,
+  "auroc_b": 0.8361,
+  "difference": 0.0167,
+  "difference_ci95": [
+    -0.0767,
+    0.1159
+  ],
+  "resamples": 2000
+}
