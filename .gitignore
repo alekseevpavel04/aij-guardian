@@ -21,3 +21,4 @@ submissions/*.zip
 *.egg-info/
 .ruff_cache/
 submission/
+submissions/*.partial

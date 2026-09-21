@@ -4,8 +4,11 @@
     python scripts/build_submission.py --strategy rules
     python scripts/build_submission.py --strategy cascade --share 0.3 --prompt configs/prompts/judge_v1.md
 
-The cascade archive carries the judge weights (the organiser's FP8 checkpoint, about 35 GiB). They
-are streamed into the zip from where they lie instead of being copied into `submission/` first.
+The cascade archive carries the judge weights (the organiser's FP8 checkpoint, about 35 GiB).
+Compressing them takes a quarter of an hour, so they go into a base archive once
+(`submissions/_weights_<digest>.zip`, keyed by file names and sizes); each cascade archive is a copy
+of it with the code, the prompt and the config appended. Level 1 deflate: on the FP8 shards it keeps
+68% of the size at 42 MB/s, level 6 keeps 65% at 13 MB/s.
 
 Builds `submission/` with the structure the rules require (pyproject.toml, model/, src/, scripts/)
 and zips it. The archive is rebuilt from scratch every time, so what is sent is always what is in
@@ -21,6 +24,7 @@ Three details come from failures other participants reported in the task comment
 """
 
 import argparse
+import hashlib
 import json
 import shutil
 import stat
@@ -104,16 +108,18 @@ DIR_MODE = stat.S_IFDIR | 0o755
 FILE_MODE = stat.S_IFREG | 0o644
 
 
-def zip_dir(out_dir: Path, archive: Path, extra: dict[str, Path] | None = None) -> None:
+def zip_dir(out_dir: Path | None, archive: Path, extra: dict[str, Path] | None = None, mode: str = "w") -> None:
     """Zip `out_dir` plus `extra` files ({name in archive: source}), streaming each file."""
-    entries = {
-        path.relative_to(out_dir).as_posix(): path
-        for path in sorted(out_dir.rglob("*"))
-        if "__pycache__" not in path.parts
-    }
+    entries = {}
+    if out_dir is not None:
+        entries = {
+            path.relative_to(out_dir).as_posix(): path
+            for path in sorted(out_dir.rglob("*"))
+            if "__pycache__" not in path.parts
+        }
     entries |= extra or {}
     archive.parent.mkdir(parents=True, exist_ok=True)
-    with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as zf:
+    with zipfile.ZipFile(archive, mode, zipfile.ZIP_DEFLATED, compresslevel=1) as zf:
         for name in sorted(entries):
             path = entries[name]
             info = zipfile.ZipInfo(name + "/" if path.is_dir() else name)
@@ -125,6 +131,20 @@ def zip_dir(out_dir: Path, archive: Path, extra: dict[str, Path] | None = None) 
             info.compress_type = zipfile.ZIP_DEFLATED
             with path.open("rb") as source, zf.open(info, "w", force_zip64=True) as target:
                 shutil.copyfileobj(source, target, 1 << 24)
+
+
+def weights_base(model_dir: Path) -> Path:
+    """The weights-only archive for `model_dir`, built on first use and reused while files are unchanged."""
+    files = {f"model/{p.name}": p for p in sorted(model_dir.iterdir()) if p.is_file()}
+    if "model/config.json" not in files or not any(n.endswith(".safetensors") for n in files):
+        raise SystemExit(f"{model_dir} does not look like a Hugging Face checkpoint")
+    manifest = json.dumps({name: path.stat().st_size for name, path in files.items()}, sort_keys=True)
+    base = ROOT / "submissions" / f"_weights_{hashlib.sha256(manifest.encode()).hexdigest()[:12]}.zip"
+    if not base.exists():
+        partial = base.with_suffix(".partial")
+        zip_dir(None, partial, files)
+        partial.rename(base)
+    return base
 
 
 def check_archive(archive: Path) -> list[str]:
@@ -165,12 +185,11 @@ def main() -> None:
         suffix += f"_{args.prompt.stem}_share{args.share}"
     name = f"guardian_{args.strategy}{suffix}.zip"
     archive = args.archive or ROOT / "submissions" / name
-    extra = None
     if args.strategy == "cascade":
-        extra = {f"model/{p.name}": p for p in sorted(args.model_dir.iterdir()) if p.is_file()}
-        if "model/config.json" not in extra or not any(n.endswith(".safetensors") for n in extra):
-            raise SystemExit(f"{args.model_dir} does not look like a Hugging Face checkpoint")
-    zip_dir(args.out, archive, extra)
+        shutil.copyfile(weights_base(args.model_dir), archive)
+        zip_dir(args.out, archive, mode="a")
+    else:
+        zip_dir(args.out, archive)
     problems = check_archive(archive)
     if problems:
         raise SystemExit("archive is not valid:\n  " + "\n  ".join(problems))
