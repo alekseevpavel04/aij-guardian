@@ -3,7 +3,7 @@
 The settings live in configs/ so that every judge result can name the exact server it came from.
 The server runs in the foreground; stop it with Ctrl+C.
 
-    python scripts/serve_judge.py --config configs/llama_server_qwen36.json --set --n-cpu-moe=30
+    python scripts/serve_judge.py --set n-cpu-moe=30 reasoning=on
 """
 
 import argparse
@@ -17,14 +17,14 @@ ROOT = Path(__file__).resolve().parents[1]
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--config", type=Path, default=ROOT / "configs/llama_server_qwen36.json")
-    ap.add_argument("--set", nargs="*", default=[], help="overrides as --flag=value")
+    ap.add_argument("--set", nargs="*", default=[], help="overrides as flag=value, without the leading dashes")
     args = ap.parse_args()
 
     config = json.loads(args.config.read_text(encoding="utf-8"))
     options = dict(config["args"])
     for override in args.set:
         flag, value = override.split("=", 1)
-        options[flag] = value
+        options[f"--{flag}"] = value
     command = [config["binary"], "--model", config["model"]]
     for flag, value in options.items():
         command += [flag, str(value)]

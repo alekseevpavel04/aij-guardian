@@ -1,0 +1,17 @@
+{
+  "a": "baseline_prompt_think1024_q4_valid",
+  "b": "baseline_prompt_q4_valid",
+  "source": null,
+  "where_rules_silent": false,
+  "rows": 46,
+  "positives": 23,
+  "trajectories": 45,
+  "auroc_a": 0.913,
+  "auroc_b": 0.8166,
+  "difference": 0.0964,
+  "difference_ci95": [
+    -0.002,
+    0.2047
+  ],
+  "resamples": 2000
+}
