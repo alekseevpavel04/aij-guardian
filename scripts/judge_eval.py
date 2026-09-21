@@ -27,7 +27,7 @@ ROOT = Path(__file__).resolve().parents[1]
 EXTERNAL = (ROOT / "data/external/apb_tau2.parquet", ROOT / "data/external/trajerr_tau2.parquet")
 
 
-def load(data: str, limit: int | None, seed: int) -> pd.DataFrame:
+def load(data: str, limit: int | None, seed: int, source: str | None = None) -> pd.DataFrame:
     if data == "valid":
         frame = pd.read_parquet(ROOT / "data/raw/valid.parquet")
         frame["domain"] = frame.id.str.split("__").str[0]
@@ -48,6 +48,8 @@ def load(data: str, limit: int | None, seed: int) -> pd.DataFrame:
             chosen.append(t)
             rows += int((frame.trajectory == t).sum())
         frame = frame[frame.trajectory.isin(chosen)]
+    if source:  # after sampling, so the rows are the same as in a run over all sources
+        frame = frame[frame.source == source]
     frame = frame.sort_values(["trajectory", "turn"])
     return frame[["id", "prompt", "response", "label", "domain", "source"]]
 
@@ -86,6 +88,7 @@ def main() -> None:
     ap.add_argument("--data", choices=("valid", "ext_dev", "ext_val"), default="valid")
     ap.add_argument("--limit", type=int, default=None, help="rows to sample, as whole trajectories")
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--source", default=None, help="keep one external source after sampling")
     ap.add_argument("--system-prompt", type=Path, required=True)
     ap.add_argument("--server", default="http://127.0.0.1:8080/v1")
     ap.add_argument("--thinking", action="store_true")
@@ -94,7 +97,7 @@ def main() -> None:
     ap.add_argument("--max-rows", type=int, default=None, help="stop after this many new rows (speed probes)")
     args = ap.parse_args()
 
-    frame = load(args.data, args.limit, args.seed)
+    frame = load(args.data, args.limit, args.seed, args.source)
     system_prompt = args.system_prompt.read_text(encoding="utf-8")
     log = ROOT / "data/interim/judge" / f"{args.name}.jsonl"
     log.parent.mkdir(parents=True, exist_ok=True)
@@ -138,6 +141,7 @@ def main() -> None:
         "data": args.data,
         "limit": args.limit,
         "seed": args.seed,
+        "source": args.source,
         "system_prompt": args.system_prompt.name,
         "thinking": args.thinking,
         "thinking_tokens": args.thinking_tokens if args.thinking else None,
