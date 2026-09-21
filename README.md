@@ -127,6 +127,7 @@ pytest
 
 ## Документы
 
-- [`docs/DECISIONS.md`](docs/DECISIONS.md) — принятые решения и их причины
-- [`docs/EXPERIMENTS.md`](docs/EXPERIMENTS.md) — таблица прогонов
-- [`docs/LICENSES.md`](docs/LICENSES.md) — лицензии моделей и библиотек
+- [`docs/LITERATURE.md`](docs/LITERATURE.md): обзор работ 2025-2026 по теме с проверенными ссылками
+- [`docs/DECISIONS.md`](docs/DECISIONS.md): принятые решения и их причины
+- [`docs/EXPERIMENTS.md`](docs/EXPERIMENTS.md): таблица прогонов
+- [`docs/LICENSES.md`](docs/LICENSES.md): лицензии моделей и библиотек
