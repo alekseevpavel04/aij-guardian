@@ -31,6 +31,7 @@ def main() -> None:
     ap.add_argument("--per-task", type=int, default=2)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out", type=Path, default=ROOT / "data/synthetic/pairs")
+    ap.add_argument("--writer-prompt", type=Path, default=ROOT / "configs/prompts/pair_writer_v2.md")
     args = ap.parse_args()
 
     frame = pd.read_parquet(args.contexts)
@@ -63,6 +64,10 @@ def main() -> None:
             )
     (out / "batch.md").write_text("\n".join(parts), encoding="utf-8")
     (out / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    # the exact instruction the subagent gets is kept with the batch it wrote
+    writer = args.writer_prompt.read_text(encoding="utf-8")
+    writer = writer.replace("{domain}", args.domain).replace("{batch_dir}", str(out.resolve()))
+    (out / "prompt.md").write_text(writer, encoding="utf-8")
     size = (out / "batch.md").stat().st_size + (out / "system.md").stat().st_size
     print(f"{len(manifest)} contexts from {min(args.tasks, len(tasks))} dialogues, {size / 1024:.0f} KiB -> {out}")
 

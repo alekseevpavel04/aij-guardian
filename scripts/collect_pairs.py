@@ -53,9 +53,13 @@ def render_turn(turn: int, text: str, calls: list[dict]) -> str:
     return "\n".join(lines)
 
 
+# arguments the agent composes itself (a handover summary, an arithmetic expression), not values it copies
+FREE_TEXT = {"summary", "expression"}
+
+
 def scalar_values(value: object) -> list[object]:
     if isinstance(value, dict):
-        return [v for item in value.values() for v in scalar_values(item)]
+        return [v for key, item in value.items() if key not in FREE_TEXT for v in scalar_values(item)]
     if isinstance(value, list):
         return [v for item in value for v in scalar_values(item)]
     return [value]
@@ -140,7 +144,7 @@ def main() -> None:
     frame = pd.DataFrame(rows)
     frame.to_parquet(folder / "pairs.parquet", index=False)
     pd.DataFrame(naturals).to_parquet(folder / "natural_labels.parquet", index=False)
-    flagged = frame[frame.flags.map(len) > 0] if len(frame) else frame
+    flagged = frame[frame["flags"].map(len) > 0] if len(frame) else frame
     print(f"{len(items)} lines: {len(frame)} written turns, {len(naturals)} natural labels, {len(problems)} bad lines")
     for p in problems:
         print("  ", p)
