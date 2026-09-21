@@ -2,7 +2,7 @@
   "binary": "D:/VScode_projects/llama.cpp/b11052/llama-server.exe",
   "model": "D:/VScode_projects/llm-models/qwen3.6-35b-a3b/Qwen3.6-35B-A3B-Q4_K_M.gguf",
   "args": {
-    "--ctx-size": 70000,
+    "--ctx-size": 76000,
     "--n-gpu-layers": 99,
     "--n-cpu-moe": 40,
     "--parallel": 1,

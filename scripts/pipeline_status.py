@@ -11,6 +11,7 @@ import urllib.request
 from pathlib import Path
 
 from guardian import journal
+from guardian.machine import measure
 
 ROOT = Path(__file__).resolve().parents[1]
 TAU2_PYTHON = "D:/VScode_projects/tau2-bench/.venv/Scripts/python.exe"
@@ -28,7 +29,14 @@ def main() -> None:
     up = server_up()
     print(f"llama-server: {'up' if up else 'down'}")
     if not up:
-        print("  start: python scripts/serve_judge.py --set ctx-size=100000")
+        print("  start: python scripts/serve_judge.py")
+    memory = measure()
+    print(
+        f"GPU {memory.gpu_used_gb:.1f} of {memory.gpu_total_gb:.1f} GB, "
+        f"RAM free {memory.ram_free_gb:.1f} of {memory.ram_total_gb:.1f} GB"
+    )
+    for warning in memory.warnings():
+        print(f"  WARNING: {warning}")
 
     sims = ROOT / "data/synthetic/tau2_ru"
     print("\nsimulations (scripts/simulate_tau2.py):")
