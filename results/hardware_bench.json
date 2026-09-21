@@ -1,0 +1,67 @@
+{
+  "machine": {
+    "gpu": "RTX 3070 8 GiB",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "python": "3.11.4"
+  },
+  "llm_q4": {
+    "available": true,
+    "model": "Qwen3-8B-Q4_K_M.gguf",
+    "kv_cache": "q8_0",
+    "tokens_per_second": {
+      "pp512": 2891.21,
+      "pp4096": 2851.12,
+      "pp12288": 2461.7,
+      "tg64": 72.07
+    }
+  },
+  "encoder_training": {
+    "available": true,
+    "parameters_m": 149.6,
+    "steps": {
+      "seq1024_batch1": {
+        "ms_per_step": 76,
+        "examples_per_second": 13.2,
+        "peak_gib": 1.45
+      },
+      "seq1024_batch2": {
+        "ms_per_step": 122,
+        "examples_per_second": 16.3,
+        "peak_gib": 2.0
+      },
+      "seq1024_batch4": {
+        "ms_per_step": 224,
+        "examples_per_second": 17.9,
+        "peak_gib": 3.08
+      },
+      "seq2048_batch1": {
+        "ms_per_step": 149,
+        "examples_per_second": 6.7,
+        "peak_gib": 2.05
+      },
+      "seq2048_batch2": {
+        "ms_per_step": 272,
+        "examples_per_second": 7.4,
+        "peak_gib": 3.19
+      },
+      "seq2048_batch4": {
+        "ms_per_step": 499,
+        "examples_per_second": 8.0,
+        "peak_gib": 5.5
+      },
+      "seq4096_batch1": {
+        "ms_per_step": 376,
+        "examples_per_second": 2.7,
+        "peak_gib": 3.42
+      },
+      "seq4096_batch2": {
+        "ms_per_step": 764,
+        "examples_per_second": 2.6,
+        "peak_gib": 5.94
+      },
+      "seq4096_batch4": {
+        "skipped": "more than 8192 tokens per step"
+      }
+    }
+  }
+}
