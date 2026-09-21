@@ -25,6 +25,12 @@ from guardian.parsing import (
 NUMBER_RE = re.compile(r"-?\d[\d 	., ]*\d|\d")
 SHORT_VALUE = 3  # below this an argument value matches the context by accident
 LONG_VALUE = 48  # above this the value is prose the agent wrote, not a value copied from context
+# An agent writes "May 24" as 2024-05-24 by design, so a date is derived rather than copied, and on the
+# external dev part dates were most of this check's firings on negatives (docs/EXPERIMENTS.md).
+ISO_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+# An airport code for a city the user named ("Seattle" as SEA) is knowledge, not a copied value.
+AIRPORT_PARAMS = frozenset({"origin", "destination"})
+AIRPORT_RE = re.compile(r"^[A-Z]{3}$")
 FREE_TEXT_PARAMS = frozenset(
     {"summary", "expression", "query", "pattern", "reason", "message", "content", "text", "note", "description"}
 )
@@ -89,7 +95,7 @@ def _values(args: dict | None, into_json_strings: bool = False) -> list[tuple[st
     return out
 
 
-def occurs_in(value: object, text: str) -> bool:
+def occurs_in(value: object, text: str, ignore_case: bool = False) -> bool:
     """Whether a value occurs in the text as a whole token.
 
     Token boundaries matter: a zip code "3019" that only occurs inside the email address
@@ -98,7 +104,18 @@ def occurs_in(value: object, text: str) -> bool:
     literal = str(value).strip()
     if not literal:
         return True
-    return re.search(rf"(?<!\w){re.escape(literal)}(?!\w)", text) is not None
+    flags = re.IGNORECASE if ignore_case else 0
+    return re.search(rf"(?<!\w){re.escape(literal)}(?!\w)", text, flags) is not None
+
+
+def occurs_in_some_form(value: object, text: str) -> bool:
+    """Whether a value occurs in the text as written or in a form the agent may legitimately normalise:
+    an order id with its "#" added or dropped, 5.0 for 5, a name in another case."""
+    literal = str(value).strip()
+    forms = {literal, literal.lstrip("#")}
+    if isinstance(value, float) and value.is_integer():
+        forms.add(str(int(value)))
+    return any(occurs_in(form, text, ignore_case=True) for form in forms)
 
 
 def normalize_number(text: str) -> str | None:
@@ -119,14 +136,18 @@ def calls_unknown_tool(calls: list[ToolCall], ctx: Context) -> list[str]:
 
 
 def unknown_arguments(calls: list[ToolCall], ctx: Context) -> list[str]:
-    """Argument name absent from the tool schema."""
+    """Top-level argument name absent from the tool schema.
+
+    Keys inside array elements are not checked: τ²-bench declares those elements with
+    additionalProperties allowed, so `flights[].price` is accepted by the environment and is not an
+    error. On the external dev part, nested keys were 36 of the check's 36 firings on negatives.
+    """
     out = []
     for call in calls:
         spec = ctx.tools.get(call.name)
         if spec is None or call.args is None:
             continue
-        known = {p.name for p in spec.params.values()}
-        out += [f"{call.name}.{k}" for k, _ in _values(call.args) if k and k not in known]
+        out += [f"{call.name}.{k}" for k in call.args if k not in spec.top_level]
     return out
 
 
@@ -187,12 +208,14 @@ def unsupported_argument_values(calls: list[ToolCall], ctx: Context) -> list[str
             if key in FREE_TEXT_PARAMS or not isinstance(value, (str, int, float)) or isinstance(value, bool):
                 continue
             literal = str(value).strip()
-            if not SHORT_VALUE <= len(literal) <= LONG_VALUE or " " in literal:
+            if not SHORT_VALUE <= len(literal) <= LONG_VALUE or " " in literal or ISO_DATE_RE.match(literal):
+                continue
+            if key in AIRPORT_PARAMS and AIRPORT_RE.match(literal):
                 continue
             param = next((p for p in (spec.params.values() if spec else []) if p.name == key), None)
             if param and param.enum:
                 continue
-            if not occurs_in(literal, ctx.prompt):
+            if not occurs_in_some_form(value, ctx.prompt):
                 out.append(f"{call.name}.{key}={literal}")
     return out
 

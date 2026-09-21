@@ -19,45 +19,12 @@
   {
     "id": "airline__21::t7",
     "label": 1,
-    "evidence": {
-      "unknown_argument": [
-        "update_reservation_flights.destination",
-        "update_reservation_flights.origin",
-        "update_reservation_flights.price",
-        "update_reservation_flights.destination",
-        "update_reservation_flights.origin",
-        "update_reservation_flights.price",
-        "update_reservation_flights.destination",
-        "update_reservation_flights.origin",
-        "update_reservation_flights.price",
-        "update_reservation_flights.destination",
-        "update_reservation_flights.origin",
-        "update_reservation_flights.price"
-      ]
-    }
+    "evidence": {}
   },
   {
     "id": "airline__23::t10",
     "label": 1,
     "evidence": {
-      "unknown_argument": [
-        "book_reservation.id",
-        "book_reservation.source",
-        "book_reservation.id",
-        "book_reservation.source",
-        "book_reservation.id",
-        "book_reservation.source",
-        "book_reservation.id",
-        "book_reservation.source",
-        "book_reservation.id",
-        "book_reservation.source",
-        "book_reservation.id",
-        "book_reservation.source",
-        "book_reservation.id",
-        "book_reservation.source",
-        "book_reservation.id",
-        "book_reservation.source"
-      ],
       "missing_required_argument": [
         "book_reservation.payment_methods.amount",
         "book_reservation.payment_methods.payment_id",
@@ -91,16 +58,7 @@
   {
     "id": "airline__44::t22",
     "label": 1,
-    "evidence": {
-      "unknown_argument": [
-        "update_reservation_flights.destination",
-        "update_reservation_flights.origin",
-        "update_reservation_flights.destination",
-        "update_reservation_flights.origin",
-        "update_reservation_flights.destination",
-        "update_reservation_flights.origin"
-      ]
-    }
+    "evidence": {}
   },
   {
     "id": "airline__47::t1",

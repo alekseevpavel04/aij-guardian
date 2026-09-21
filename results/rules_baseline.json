@@ -16,15 +16,15 @@
       ]
     },
     "unknown_argument": {
-      "fired": 3,
-      "fired_on_positive": 3,
+      "fired": 0,
+      "fired_on_positive": 0,
       "fired_on_negative": 0,
-      "precision": 1.0,
-      "recall": 0.1304,
-      "f1": 0.2308,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
       "f1_ci95": [
         0.0,
-        0.4375
+        0.0
       ]
     },
     "missing_required_argument": {
@@ -120,13 +120,13 @@
         "missing_required_argument",
         "enum_violation"
       ],
-      "fired": 8,
+      "fired": 6,
       "precision": 1.0,
-      "recall": 0.3478,
-      "f1": 0.5161,
+      "recall": 0.2609,
+      "f1": 0.4138,
       "f1_ci95": [
-        0.2609,
-        0.7059
+        0.16,
+        0.6154
       ]
     },
     "any_schema_or_repeat": {
@@ -137,13 +137,13 @@
         "enum_violation",
         "repeated_failed_call"
       ],
-      "fired": 9,
+      "fired": 7,
       "precision": 1.0,
-      "recall": 0.3913,
-      "f1": 0.5625,
+      "recall": 0.3043,
+      "f1": 0.4667,
       "f1_ci95": [
-        0.3125,
-        0.7392
+        0.2308,
+        0.6667
       ]
     },
     "any_check_except_numbers": {
@@ -157,13 +157,13 @@
         "unsupported_argument_value",
         "no_op_replacement"
       ],
-      "fired": 12,
+      "fired": 10,
       "precision": 1.0,
-      "recall": 0.5217,
-      "f1": 0.6857,
+      "recall": 0.4348,
+      "f1": 0.6061,
       "f1_ci95": [
-        0.48,
-        0.8422
+        0.3871,
+        0.7826
       ]
     },
     "any_check": {
@@ -178,58 +178,58 @@
         "no_op_replacement",
         "unsupported_number"
       ],
-      "fired": 13,
-      "precision": 0.9231,
-      "recall": 0.5217,
-      "f1": 0.6667,
+      "fired": 11,
+      "precision": 0.9091,
+      "recall": 0.4348,
+      "f1": 0.5882,
       "f1_ci95": [
-        0.4614,
-        0.8293
+        0.375,
+        0.762
       ]
     }
   },
   "projection": {
     "detector": "any_check_except_numbers",
-    "recall": 0.5217,
+    "recall": 0.4348,
     "false_positive_rate_observed": 0.0,
     "false_positive_rate_upper95": 0.1221,
     "note": "0 false positives out of 23 negatives; the upper bound is what carries to a larger test set, the point estimate of 0 does not",
     "by_base_rate": {
       "0.5000": {
         "rules_precision_at_observed_fpr": 1.0,
-        "rules_f1_at_observed_fpr": 0.6857,
-        "rules_precision_at_upper_fpr": 0.8103,
-        "rules_f1_at_upper_fpr": 0.6348,
+        "rules_f1_at_observed_fpr": 0.6061,
+        "rules_precision_at_upper_fpr": 0.7807,
+        "rules_f1_at_upper_fpr": 0.5585,
         "always_1_f1": 0.6667,
         "rank_at_observed_fpr": 1,
-        "rank_at_upper_fpr": 1
+        "rank_at_upper_fpr": 3
       },
       "0.3333": {
         "rules_precision_at_observed_fpr": 1.0,
-        "rules_f1_at_observed_fpr": 0.6857,
-        "rules_precision_at_upper_fpr": 0.6811,
-        "rules_f1_at_upper_fpr": 0.5909,
+        "rules_f1_at_observed_fpr": 0.6061,
+        "rules_precision_at_upper_fpr": 0.6403,
+        "rules_f1_at_upper_fpr": 0.5179,
         "always_1_f1": 0.5,
         "rank_at_observed_fpr": 1,
-        "rank_at_upper_fpr": 1
+        "rank_at_upper_fpr": 4
       },
       "0.2500": {
         "rules_precision_at_observed_fpr": 1.0,
-        "rules_f1_at_observed_fpr": 0.6857,
-        "rules_precision_at_upper_fpr": 0.5875,
-        "rules_f1_at_upper_fpr": 0.5527,
+        "rules_f1_at_observed_fpr": 0.6061,
+        "rules_precision_at_upper_fpr": 0.5427,
+        "rules_f1_at_upper_fpr": 0.4828,
         "always_1_f1": 0.4,
         "rank_at_observed_fpr": 1,
-        "rank_at_upper_fpr": 3
+        "rank_at_upper_fpr": 18
       },
       "0.2372": {
         "rules_precision_at_observed_fpr": 1.0,
-        "rules_f1_at_observed_fpr": 0.6857,
-        "rules_precision_at_upper_fpr": 0.5705,
-        "rules_f1_at_upper_fpr": 0.545,
+        "rules_f1_at_observed_fpr": 0.6061,
+        "rules_precision_at_upper_fpr": 0.5254,
+        "rules_f1_at_upper_fpr": 0.4758,
         "always_1_f1": 0.3834,
         "rank_at_observed_fpr": 1,
-        "rank_at_upper_fpr": 3
+        "rank_at_upper_fpr": 20
       }
     },
     "measured_share_of_positives": 0.2372

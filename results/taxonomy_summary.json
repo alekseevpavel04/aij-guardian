@@ -5,14 +5,12 @@
     "contradiction": 14,
     "unsupported": 9
   },
-  "caught_by_checks": 12,
+  "caught_by_checks": 10,
   "by_category": {
     "policy_violation": {
       "examples": 6,
-      "caught_by_checks": 2,
-      "checks_that_fired": [
-        "unknown_argument"
-      ]
+      "caught_by_checks": 0,
+      "checks_that_fired": []
     },
     "tool_not_available": {
       "examples": 5,
@@ -39,8 +37,7 @@
       "examples": 1,
       "caught_by_checks": 1,
       "checks_that_fired": [
-        "missing_required_argument",
-        "unknown_argument"
+        "missing_required_argument"
       ]
     },
     "wrong_aggregation": {
