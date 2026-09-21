@@ -57,14 +57,24 @@ GENERATED = {
             str(tmp / "x.json"),
         ],
     ),
+    "source_match.json": ("source_match.py", lambda tmp: ["--out", str(tmp / "x.json")]),
 }
-# downloaded sources the external sets are built from; not in git
-EXTERNAL = [ROOT / "data/external/apb/tau2/test.jsonl", Path("D:/VScode_projects/TrajDebug/data/trajerrbench")]
-NEEDS_EXTERNAL = {"external_apb.json", "external_trajerr.json", "external_splits.json", "rules_external.json"}
 # runtime.json is a timing, tau2_match.json needs the network, baseline_inventory.json the unpacked
 # organiser archive and tau2_reference.json a local clone of tau2-bench, so none of them is re-checked here
-NEEDS_DATA = {"eda.json", "trivial_baselines.json", "rules_baseline.json"}
 DATA = ROOT / "data/raw/valid.parquet"
+# downloaded sources, not in git
+EXTERNAL = [ROOT / "data/external/apb/tau2/test.jsonl", Path("D:/VScode_projects/TrajDebug/data/trajerrbench")]
+LEADERBOARD = [ROOT / "data/external/tau2_leaderboard/submissions"]
+REQUIRES = {
+    "eda.json": [DATA],
+    "trivial_baselines.json": [DATA],
+    "rules_baseline.json": [DATA],
+    "external_apb.json": [DATA, *EXTERNAL],
+    "external_trajerr.json": [DATA, *EXTERNAL],
+    "external_splits.json": [DATA, *EXTERNAL],
+    "rules_external.json": [DATA, *EXTERNAL],
+    "source_match.json": [DATA, *LEADERBOARD],
+}
 
 
 def run(script: str, extra: list[str], tmp: Path) -> None:
@@ -106,11 +116,9 @@ def main() -> None:
         tmp = Path(raw_tmp)
         done = set()
         for name, (script, extra) in GENERATED.items():
-            if name in NEEDS_DATA and not DATA.exists():
-                print(f"skip {name}: needs {DATA.name}")
-                continue
-            if name in NEEDS_EXTERNAL and not (DATA.exists() and all(p.exists() for p in EXTERNAL)):
-                print(f"skip {name}: needs the downloaded external sources")
+            missing = [path for path in REQUIRES.get(name, []) if not path.exists()]
+            if missing:
+                print(f"skip {name}: needs {', '.join(str(path) for path in missing)}")
                 continue
             if script not in done:
                 run(script, extra(tmp), tmp)
