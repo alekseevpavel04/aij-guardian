@@ -18,6 +18,7 @@ import pandas as pd
 from guardian import journal
 from guardian.env import setup
 from guardian.judge import JudgeClient
+from guardian.labeller import without_one_call_rule
 
 ROOT = Path(__file__).resolve().parents[1]
 SALT = "aij-guardian pseudo-test labels"
@@ -39,6 +40,9 @@ def main() -> None:
     ap.add_argument("--answer-prefix", default="Метка: ")
     ap.add_argument("--server", default="http://127.0.0.1:8080/v1")
     ap.add_argument("--max-rows", type=int, default=None)
+    ap.add_argument(
+        "--strip-one-call-rule", action="store_true", help="labeller view without the one-call rule (guardian.labeller)"
+    )
     ap.add_argument("--split", default=None, help="keep rows of one split (column `split`), e.g. train")
     args = ap.parse_args()
 
@@ -64,7 +68,8 @@ def main() -> None:
     started = time.monotonic()
     for i, row in enumerate(todo.itertuples(), 1):
         # an empty reference (no unique τ² task) sends no <reference> block at all
-        verdict = client.score(prompt, row.prompt, row.response, row.reference or None)
+        context = without_one_call_rule(row.prompt) if args.strip_one_call_rule else row.prompt
+        verdict = client.score(prompt, context, row.response, row.reference or None)
         journal.append(
             log,
             {
@@ -76,6 +81,7 @@ def main() -> None:
                 "seconds": round(verdict.seconds, 2),
                 "labeller": args.prompt.name,
                 "thinking_tokens": args.thinking_tokens,
+                "strip_one_call_rule": args.strip_one_call_rule,
             },
         )
         elapsed = time.monotonic() - started

@@ -24,6 +24,7 @@ from sklearn.metrics import roc_auc_score
 from guardian import journal
 from guardian.env import setup
 from guardian.judge import JudgeClient
+from guardian.labeller import without_one_call_rule
 from guardian.metrics import best_threshold, binary_scores
 from guardian.tau2_tasks import reference_text, unique_task
 
@@ -104,6 +105,9 @@ def main() -> None:
     ap.add_argument("--only", default=None, help="comma-separated ids to score (probes on chosen cases)")
     ap.add_argument("--out", type=Path, default=None, help="summary file, results/judge_<name>.json by default")
     ap.add_argument(
+        "--strip-one-call-rule", action="store_true", help="labeller view without the one-call rule (guardian.labeller)"
+    )
+    ap.add_argument(
         "--reference", choices=("tau2",), default=None, help="give a labeller the τ² task of each row (valid only)"
     )
     args = ap.parse_args()
@@ -131,7 +135,8 @@ def main() -> None:
         todo = todo.head(args.max_rows)
     started = time.monotonic()
     for i, row in enumerate(todo.itertuples(), 1):
-        verdict = client.score(system_prompt, row.prompt, row.response, references.get(row.id))
+        prompt = without_one_call_rule(row.prompt) if args.strip_one_call_rule else row.prompt
+        verdict = client.score(system_prompt, prompt, row.response, references.get(row.id))
         record = {
             "id": row.id,
             "score": verdict.score,
@@ -176,6 +181,8 @@ def main() -> None:
         "mean_prompt_tokens": round(float(records.prompt_tokens.mean())),
         **summarise(scored),
     }
+    if args.strip_one_call_rule:
+        summary["strip_one_call_rule"] = True
     if args.reference:
         summary["reference"] = args.reference
         # for a labeller the question is agreement with the organiser's label, with and without the task
