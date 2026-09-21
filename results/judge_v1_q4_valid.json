@@ -5,6 +5,7 @@
   "seed": 0,
   "source": null,
   "system_prompt": "judge_v1.md",
+  "append_prompt": null,
   "thinking": false,
   "thinking_tokens": null,
   "rows_without_a_verdict_token": 0,

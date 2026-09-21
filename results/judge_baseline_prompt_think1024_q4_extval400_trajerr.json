@@ -5,6 +5,7 @@
   "seed": 0,
   "source": "trajerrbench",
   "system_prompt": "prompt.md",
+  "append_prompt": null,
   "thinking": true,
   "thinking_tokens": 1024,
   "rows_without_a_verdict_token": 0,
