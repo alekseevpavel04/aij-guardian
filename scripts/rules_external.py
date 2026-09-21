@@ -58,6 +58,9 @@ def main() -> None:
         hits[i] = [len(found[n]) > 0 for n in names]
     elapsed = time.monotonic() - started
     predictor = hits[:, [names.index(n) for n in DEFAULT_CHECKS]].any(axis=1).astype(int)
+    # the submission variant without repeated_call, whose labels disagree between the two sources
+    without_repeats = [n for n in DEFAULT_CHECKS if n != "repeated_call"]
+    predictor_without_repeats = hits[:, [names.index(n) for n in without_repeats]].any(axis=1).astype(int)
 
     report = {"rows": len(frame), "parts": {}}
     for part_name in ("ext_dev", "ext_val"):
@@ -67,14 +70,20 @@ def main() -> None:
             "rows": int(mask.sum()),
             "positives": int(y.sum()),
             "predictor": scores(y, predictor[mask]),
+            "predictor_without_repeated_call": scores(y, predictor_without_repeats[mask]),
             "checks": {n: scores(y, hits[mask, j]) for j, n in enumerate(names)},
             "predictor_by_source": {},
             "predictor_by_domain": {},
+            "predictor_without_repeated_call_by_domain": {},
         }
         for column, key in (("source", "predictor_by_source"), ("domain", "predictor_by_domain")):
             for value in sorted(frame[column].unique()):
                 sub = mask & (frame[column] == value).to_numpy()
                 entry[key][value] = scores(frame.weak_label.to_numpy()[sub], predictor[sub])
+                if column == "domain":
+                    entry["predictor_without_repeated_call_by_domain"][value] = scores(
+                        frame.weak_label.to_numpy()[sub], predictor_without_repeats[sub]
+                    )
         report["parts"][part_name] = entry
 
     args.out.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
