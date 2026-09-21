@@ -151,9 +151,6 @@ def render_trajectory(messages: list[dict], system: str) -> list[RenderedStep]:
     return steps
 
 
-TAU2_USER_ID_RE = re.compile(r"\b[a-z]+(?:_[a-z]+)+_\d{3,5}\b")
-
-
 def tau2_user(messages: list[dict]) -> str | None:
     """The τ² user id of a trajectory (e.g. mei_brown_7075), the first one mentioned anywhere.
 
