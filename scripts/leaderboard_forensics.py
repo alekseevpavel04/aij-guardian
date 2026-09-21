@@ -82,9 +82,7 @@ def main() -> None:
         "test_size_lower_bound": max(r["predicted_positive"] for r in recon),
         "teams_with_full_recall": [r["team"] for r in all_ones],
         "test_size_from_full_recall": sorted({r["predicted_positive"] for r in all_ones}) or None,
-        "positive_share": (
-            round(p / all_ones[0]["predicted_positive"], 4) if all_ones else None
-        ),
+        "positive_share": (round(p / all_ones[0]["predicted_positive"], 4) if all_ones else None),
         "teams": recon,
     }
     args.out.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

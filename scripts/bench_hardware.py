@@ -34,9 +34,21 @@ def bench_llama(prompt_tokens: list[int]) -> dict:
     if not (LLAMA_BENCH.exists() and GGUF.exists()):
         return {"available": False}
     command = [
-        str(LLAMA_BENCH), "-m", str(GGUF), "-ngl", "99", "-r", "1",
-        "-p", ",".join(str(t) for t in prompt_tokens), "-n", "64",
-        "-ctk", "q8_0", "-ctv", "q8_0",
+        str(LLAMA_BENCH),
+        "-m",
+        str(GGUF),
+        "-ngl",
+        "99",
+        "-r",
+        "1",
+        "-p",
+        ",".join(str(t) for t in prompt_tokens),
+        "-n",
+        "64",
+        "-ctk",
+        "q8_0",
+        "-ctv",
+        "q8_0",
     ]
     result = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", errors="replace")
     rows = {f"{kind}{size}": float(rate) for kind, size, rate in ROW_RE.findall(result.stdout)}
@@ -52,8 +64,14 @@ def bench_encoder(lengths: list[int], batches: list[int], max_tokens: int) -> di
 
     torch.backends.cuda.matmul.allow_tf32 = True
     config = ModernBertConfig(
-        vocab_size=50368, hidden_size=768, num_hidden_layers=22, num_attention_heads=12,
-        intermediate_size=1152, max_position_embeddings=8192, num_labels=2, reference_compile=False,
+        vocab_size=50368,
+        hidden_size=768,
+        num_hidden_layers=22,
+        num_attention_heads=12,
+        intermediate_size=1152,
+        max_position_embeddings=8192,
+        num_labels=2,
+        reference_compile=False,
     )
     model = ModernBertForSequenceClassification(config).cuda().to(torch.bfloat16)
     optimizer = torch.optim.AdamW(model.parameters(), lr=1e-5)
@@ -123,8 +141,10 @@ def main() -> None:
         elif m.get("oom"):
             print(f"{'encoder ' + key:>22}: out of memory")
         else:
-            print(f"{'encoder ' + key:>22}: {m['ms_per_step']:>6} ms/step, "
-                  f"{m['examples_per_second']:>5} examples/s, peak {m['peak_gib']} GiB")
+            print(
+                f"{'encoder ' + key:>22}: {m['ms_per_step']:>6} ms/step, "
+                f"{m['examples_per_second']:>5} examples/s, peak {m['peak_gib']} GiB"
+            )
 
 
 if __name__ == "__main__":
