@@ -1,3 +1,9 @@
+import json
+import re
+from pathlib import Path
+
+import pytest
+
 from guardian.parsing import parse_available_tools, parse_transcript, system_turn
 from guardian.render import render_system, render_tools, render_trajectory, tau2_user
 
@@ -104,3 +110,29 @@ def test_tau2_user_is_found_in_text_or_call_arguments():
     assert tau2_user(said) == "mei_brown_7075"
     called = [{"role": "assistant", "tool_calls": [{"function": {"arguments": '{"user_id": "sara_doe_496"}'}}]}]
     assert tau2_user(called) == "sara_doe_496"
+
+
+ROOT = Path(__file__).resolve().parents[1]
+VALID = ROOT / "data" / "raw" / "valid.parquet"
+APB = ROOT / "data" / "external" / "apb" / "tau2" / "test.jsonl"
+
+
+@pytest.mark.skipif(not (VALID.exists() and APB.exists()), reason="needs valid.parquet and AgentProcessBench")
+def test_rendered_tools_match_the_competition_data_byte_for_byte():
+    """Every tool AgentProcessBench shares with valid.parquet renders exactly as the organiser wrote it."""
+    import pandas as pd
+
+    def blocks(text: str) -> dict[str, str]:
+        body = text[text.find("[AVAILABLE TOOLS]") + len("[AVAILABLE TOOLS]") :].strip()
+        return {b.split(" — ")[0]: b for b in re.split(r"\n(?=- )", body)}
+
+    frame = pd.read_parquet(VALID)
+    trajectories = [json.loads(line) for line in APB.read_text(encoding="utf-8").splitlines()]
+    shared = 0
+    for domain in ("airline", "retail", "telecom"):
+        ours = blocks(system_turn(parse_transcript(frame[frame.id.str.startswith(domain)].prompt.iloc[0])).text)
+        theirs = blocks(render_tools(next(t for t in trajectories if t["data_source"] == f"tau2_{domain}")["tools"]))
+        for name in ours.keys() & theirs.keys():
+            assert theirs[name] == ours[name], name
+            shared += 1
+    assert shared >= 39

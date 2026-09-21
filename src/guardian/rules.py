@@ -140,7 +140,7 @@ def unknown_arguments(calls: list[ToolCall], ctx: Context) -> list[str]:
 
     Keys inside array elements are not checked: τ²-bench declares those elements with
     additionalProperties allowed, so `flights[].price` is accepted by the environment and is not an
-    error. On the external dev part, nested keys were 36 of the check's 36 firings on negatives.
+    error. On the external dev part every firing of the nested version on a correct step was such a key.
     """
     out = []
     for call in calls:
