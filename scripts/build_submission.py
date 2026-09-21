@@ -23,6 +23,8 @@ import stat
 import zipfile
 from pathlib import Path
 
+from guardian.predictor import DEFAULT_CHECKS
+
 ROOT = Path(__file__).resolve().parents[1]
 MODULES = ("__init__.py", "io.py", "parsing.py", "predictor.py", "rules.py")
 
@@ -58,7 +60,7 @@ otherwise, regardless of the extension. No network access and no model weights a
 """
 
 
-def build(out_dir: Path, strategy: str, label: int, version: str) -> None:
+def build(out_dir: Path, strategy: str, label: int, version: str, without: tuple[str, ...] = ()) -> None:
     if out_dir.exists():
         shutil.rmtree(out_dir)
     (out_dir / "src/guardian").mkdir(parents=True)
@@ -72,6 +74,8 @@ def build(out_dir: Path, strategy: str, label: int, version: str) -> None:
     (out_dir / "pyproject.toml").write_text(PYPROJECT.format(version=version), encoding="utf-8")
     (out_dir / "README.md").write_text(README.format(strategy=strategy), encoding="utf-8")
     config = {"strategy": strategy, "label": label}
+    if without:
+        config["checks"] = [c for c in DEFAULT_CHECKS if c not in without]
     (out_dir / "model/config.json").write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
 
 
@@ -122,10 +126,12 @@ def main() -> None:
     ap.add_argument("--version", default="0.1.0")
     ap.add_argument("--out", type=Path, default=ROOT / "submission")
     ap.add_argument("--archive", type=Path, default=None)
+    ap.add_argument("--without", nargs="+", default=[], choices=DEFAULT_CHECKS, help="checks left out of the predictor")
     args = ap.parse_args()
 
-    build(args.out, args.strategy, args.label, args.version)
-    name = f"guardian_{args.strategy}{'_' + str(args.label) if args.strategy == 'constant' else ''}.zip"
+    build(args.out, args.strategy, args.label, args.version, tuple(args.without))
+    suffix = f"_{args.label}" if args.strategy == "constant" else "".join(f"_no_{c}" for c in args.without)
+    name = f"guardian_{args.strategy}{suffix}.zip"
     archive = args.archive or ROOT / "submissions" / name
     zip_dir(args.out, archive)
     problems = check_archive(archive)
