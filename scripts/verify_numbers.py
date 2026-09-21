@@ -25,7 +25,30 @@ GENERATED = {
     "rules_baseline.json": ("rules_baseline.py", lambda tmp: ["--out", str(tmp / "x.json")]),
     "taxonomy_summary.json": ("taxonomy_summary.py", lambda tmp: ["--out", str(tmp / "x.json")]),
     "submission_counts.json": ("submission_counts.py", lambda tmp: ["--out", str(tmp / "x.json")]),
+    "external_apb.json": (
+        "build_apb.py",
+        lambda tmp: ["--out", str(tmp / "apb.parquet"), "--stats", str(tmp / "x.json")],
+    ),
+    "external_trajerr.json": (
+        "build_trajerr.py",
+        lambda tmp: ["--out", str(tmp / "trajerr.parquet"), "--stats", str(tmp / "x.json")],
+    ),
+    "external_splits.json": (
+        "split_external.py",
+        lambda tmp: [
+            "--sources",
+            str(tmp / "apb.parquet"),
+            str(tmp / "trajerr.parquet"),
+            "--splits",
+            str(tmp / "splits.json"),
+            "--out",
+            str(tmp / "x.json"),
+        ],
+    ),
 }
+# downloaded sources the external sets are built from; not in git
+EXTERNAL = [ROOT / "data/external/apb/tau2/test.jsonl", Path("D:/VScode_projects/TrajDebug/data/trajerrbench")]
+NEEDS_EXTERNAL = {"external_apb.json", "external_trajerr.json", "external_splits.json"}
 # runtime.json is a timing, tau2_match.json needs the network, baseline_inventory.json the unpacked
 # organiser archive and tau2_reference.json a local clone of tau2-bench, so none of them is re-checked here
 NEEDS_DATA = {"eda.json", "trivial_baselines.json", "rules_baseline.json"}
@@ -73,6 +96,9 @@ def main() -> None:
         for name, (script, extra) in GENERATED.items():
             if name in NEEDS_DATA and not DATA.exists():
                 print(f"skip {name}: needs {DATA.name}")
+                continue
+            if name in NEEDS_EXTERNAL and not (DATA.exists() and all(p.exists() for p in EXTERNAL)):
+                print(f"skip {name}: needs the downloaded external sources")
                 continue
             if script not in done:
                 run(script, extra(tmp), tmp)

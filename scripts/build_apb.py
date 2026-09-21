@@ -40,7 +40,7 @@ def main() -> None:
     ap.add_argument("--source", type=Path, default=ROOT / "data/external/apb/tau2/test.jsonl")
     ap.add_argument("--revision", default="cd81f326aece8b0a3f6359e20df370690d3a98bf")
     ap.add_argument("--out", type=Path, default=ROOT / "data/external/apb_tau2.parquet")
-    ap.add_argument("--stats", type=Path, default=ROOT / "results/external_data.json")
+    ap.add_argument("--stats", type=Path, default=ROOT / "results/external_apb.json")
     args = ap.parse_args()
 
     raw = args.source.read_bytes()
@@ -92,8 +92,7 @@ def main() -> None:
         or bool(unknown_roles(parse_transcript(r.prompt)))
         for r in frame.itertuples()
     )
-    stats = json.loads(args.stats.read_text(encoding="utf-8")) if args.stats.exists() else {}
-    stats["agentprocessbench_tau2"] = {
+    stats = {
         "source": f"https://huggingface.co/datasets/{REPO}",
         "revision": args.revision,
         "file": "tau2/test.jsonl",
@@ -116,7 +115,7 @@ def main() -> None:
         "prompt_chars_p50": int(frame.prompt.str.len().median()),
     }
     args.stats.write_text(json.dumps(stats, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(json.dumps(stats["agentprocessbench_tau2"], ensure_ascii=False, indent=2))
+    print(json.dumps(stats, ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":

@@ -1,0 +1,40 @@
+{
+  "source": "https://github.com/THU-KEG/TrajDebug",
+  "revision": "5b04f98b1995ec758d9aba70940d17bb7d2d169b",
+  "path": "data/trajerrbench/en/tau2bench",
+  "files_sha256": "4ce24532eb9503af3193c8dfe73c96ed330da9d2774a2bca28fa2c7bef64e904",
+  "license": "annotations MIT; trajectories from tau2-bench (MIT)",
+  "trajectories": 400,
+  "skipped": {
+    "critical_step_is_not_an_agent_step": 1
+  },
+  "rows": 3137,
+  "positives": 399,
+  "negatives_weak": 2738,
+  "positives_by_error_family": {
+    "reason": 237,
+    "plan": 58,
+    "obs": 53,
+    "act": 24,
+    "verify": 19,
+    "untyped": 8
+  },
+  "by_domain": {
+    "airline": {
+      "rows": 1658,
+      "positives": 220
+    },
+    "retail": {
+      "rows": 1479,
+      "positives": 179
+    }
+  },
+  "by_agent": {
+    "deepseek-reasoner": 174,
+    "gpt-5": 146,
+    "qwen3-max": 79
+  },
+  "groups": 75,
+  "rows_the_parser_does_not_fully_recognise": 0,
+  "prompt_chars_p50": 16946
+}

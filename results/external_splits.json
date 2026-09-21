@@ -1,0 +1,112 @@
+{
+  "salt": "aij-guardian ext_val 2026-09-21",
+  "val_share_of_groups": 0.4,
+  "groups": 97,
+  "val_groups": [
+    "airline:airline_failed_qwen3-max_c34f78a1-fb7e-4d0f-8f50-f56e6ac04241",
+    "airline:amelia_davis_8890",
+    "airline:amelia_sanchez_4739",
+    "airline:daiki_lee_6144",
+    "airline:daiki_muller_1116",
+    "airline:ivan_muller_7015",
+    "airline:ivan_rossi_8555",
+    "airline:james_lee_6136",
+    "airline:james_patel_123",
+    "airline:james_patel_9828",
+    "airline:james_taylor_7043",
+    "airline:mei_brown_123",
+    "airline:mei_brown_7075",
+    "airline:omar_rossi_1241",
+    "airline:sofia_kim_7287",
+    "retail:aarav_anderson_8794",
+    "retail:ava_nguyen_6646",
+    "retail:chen_johnson_4204",
+    "retail:daiki_johnson_9523",
+    "retail:daiki_silva_2903",
+    "retail:ethan_garcia_1261",
+    "retail:fatima_taylor_3452",
+    "retail:isabella_lopez_6490",
+    "retail:james_sanchez_3954",
+    "retail:lucas_brown_6720",
+    "retail:lucas_santos_6600",
+    "retail:mei_ahmed_4909",
+    "retail:mei_davis_8935",
+    "retail:mei_patel_7272",
+    "retail:noah_ito_3850",
+    "retail:noah_patel_6952",
+    "retail:olivia_lopez_3865",
+    "retail:sofia_li_9219",
+    "retail:sofia_thomas_1518",
+    "retail:sophia_martin_8570",
+    "retail:yara_ito_8499",
+    "retail:yara_silva_7567",
+    "retail:yusuf_hernandez_6785",
+    "retail:yusuf_rossi_9620",
+    "retail:yusuf_taylor_7149",
+    "telecom:task36",
+    "telecom:task38",
+    "telecom:task41",
+    "telecom:task43",
+    "telecom:task48"
+  ],
+  "parts": {
+    "ext_dev": {
+      "rows": 3626,
+      "positives": 925,
+      "groups": 52,
+      "by_source": {
+        "agentprocessbench": {
+          "rows": 1719,
+          "positives": 685
+        },
+        "trajerrbench": {
+          "rows": 1907,
+          "positives": 240
+        }
+      },
+      "by_domain": {
+        "airline": {
+          "rows": 1767,
+          "positives": 362
+        },
+        "retail": {
+          "rows": 975,
+          "positives": 104
+        },
+        "telecom": {
+          "rows": 884,
+          "positives": 459
+        }
+      }
+    },
+    "ext_val": {
+      "rows": 2691,
+      "positives": 584,
+      "groups": 45,
+      "by_source": {
+        "agentprocessbench": {
+          "rows": 1461,
+          "positives": 425
+        },
+        "trajerrbench": {
+          "rows": 1230,
+          "positives": 159
+        }
+      },
+      "by_domain": {
+        "airline": {
+          "rows": 770,
+          "positives": 160
+        },
+        "retail": {
+          "rows": 1484,
+          "positives": 178
+        },
+        "telecom": {
+          "rows": 437,
+          "positives": 246
+        }
+      }
+    }
+  }
+}

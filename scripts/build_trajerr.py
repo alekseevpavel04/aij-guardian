@@ -78,7 +78,7 @@ def main() -> None:
     ap.add_argument("--repo", type=Path, default=Path("D:/VScode_projects/TrajDebug"))
     ap.add_argument("--valid", type=Path, default=ROOT / "data/raw/valid.parquet")
     ap.add_argument("--out", type=Path, default=ROOT / "data/external/trajerr_tau2.parquet")
-    ap.add_argument("--stats", type=Path, default=ROOT / "results/external_data.json")
+    ap.add_argument("--stats", type=Path, default=ROOT / "results/external_trajerr.json")
     args = ap.parse_args()
 
     source = args.repo / "data/trajerrbench/en/tau2bench"
@@ -134,8 +134,7 @@ def main() -> None:
         for r in frame.itertuples()
     )
     positives = frame[frame.weak_label == 1]
-    stats = json.loads(args.stats.read_text(encoding="utf-8")) if args.stats.exists() else {}
-    stats["trajerrbench_tau2"] = {
+    stats = {
         "source": "https://github.com/THU-KEG/TrajDebug",
         "revision": commit,
         "path": "data/trajerrbench/en/tau2bench",
@@ -154,7 +153,7 @@ def main() -> None:
         "prompt_chars_p50": int(frame.prompt.str.len().median()),
     }
     args.stats.write_text(json.dumps(stats, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(json.dumps(stats["trajerrbench_tau2"], ensure_ascii=False, indent=2))
+    print(json.dumps(stats, ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":
