@@ -58,6 +58,7 @@ GENERATED = {
         ],
     ),
     "source_match.json": ("source_match.py", lambda tmp: ["--out", str(tmp / "x.json")]),
+    "budget_model.json": ("budget_model.py", lambda tmp: ["--out", str(tmp / "x.json")]),
 }
 # runtime.json is a timing, tau2_match.json needs the network, baseline_inventory.json the unpacked
 # organiser archive and tau2_reference.json a local clone of tau2-bench, so none of them is re-checked here
