@@ -165,6 +165,32 @@
     "0": 0,
     "1": 23
   },
+  "system_blocks_by_domain": {
+    "airline": {
+      "distinct": 1,
+      "chars": [
+        13488
+      ]
+    },
+    "banking_knowledge": {
+      "distinct": 1,
+      "chars": [
+        12681
+      ]
+    },
+    "retail": {
+      "distinct": 1,
+      "chars": [
+        14826
+      ]
+    },
+    "telecom": {
+      "distinct": 1,
+      "chars": [
+        27446
+      ]
+    }
+  },
   "duplicate_prompts": 0,
   "duplicate_prompt_response_pairs": 0
 }

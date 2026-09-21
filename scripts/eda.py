@@ -19,7 +19,14 @@ import pandas as pd
 from guardian.env import setup
 from guardian.io import read_rows
 from guardian.metrics import binary_scores, bootstrap_ci
-from guardian.parsing import MARKER_LIKE_RE, TURN_INDEX_RE, parse_transcript, unknown_roles, unparsed_markers
+from guardian.parsing import (
+    MARKER_LIKE_RE,
+    TURN_INDEX_RE,
+    parse_transcript,
+    system_turn,
+    unknown_roles,
+    unparsed_markers,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 ALT_MARKERS = ("→ TOOL_CALL", "← TOOL_RESPONSE", "[AVAILABLE TOOLS]", "⟦ASSISTANT_TOOL_CALL")
@@ -68,6 +75,18 @@ def length_report(frame) -> dict:
             "chars_max": int(chars.max()),
         }
     return out
+
+
+def system_block_report(frame) -> dict:
+    """Distinct ⟦SYSTEM⟧ blocks per domain: one each means the policy is a fixed text per domain."""
+    blocks: dict[str, set[str]] = {}
+    for row in frame.itertuples():
+        system = system_turn(parse_transcript(row.prompt))
+        blocks.setdefault(domain_of(row.id), set()).add(system.text if system else "")
+    return {
+        domain: {"distinct": len(texts), "chars": sorted(len(t) for t in texts)}
+        for domain, texts in sorted(blocks.items())
+    }
 
 
 def trivial_baselines(y: np.ndarray, frame, seed: int = 42) -> dict:
@@ -123,6 +142,7 @@ def main() -> None:
         "explanation_non_empty_by_label": (
             {str(k): int(explanations[y == k].ne("").sum()) for k in (0, 1)} if explanations is not None else None
         ),
+        "system_blocks_by_domain": system_block_report(frame),
         "duplicate_prompts": int(frame["prompt"].duplicated().sum()),
         "duplicate_prompt_response_pairs": int(frame.duplicated(subset=["prompt", "response"]).sum()),
     }
@@ -139,6 +159,7 @@ def main() -> None:
     print(f"markers: {fmt['markers'][:6]}")
     print(f"markers documented on the Data tab: {fmt['markers_documented_on_data_tab']}")
     print(f"unparsed markers: {fmt['unparsed_markers']}, unexpected roles: {fmt['unexpected_roles']}")
+    print(f"distinct system blocks by domain: {eda['system_blocks_by_domain']}")
     print(f"explanation non-empty by label: {eda['explanation_non_empty_by_label']}")
     print(f"prompt length in chars: {eda['lengths']['prompt']}")
     for name, m in baselines.items():
