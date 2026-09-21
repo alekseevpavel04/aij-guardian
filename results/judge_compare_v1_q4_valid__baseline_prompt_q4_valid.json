@@ -1,6 +1,8 @@
 {
   "a": "v1_q4_valid",
   "b": "baseline_prompt_q4_valid",
+  "source": null,
+  "where_rules_silent": false,
   "rows": 46,
   "positives": 23,
   "trajectories": 45,

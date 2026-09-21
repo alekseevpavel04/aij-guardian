@@ -76,6 +76,98 @@ REQUIRES = {
     "rules_external.json": [DATA, *EXTERNAL],
     "source_match.json": [DATA, *LEADERBOARD],
 }
+# judge runs: the summary is recomputed from the jsonl of scores, no server call is made
+JUDGE_RUNS = {
+    "baseline_prompt_q4_valid": [
+        "--data",
+        "valid",
+        "--system-prompt",
+        "data/raw/baseline/baseline/src/hallucination_detector/prompt.md",
+    ],
+    "v1_q4_valid": ["--data", "valid", "--system-prompt", "configs/prompts/judge_v1.md"],
+    "baseline_prompt_think1024_q4_valid": [
+        "--data",
+        "valid",
+        "--system-prompt",
+        "data/raw/baseline/baseline/src/hallucination_detector/prompt.md",
+        "--thinking",
+        "--thinking-tokens",
+        "1024",
+    ],
+    "v1_q4_extval400": [
+        "--data",
+        "ext_val",
+        "--limit",
+        "400",
+        "--seed",
+        "0",
+        "--system-prompt",
+        "configs/prompts/judge_v1.md",
+    ],
+    "baseline_prompt_q4_extval400": [
+        "--data",
+        "ext_val",
+        "--limit",
+        "400",
+        "--seed",
+        "0",
+        "--system-prompt",
+        "data/raw/baseline/baseline/src/hallucination_detector/prompt.md",
+    ],
+}
+JUDGE_COMPARES = {
+    "v1_q4_valid__baseline_prompt_q4_valid": ["--a", "v1_q4_valid", "--b", "baseline_prompt_q4_valid"],
+    "v1_q4_valid__baseline_prompt_q4_valid__rules_silent": [
+        "--a",
+        "v1_q4_valid",
+        "--b",
+        "baseline_prompt_q4_valid",
+        "--where-rules-silent",
+    ],
+    "v1_q4_extval400__baseline_prompt_q4_extval400": ["--a", "v1_q4_extval400", "--b", "baseline_prompt_q4_extval400"],
+    "v1_q4_extval400__baseline_prompt_q4_extval400__rules_silent": [
+        "--a",
+        "v1_q4_extval400",
+        "--b",
+        "baseline_prompt_q4_extval400",
+        "--where-rules-silent",
+    ],
+    "v1_q4_extval400__baseline_prompt_q4_extval400__trajerrbench": [
+        "--a",
+        "v1_q4_extval400",
+        "--b",
+        "baseline_prompt_q4_extval400",
+        "--source",
+        "trajerrbench",
+    ],
+    "v1_q4_extval400__baseline_prompt_q4_extval400__agentprocessbench__rules_silent": [
+        "--a",
+        "v1_q4_extval400",
+        "--b",
+        "baseline_prompt_q4_extval400",
+        "--source",
+        "agentprocessbench",
+        "--where-rules-silent",
+    ],
+    "baseline_prompt_think1024_q4_valid__baseline_prompt_q4_valid": [
+        "--a",
+        "baseline_prompt_think1024_q4_valid",
+        "--b",
+        "baseline_prompt_q4_valid",
+    ],
+}
+for _name, _args in JUDGE_RUNS.items():
+    GENERATED[f"judge_{_name}.json"] = (
+        "judge_eval.py",
+        lambda tmp, a=_args, n=_name: [*a, "--name", n, "--out", str(tmp / "x.json")],
+    )
+    REQUIRES[f"judge_{_name}.json"] = [DATA, *EXTERNAL, ROOT / "data/interim/judge" / f"{_name}.jsonl"]
+for _name, _args in JUDGE_COMPARES.items():
+    GENERATED[f"judge_compare_{_name}.json"] = (
+        "judge_compare.py",
+        lambda tmp, a=_args: [*a, "--out", str(tmp / "x.json")],
+    )
+    REQUIRES[f"judge_compare_{_name}.json"] = [DATA, *EXTERNAL]
 
 
 def run(script: str, extra: list[str], tmp: Path) -> None:
@@ -121,9 +213,11 @@ def main() -> None:
             if missing:
                 print(f"skip {name}: needs {', '.join(str(path) for path in missing)}")
                 continue
-            if script not in done:
+            # one run per script and arguments: eda.py writes two files, judge_eval.py serves many runs
+            key = (script, *extra(tmp))
+            if key not in done:
                 run(script, extra(tmp), tmp)
-                done.add(script)
+                done.add(key)
             committed_path = args.results / name
             # scripts that take --out write to the name given there, scripts that take --out-dir keep theirs
             recomputed_path = tmp / ("x.json" if "--out" in extra(tmp) else name)

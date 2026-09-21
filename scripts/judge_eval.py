@@ -1,10 +1,12 @@
 """Score labelled rows with an LLM judge served by an OpenAI-compatible server and measure it.
 
 Rows are written to a jsonl as they are scored, so a run that stops can be resumed with the same
-command. On an external part, whole trajectories are sampled and scored in turn order: consecutive
-steps of one trajectory share almost the whole prompt, and the server's prompt cache then computes
-only the new tokens. The summary reports AUROC and F1 at the fixed threshold; a threshold chosen on
-the same rows is reported as optimistic and is not a result.
+command, and a finished run recomputes its summary from the jsonl without calling the server
+(which is how scripts/verify_numbers.py checks it). On an external part, whole trajectories are
+sampled and scored in turn order: consecutive steps of one trajectory share almost the whole
+prompt, and the server's prompt cache then computes only the new tokens. The summary reports AUROC
+and F1 at the fixed threshold; a threshold chosen on the same rows is reported as optimistic and is
+not a result.
 
     python scripts/judge_eval.py --data valid --system-prompt <file> --name baseline_prompt_q4
     python scripts/judge_eval.py --data ext_val --limit 300 --system-prompt <file> --name ...
@@ -95,6 +97,7 @@ def main() -> None:
     ap.add_argument("--thinking-tokens", type=int, default=1024)
     ap.add_argument("--name", required=True)
     ap.add_argument("--max-rows", type=int, default=None, help="stop after this many new rows (speed probes)")
+    ap.add_argument("--out", type=Path, default=None, help="summary file, results/judge_<name>.json by default")
     args = ap.parse_args()
 
     frame = load(args.data, args.limit, args.seed, args.source)
@@ -150,7 +153,7 @@ def main() -> None:
         "mean_prompt_tokens": round(float(records.prompt_tokens.mean())),
         **summarise(scored),
     }
-    out = ROOT / "results" / f"judge_{args.name}.json"
+    out = args.out or ROOT / "results" / f"judge_{args.name}.json"
     out.write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(summary, ensure_ascii=False, indent=2))
 

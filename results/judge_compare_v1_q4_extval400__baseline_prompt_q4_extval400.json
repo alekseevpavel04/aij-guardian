@@ -1,6 +1,8 @@
 {
   "a": "v1_q4_extval400",
   "b": "baseline_prompt_q4_extval400",
+  "source": null,
+  "where_rules_silent": false,
   "rows": 405,
   "positives": 161,
   "trajectories": 34,

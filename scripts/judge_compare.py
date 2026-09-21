@@ -53,6 +53,7 @@ def main() -> None:
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--source", default=None, help="keep one source: valid, agentprocessbench, trajerrbench")
     ap.add_argument("--where-rules-silent", action="store_true")
+    ap.add_argument("--out", type=Path, default=None)
     args = ap.parse_args()
 
     frame = pd.DataFrame({"a": scores(args.a), "b": scores(args.b)}).dropna()
@@ -88,7 +89,7 @@ def main() -> None:
         "resamples": len(diffs),
     }
     suffix = (f"__{args.source}" if args.source else "") + ("__rules_silent" if args.where_rules_silent else "")
-    out = ROOT / "results" / f"judge_compare_{args.a}__{args.b}{suffix}.json"
+    out = args.out or ROOT / "results" / f"judge_compare_{args.a}__{args.b}{suffix}.json"
     out.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(result, indent=2))
 
