@@ -9,13 +9,16 @@ the server do it, is what makes a reasoning budget possible on a server that has
 1. the reasoning is generated after "<think>\\n" until the model closes it or the budget runs out;
 2. "</think>" is then written by us and the verdict is read as one token after it.
 
-Without reasoning the template's empty think block is written directly and only step 2 runs. The
-client uses only the standard library: `pip install .` on the platform runs without network.
+Without reasoning the template's empty think block is written directly and only step 2 runs. If
+the server rejects a plain completion, the client switches, for good, to the chat endpoint with
+thinking disabled: the exact request of the organiser's baseline, which is known to work on the
+platform. The client uses only the standard library: `pip install .` runs without network.
 """
 
 import json
 import math
 import time
+import urllib.error
 import urllib.request
 from dataclasses import dataclass
 
@@ -83,29 +86,62 @@ class JudgeClient:
         thinking: bool = False,
         thinking_tokens: int = 1024,
     ):
-        self.url = base_url.rstrip("/") + "/completions"
+        self.base_url = base_url.rstrip("/")
         self.model = model
         self.timeout = timeout
         self.thinking = thinking
         self.thinking_tokens = thinking_tokens
+        self.use_chat = False
 
-    def _complete(self, prompt: str, **params) -> dict:
-        body = {"model": self.model, "prompt": prompt, "temperature": 0.0, **params}
+    def _post(self, endpoint: str, body: dict) -> dict:
         request = urllib.request.Request(
-            self.url, data=json.dumps(body).encode("utf-8"), headers={"Content-Type": "application/json"}
+            f"{self.base_url}/{endpoint}",
+            data=json.dumps({"model": self.model, "temperature": 0.0, **body}).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
         )
         with urllib.request.urlopen(request, timeout=self.timeout) as reply:
             return json.loads(reply.read().decode("utf-8"))
 
+    def _complete(self, prompt: str, **params) -> dict:
+        return self._post("completions", {"prompt": prompt, **params})
+
+    def _chat_verdict(self, system_prompt: str, prompt: str, response: str) -> dict:
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_text(prompt, response)},
+        ]
+        body = {
+            "messages": messages,
+            "max_tokens": 1,
+            "logprobs": True,
+            "top_logprobs": 20,
+            "chat_template_kwargs": {"enable_thinking": False},
+        }
+        data = self._post("chat/completions", body)
+        # chat logprobs have the llama-server layout, so the same reader handles them
+        return {"choices": [{"logprobs": data["choices"][0].get("logprobs")}], "usage": data.get("usage")}
+
     def score(self, system_prompt: str, prompt: str, response: str) -> Verdict:
         started = time.monotonic()
+        if self.use_chat and not self.thinking:
+            data = self._chat_verdict(system_prompt, prompt, response)
+            return self._verdict(data, None, started)
         text = render(system_prompt, prompt, response, self.thinking)
         reasoning_tokens = None
         if self.thinking:
             thought = self._complete(text, max_tokens=self.thinking_tokens, stop=["</think>"])
             text += thought["choices"][0]["text"].rstrip() + CLOSE_THINK
             reasoning_tokens = (thought.get("usage") or {}).get("completion_tokens")
-        data = self._complete(text, max_tokens=1, logprobs=20)
+        try:
+            data = self._complete(text, max_tokens=1, logprobs=20)
+        except urllib.error.HTTPError:
+            if self.thinking:
+                raise
+            self.use_chat = True
+            data = self._chat_verdict(system_prompt, prompt, response)
+        return self._verdict(data, reasoning_tokens, started)
+
+    def _verdict(self, data: dict, reasoning_tokens: int | None, started: float) -> Verdict:
         top = first_top_logprobs(data["choices"][0].get("logprobs"))
         usage = data.get("usage") or {}
         cached = (usage.get("prompt_tokens_details") or {}).get("cached_tokens")

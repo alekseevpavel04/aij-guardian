@@ -42,3 +42,37 @@ def test_render_matches_the_models_chat_template(thinking):
         messages, tokenize=False, add_generation_prompt=True, enable_thinking=thinking
     )
     assert render("S", "P", "R", thinking) == expected
+
+
+def test_client_falls_back_to_the_chat_endpoint_when_completions_are_rejected():
+    import json
+    import threading
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+
+    from guardian.judge import JudgeClient
+
+    class Handler(BaseHTTPRequestHandler):
+        def do_POST(self):
+            self.rfile.read(int(self.headers["Content-Length"]))
+            if self.path.endswith("/chat/completions"):
+                top = [{"token": "1", "logprob": math.log(0.8)}, {"token": "0", "logprob": math.log(0.2)}]
+                body = {"choices": [{"logprobs": {"content": [{"token": "1", "top_logprobs": top}]}}]}
+                self.send_response(200)
+                self.end_headers()
+                self.wfile.write(json.dumps(body).encode())
+            else:
+                self.send_response(404)
+                self.end_headers()
+
+        def log_message(self, *args):
+            pass
+
+    server = HTTPServer(("127.0.0.1", 0), Handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    try:
+        client = JudgeClient(f"http://127.0.0.1:{server.server_port}/v1")
+        assert abs(client.score("S", "P", "R").score - 0.8) < 1e-9
+        assert client.use_chat
+        assert abs(client.score("S", "P", "R").score - 0.8) < 1e-9
+    finally:
+        server.shutdown()
