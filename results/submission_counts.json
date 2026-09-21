@@ -2,5 +2,21 @@
   "positives": 130,
   "rows": 548,
   "source": "leaderboard_forensics.json",
-  "submissions": []
+  "submissions": [
+    {
+      "date": "2026-09-21",
+      "archive_sha256": "94365e2dc533e06d15947306a73d81bc68c63e45f8e7f1e6bc9f5a35839a7f5b",
+      "strategy": "rules without repeated_call (c6e184e)",
+      "f1": "0.17333",
+      "precision": "0.65",
+      "recall": "0.1",
+      "note": "public leaderboard row read by the author, place 58",
+      "counts": {
+        "tp": 13,
+        "predicted_positive": 20,
+        "fp": 7,
+        "predicted_share": 0.0365
+      }
+    }
+  ]
 }

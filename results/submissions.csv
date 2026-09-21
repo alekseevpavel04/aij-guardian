@@ -1,1 +1,2 @@
 date,archive_sha256,strategy,f1,precision,recall,note
+2026-09-21,94365e2dc533e06d15947306a73d81bc68c63e45f8e7f1e6bc9f5a35839a7f5b,rules without repeated_call (c6e184e),0.17333,0.65,0.1,"public leaderboard row read by the author, place 58"
