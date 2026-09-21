@@ -25,7 +25,7 @@ AGENT_INSTRUCTION = (
     "\n"
     "Try to be helpful and always follow the policy. Always make sure you generate valid JSON only."
 )  # tau2-bench src/tau2/agent/llm_agent.py; the competition data adds a paragraph about Russian
-TAU2_USER_ID_RE = re.compile(r"[a-z]+(?:_[a-z]+)+_\d{3,5}")  # mei_brown_7075
+TAU2_USER_ID_RE = re.compile(r"\b[a-z]+(?:_[a-z]+)+_\d{3,5}\b")  # mei_brown_7075
 
 
 def _resolve(schema: dict, defs: dict) -> dict:

@@ -1,5 +1,5 @@
 from guardian.parsing import parse_available_tools, parse_transcript, system_turn
-from guardian.render import render_system, render_tools, render_trajectory
+from guardian.render import render_system, render_tools, render_trajectory, tau2_user
 
 TOOLS = [
     {
@@ -96,3 +96,11 @@ def test_trajectory_steps():
     assert [t.role for t in turns] == ["SYSTEM", "ASSISTANT", "USER", "ASSISTANT"]
     assert turns[-1].results[0].is_error
     assert system_turn(turns).text.startswith("<instructions>")
+
+
+def test_tau2_user_is_found_in_text_or_call_arguments():
+    assert tau2_user(MESSAGES) is None
+    said = [{"role": "user", "content": "My user ID is mei_brown_7075."}]
+    assert tau2_user(said) == "mei_brown_7075"
+    called = [{"role": "assistant", "tool_calls": [{"function": {"arguments": '{"user_id": "sara_doe_496"}'}}]}]
+    assert tau2_user(called) == "sara_doe_496"
