@@ -1,0 +1,236 @@
+{
+  "rows": 6317,
+  "seconds": 17.4,
+  "parts": {
+    "ext_dev": {
+      "rows": 3626,
+      "positives": 925,
+      "predictor": {
+        "fired": 337,
+        "fired_on_positive": 306,
+        "fired_on_negative": 31,
+        "precision": 0.908,
+        "recall": 0.3308
+      },
+      "checks": {
+        "unknown_tool": {
+          "fired": 111,
+          "fired_on_positive": 111,
+          "fired_on_negative": 0,
+          "precision": 1.0,
+          "recall": 0.12
+        },
+        "unknown_argument": {
+          "fired": 0,
+          "fired_on_positive": 0,
+          "fired_on_negative": 0,
+          "precision": null,
+          "recall": 0.0
+        },
+        "missing_required_argument": {
+          "fired": 7,
+          "fired_on_positive": 7,
+          "fired_on_negative": 0,
+          "precision": 1.0,
+          "recall": 0.0076
+        },
+        "enum_violation": {
+          "fired": 0,
+          "fired_on_positive": 0,
+          "fired_on_negative": 0,
+          "precision": null,
+          "recall": 0.0
+        },
+        "repeated_failed_call": {
+          "fired": 8,
+          "fired_on_positive": 8,
+          "fired_on_negative": 0,
+          "precision": 1.0,
+          "recall": 0.0086
+        },
+        "repeated_call": {
+          "fired": 210,
+          "fired_on_positive": 180,
+          "fired_on_negative": 30,
+          "precision": 0.8571,
+          "recall": 0.1946
+        },
+        "unsupported_argument_value": {
+          "fired": 12,
+          "fired_on_positive": 11,
+          "fired_on_negative": 1,
+          "precision": 0.9167,
+          "recall": 0.0119
+        },
+        "no_op_replacement": {
+          "fired": 1,
+          "fired_on_positive": 1,
+          "fired_on_negative": 0,
+          "precision": 1.0,
+          "recall": 0.0011
+        },
+        "unsupported_number": {
+          "fired": 394,
+          "fired_on_positive": 163,
+          "fired_on_negative": 231,
+          "precision": 0.4137,
+          "recall": 0.1762
+        }
+      },
+      "predictor_by_source": {
+        "agentprocessbench": {
+          "fired": 315,
+          "fired_on_positive": 306,
+          "fired_on_negative": 9,
+          "precision": 0.9714,
+          "recall": 0.4467
+        },
+        "trajerrbench": {
+          "fired": 22,
+          "fired_on_positive": 0,
+          "fired_on_negative": 22,
+          "precision": 0.0,
+          "recall": 0.0
+        }
+      },
+      "predictor_by_domain": {
+        "airline": {
+          "fired": 47,
+          "fired_on_positive": 27,
+          "fired_on_negative": 20,
+          "precision": 0.5745,
+          "recall": 0.0746
+        },
+        "retail": {
+          "fired": 5,
+          "fired_on_positive": 2,
+          "fired_on_negative": 3,
+          "precision": 0.4,
+          "recall": 0.0192
+        },
+        "telecom": {
+          "fired": 285,
+          "fired_on_positive": 277,
+          "fired_on_negative": 8,
+          "precision": 0.9719,
+          "recall": 0.6035
+        }
+      }
+    },
+    "ext_val": {
+      "rows": 2691,
+      "positives": 584,
+      "predictor": {
+        "fired": 203,
+        "fired_on_positive": 179,
+        "fired_on_negative": 24,
+        "precision": 0.8818,
+        "recall": 0.3065
+      },
+      "checks": {
+        "unknown_tool": {
+          "fired": 54,
+          "fired_on_positive": 54,
+          "fired_on_negative": 0,
+          "precision": 1.0,
+          "recall": 0.0925
+        },
+        "unknown_argument": {
+          "fired": 0,
+          "fired_on_positive": 0,
+          "fired_on_negative": 0,
+          "precision": null,
+          "recall": 0.0
+        },
+        "missing_required_argument": {
+          "fired": 2,
+          "fired_on_positive": 2,
+          "fired_on_negative": 0,
+          "precision": 1.0,
+          "recall": 0.0034
+        },
+        "enum_violation": {
+          "fired": 0,
+          "fired_on_positive": 0,
+          "fired_on_negative": 0,
+          "precision": null,
+          "recall": 0.0
+        },
+        "repeated_failed_call": {
+          "fired": 1,
+          "fired_on_positive": 1,
+          "fired_on_negative": 0,
+          "precision": 1.0,
+          "recall": 0.0017
+        },
+        "repeated_call": {
+          "fired": 133,
+          "fired_on_positive": 111,
+          "fired_on_negative": 22,
+          "precision": 0.8346,
+          "recall": 0.1901
+        },
+        "unsupported_argument_value": {
+          "fired": 16,
+          "fired_on_positive": 14,
+          "fired_on_negative": 2,
+          "precision": 0.875,
+          "recall": 0.024
+        },
+        "no_op_replacement": {
+          "fired": 0,
+          "fired_on_positive": 0,
+          "fired_on_negative": 0,
+          "precision": null,
+          "recall": 0.0
+        },
+        "unsupported_number": {
+          "fired": 232,
+          "fired_on_positive": 94,
+          "fired_on_negative": 138,
+          "precision": 0.4052,
+          "recall": 0.161
+        }
+      },
+      "predictor_by_source": {
+        "agentprocessbench": {
+          "fired": 197,
+          "fired_on_positive": 178,
+          "fired_on_negative": 19,
+          "precision": 0.9036,
+          "recall": 0.4188
+        },
+        "trajerrbench": {
+          "fired": 6,
+          "fired_on_positive": 1,
+          "fired_on_negative": 5,
+          "precision": 0.1667,
+          "recall": 0.0063
+        }
+      },
+      "predictor_by_domain": {
+        "airline": {
+          "fired": 8,
+          "fired_on_positive": 6,
+          "fired_on_negative": 2,
+          "precision": 0.75,
+          "recall": 0.0375
+        },
+        "retail": {
+          "fired": 25,
+          "fired_on_positive": 7,
+          "fired_on_negative": 18,
+          "precision": 0.28,
+          "recall": 0.0393
+        },
+        "telecom": {
+          "fired": 170,
+          "fired_on_positive": 166,
+          "fired_on_negative": 4,
+          "precision": 0.9765,
+          "recall": 0.6748
+        }
+      }
+    }
+  }
+}
