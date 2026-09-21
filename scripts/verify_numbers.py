@@ -45,10 +45,22 @@ GENERATED = {
             str(tmp / "x.json"),
         ],
     ),
+    "rules_external.json": (
+        "rules_external.py",
+        lambda tmp: [
+            "--sources",
+            str(tmp / "apb.parquet"),
+            str(tmp / "trajerr.parquet"),
+            "--splits",
+            str(tmp / "splits.json"),
+            "--out",
+            str(tmp / "x.json"),
+        ],
+    ),
 }
 # downloaded sources the external sets are built from; not in git
 EXTERNAL = [ROOT / "data/external/apb/tau2/test.jsonl", Path("D:/VScode_projects/TrajDebug/data/trajerrbench")]
-NEEDS_EXTERNAL = {"external_apb.json", "external_trajerr.json", "external_splits.json"}
+NEEDS_EXTERNAL = {"external_apb.json", "external_trajerr.json", "external_splits.json", "rules_external.json"}
 # runtime.json is a timing, tau2_match.json needs the network, baseline_inventory.json the unpacked
 # organiser archive and tau2_reference.json a local clone of tau2-bench, so none of them is re-checked here
 NEEDS_DATA = {"eda.json", "trivial_baselines.json", "rules_baseline.json"}

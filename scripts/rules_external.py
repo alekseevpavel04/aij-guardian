@@ -59,7 +59,7 @@ def main() -> None:
     elapsed = time.monotonic() - started
     predictor = hits[:, [names.index(n) for n in DEFAULT_CHECKS]].any(axis=1).astype(int)
 
-    report = {"rows": len(frame), "seconds": round(elapsed, 1), "parts": {}}
+    report = {"rows": len(frame), "parts": {}}
     for part_name in ("ext_dev", "ext_val"):
         mask = (frame.part == part_name).to_numpy()
         y = frame.weak_label.to_numpy()[mask]
