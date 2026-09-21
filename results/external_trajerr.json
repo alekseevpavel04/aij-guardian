@@ -35,6 +35,7 @@
     "qwen3-max": 79
   },
   "groups": 75,
+  "trajectories_with_the_policy_of_valid_parquet": 400,
   "rows_the_parser_does_not_fully_recognise": 0,
   "prompt_chars_p50": 16946
 }

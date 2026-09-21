@@ -8,8 +8,9 @@ The annotated step becomes a positive. Agent steps before it become negatives wi
 label_quality "weak": an earlier step can still be wrong without being the decisive error. Steps
 after it are dropped, since what follows a decisive error is neither clean nor labelled.
 
-The files carry no tool schemas. Their policies are the τ²-bench version our data uses (airline 7676
-characters in both), so the [AVAILABLE TOOLS] block is taken from valid.parquet for the domain.
+The files carry no tool schemas. Their policies are the τ²-bench version our data uses (the build
+counts the trajectories whose policy text equals the one in valid.parquet), so the [AVAILABLE TOOLS]
+block is taken from valid.parquet for the domain.
 
     python scripts/build_trajerr.py --repo D:/VScode_projects/TrajDebug
 """
@@ -29,6 +30,7 @@ from guardian.parsing import (
     TOOLS_HEADER,
     format_recognised,
     parse_transcript,
+    section,
     system_turn,
     unknown_roles,
     unparsed_markers,
@@ -64,12 +66,11 @@ def to_messages(raw: list[dict]) -> list[dict]:
     return out
 
 
-def tools_blocks(valid: Path) -> dict[str, str]:
-    blocks = {}
+def valid_systems(valid: Path) -> dict[str, str]:
+    systems = {}
     for row in pd.read_parquet(valid).itertuples():
-        text = system_turn(parse_transcript(row.prompt)).text
-        blocks.setdefault(row.id.split("__")[0], text[text.find(TOOLS_HEADER) :])
-    return blocks
+        systems.setdefault(row.id.split("__")[0], system_turn(parse_transcript(row.prompt)).text)
+    return systems
 
 
 def main() -> None:
@@ -85,7 +86,9 @@ def main() -> None:
     commit = subprocess.run(
         ["git", "-C", str(args.repo), "rev-parse", "HEAD"], capture_output=True, text=True, check=True
     ).stdout.strip()
-    tools = tools_blocks(args.valid)
+    systems = valid_systems(args.valid)
+    tools = {d: text[text.find(TOOLS_HEADER) :] for d, text in systems.items()}
+    same_policy: Counter = Counter()
     files = sorted(source.glob("*.json"))
     digest = hashlib.sha256()
     records, skipped = [], Counter()
@@ -95,6 +98,8 @@ def main() -> None:
         t = json.loads(raw)
         domain = path.name.split("_", 1)[0]
         annotation = t["metadata"]["annotation"]
+        # the tool block from valid.parquet is only right if the agent saw the same policy version
+        same_policy[t["messages"][0]["content"].strip() == section(systems[domain], "policy")] += 1
         messages = to_messages(t["messages"])
         steps = render_trajectory(messages, render_system(messages[0]["content"], tools[domain]))
         by_step = {messages[s.message_index]["step"]: s for s in steps}
@@ -149,6 +154,7 @@ def main() -> None:
         "by_domain": {d: {"rows": len(g), "positives": int(g.weak_label.sum())} for d, g in frame.groupby("domain")},
         "by_agent": dict(Counter(positives.agent)),
         "groups": int(frame.group.nunique()),
+        "trajectories_with_the_policy_of_valid_parquet": same_policy[True],
         "rows_the_parser_does_not_fully_recognise": int(parse_failures),
         "prompt_chars_p50": int(frame.prompt.str.len().median()),
     }

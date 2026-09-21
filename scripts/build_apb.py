@@ -46,11 +46,19 @@ def main() -> None:
     raw = args.source.read_bytes()
     trajectories = [json.loads(line) for line in raw.decode("utf-8").splitlines() if line.strip()]
     records, greetings = [], 0
+    # agent steps that call a tool missing from the trajectory's own tool list, by source label:
+    # in telecom these are the user's device tools, which our data counts as a hallucination
+    foreign_calls: Counter = Counter()
     for t in trajectories:
         domain = t["data_source"].removeprefix("tau2_")
         system = render_system(t["messages"][0]["content"], render_tools(t["tools"]))
         steps = {s.message_index: s for s in render_trajectory(t["messages"], system)}
         labels = {int(k): v for k, v in t["step_labels"].items()}
+        offered = {tool["function"]["name"] for tool in t["tools"]}
+        for index, value in labels.items():
+            called = {c["function"]["name"] for c in t["messages"][index].get("tool_calls") or []}
+            if called - offered:
+                foreign_calls[f"{domain}:{value}"] += 1
         # telecom tasks share one customer, so its trajectories are grouped by task instead of by user
         user = tau2_user(t["messages"][1:]) if domain != "telecom" else None
         group = f"{domain}:{user}" if user else f"{domain}:task{t['query_index']}"
@@ -108,6 +116,7 @@ def main() -> None:
         "positives": int(frame.weak_label.sum()),
         "negatives": int((frame.weak_label == 0).sum()),
         "first_error_rows": int(frame.first_error.sum()),
+        "steps_calling_tools_not_offered": dict(sorted(foreign_calls.items())),
         "trajectories_with_an_error": int(sum(any(v == -1 for v in t["step_labels"].values()) for t in trajectories)),
         "groups": int(frame.group.nunique()),
         "by_domain": {d: {"rows": len(g), "positives": int(g.weak_label.sum())} for d, g in frame.groupby("domain")},

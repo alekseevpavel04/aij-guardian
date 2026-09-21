@@ -17,6 +17,10 @@
   "positives": 1110,
   "negatives": 2070,
   "first_error_rows": 143,
+  "steps_calling_tools_not_offered": {
+    "telecom:-1": 165,
+    "telecom:0": 1
+  },
   "trajectories_with_an_error": 143,
   "groups": 52,
   "by_domain": {
