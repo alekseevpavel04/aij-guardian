@@ -1,0 +1,83 @@
+{
+  "batch": "valid_10",
+  "rows": 10,
+  "organiser_positives": 7,
+  "sonnet_missing": 0,
+  "agree_with_organiser": {
+    "sonnet": 7,
+    "local_v1": 8,
+    "local_v1s": 6
+  },
+  "rows_detail": [
+    {
+      "id": "airline__8::t7",
+      "organiser": 1,
+      "sonnet": 1,
+      "local_v1": 1,
+      "local_v1s": 0
+    },
+    {
+      "id": "banking_knowledge__task_005::t6",
+      "organiser": 1,
+      "sonnet": 1,
+      "local_v1": 0,
+      "local_v1s": 0
+    },
+    {
+      "id": "banking_knowledge__task_018::t6",
+      "organiser": 1,
+      "sonnet": 0,
+      "local_v1": 1,
+      "local_v1s": 0
+    },
+    {
+      "id": "retail__36::t10",
+      "organiser": 1,
+      "sonnet": 0,
+      "local_v1": 0,
+      "local_v1s": 0
+    },
+    {
+      "id": "retail__29::t13",
+      "organiser": 1,
+      "sonnet": 0,
+      "local_v1": 1,
+      "local_v1s": 1
+    },
+    {
+      "id": "retail__106::t3",
+      "organiser": 1,
+      "sonnet": 1,
+      "local_v1": 1,
+      "local_v1s": 1
+    },
+    {
+      "id": "retail__78::t1",
+      "organiser": 0,
+      "sonnet": 0,
+      "local_v1": 0,
+      "local_v1s": 0
+    },
+    {
+      "id": "retail__14::t1",
+      "organiser": 0,
+      "sonnet": 0,
+      "local_v1": 0,
+      "local_v1s": 0
+    },
+    {
+      "id": "telecom__mobile_data_issuebad_network_preference-bad_vpn-data_mode_off-data_saver_mode_onP::t6",
+      "organiser": 1,
+      "sonnet": 1,
+      "local_v1": 1,
+      "local_v1s": 1
+    },
+    {
+      "id": "telecom__mms_issuebad_network_preference-bad_wifi_calling-break_apn_mms_setting-break_app_::t7",
+      "organiser": 0,
+      "sonnet": 0,
+      "local_v1": 0,
+      "local_v1s": 0
+    }
+  ]
+}
