@@ -1,0 +1,35 @@
+{
+  "train_rows": 212,
+  "train_positives": 33,
+  "pairs": false,
+  "rules": true,
+  "cv_auroc_by_c": {
+    "0.001": 0.7799,
+    "0.003": 0.7764,
+    "0.01": 0.7738,
+    "0.03": 0.7721,
+    "0.1": 0.7676,
+    "0.3": 0.7638,
+    "1.0": 0.761
+  },
+  "chosen_c": 0.001,
+  "check_contexts": {
+    "rows": 172,
+    "positives": 34,
+    "head_auroc": 0.9214
+  },
+  "valid": {
+    "clean": {
+      "rows": 24,
+      "positives": 10,
+      "head_auroc": 0.8357,
+      "judge_auroc": 0.9214
+    },
+    "leaked": {
+      "rows": 22,
+      "positives": 13,
+      "head_auroc": 0.6923,
+      "judge_auroc": 0.6752
+    }
+  }
+}
