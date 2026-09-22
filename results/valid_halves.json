@@ -1,0 +1,60 @@
+{
+  "derive": {
+    "rows": 24,
+    "positives": 12,
+    "ids": [
+      "airline__10::t19",
+      "airline__23::t10",
+      "airline__47::t1",
+      "airline__5::t1",
+      "airline__7::t6",
+      "airline__9::t6",
+      "banking_knowledge__task_003::t7",
+      "banking_knowledge__task_018::t6",
+      "banking_knowledge__task_033::t2",
+      "banking_knowledge__task_068::t11",
+      "banking_knowledge__task_080::t30",
+      "banking_knowledge__task_081::t35",
+      "retail__108::t1",
+      "retail__29::t13",
+      "retail__36::t10",
+      "retail__48::t4",
+      "retail__78::t1",
+      "retail__87::t6",
+      "telecom__mms_issueairplane_mode_on-bad_network_preference-bad_wifi_calling-break_app_sms_p::t7",
+      "telecom__mms_issueairplane_mode_on-bad_network_preference-break_apn_mms_setting-break_app_::t10",
+      "telecom__mms_issueairplane_mode_on-bad_network_preference-break_app_both_permissions-data_::t12",
+      "telecom__mms_issuebad_network_preference-bad_wifi_calling-break_apn_mms_setting-break_app_::t7",
+      "telecom__mobile_data_issuebad_network_preference-bad_vpn-data_mode_off-data_saver_mode_onP::t6",
+      "telecom__service_issueairplane_mode_on-break_apn_settings-lock_sim_card_pin-overdue_bill_s::t15"
+    ]
+  },
+  "holdout": {
+    "rows": 22,
+    "positives": 11,
+    "ids": [
+      "airline__10::t21",
+      "airline__21::t7",
+      "airline__24::t14",
+      "airline__3::t4",
+      "airline__44::t22",
+      "airline__8::t7",
+      "banking_knowledge__task_005::t6",
+      "banking_knowledge__task_051::t15",
+      "banking_knowledge__task_057::t2",
+      "banking_knowledge__task_063::t8",
+      "banking_knowledge__task_083::t10",
+      "retail__106::t3",
+      "retail__12::t4",
+      "retail__14::t1",
+      "retail__27::t10",
+      "retail__47::t12",
+      "telecom__mms_issueairplane_mode_on-bad_network_preference-bad_wifi_calling-data_usage_exce::t7",
+      "telecom__mms_issueairplane_mode_on-bad_wifi_calling-break_app_both_permissions-data_mode_o::t15",
+      "telecom__mms_issueairplane_mode_on-break_app_both_permissionsPERSONA_Hard::t8",
+      "telecom__mms_issuebreak_apn_mms_setting-user_abroad_roaming_enabled_offPERSONA_Hard::t27",
+      "telecom__mobile_data_issueairplane_mode_on-bad_network_preference-bad_vpn-data_saver_mode_::t7",
+      "telecom__service_issuebreak_apn_settings-contract_end_suspension-lock_sim_card_pin-unseat_::t13"
+    ]
+  }
+}
