@@ -63,6 +63,28 @@ GENERATED = {
         lambda tmp: ["--out", str(tmp / "contexts.parquet"), "--summary", str(tmp / "x.json")],
     ),
     "budget_model.json": ("budget_model.py", lambda tmp: ["--out", str(tmp / "x.json")]),
+    "valid_halves.json": ("split_valid.py", lambda tmp: ["--out", str(tmp / "x.json")]),
+    "labeller_errors.json": ("labeller_errors.py", lambda tmp: ["--out", str(tmp / "x.json")]),
+    "pairs_agreement.json": (
+        "pairs_agreement.py",
+        lambda tmp: [
+            *("--batches", "airline_01", "retail_01"),
+            *("--natural", "labeler_v1s_pilot", "--written", "labeler_v1s_pilot_written"),
+            *("--out", str(tmp / "x.json")),
+        ],
+    ),
+    **{
+        f"sonnet_labels_{batch}.json": (
+            "sonnet_label_agreement.py",
+            lambda tmp, b=batch, who=who: ["--batch", b, "--labellers", *who, "--out", str(tmp / "x.json")],
+        )
+        for batch, who in (
+            ("valid_10", ("sonnet", "opus")),
+            ("valid_rest_airline", ("opus",)),
+            ("valid_rest_retail", ("opus",)),
+            ("valid_rest_telecom", ("opus",)),
+        )
+    },
 }
 # runtime.json is a timing, tau2_match.json needs the network, baseline_inventory.json the unpacked
 # organiser archive and tau2_reference.json a local clone of tau2-bench, so none of them is re-checked here
@@ -80,6 +102,14 @@ REQUIRES = {
     "rules_external.json": [DATA, *EXTERNAL],
     "source_match.json": [DATA, *LEADERBOARD],
     "organizer_contexts.json": [DATA],
+    "valid_halves.json": [DATA],
+    # label journals and Claude batches live in data/, which is not in git
+    "labeller_errors.json": [DATA, ROOT / "data/synthetic/sonnet_labels", ROOT / "data/interim/judge"],
+    "pairs_agreement.json": [ROOT / "data/synthetic/pairs", ROOT / "data/interim/labels"],
+    **{
+        f"sonnet_labels_{b}.json": [DATA, ROOT / "data/synthetic/sonnet_labels" / b]
+        for b in ("valid_10", "valid_rest_airline", "valid_rest_retail", "valid_rest_telecom")
+    },
 }
 # judge runs: the summary is recomputed from the jsonl of scores, no server call is made
 JUDGE_RUNS = {
