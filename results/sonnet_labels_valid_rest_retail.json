@@ -1,0 +1,57 @@
+{
+  "batch": "valid_rest_retail",
+  "rows": 6,
+  "organiser_positives": 2,
+  "missing": {
+    "opus": 0
+  },
+  "agree_with_organiser": {
+    "opus": 6,
+    "local_v1": 6,
+    "local_v1s": 6
+  },
+  "rows_detail": [
+    {
+      "id": "retail__108::t1",
+      "organiser": 0,
+      "opus": 0,
+      "local_v1": 0,
+      "local_v1s": 0
+    },
+    {
+      "id": "retail__12::t4",
+      "organiser": 0,
+      "opus": 0,
+      "local_v1": 0,
+      "local_v1s": 0
+    },
+    {
+      "id": "retail__27::t10",
+      "organiser": 1,
+      "opus": 1,
+      "local_v1": 1,
+      "local_v1s": 1
+    },
+    {
+      "id": "retail__47::t12",
+      "organiser": 0,
+      "opus": 0,
+      "local_v1": 0,
+      "local_v1s": 0
+    },
+    {
+      "id": "retail__48::t4",
+      "organiser": 1,
+      "opus": 1,
+      "local_v1": 1,
+      "local_v1s": 1
+    },
+    {
+      "id": "retail__87::t6",
+      "organiser": 0,
+      "opus": 0,
+      "local_v1": 0,
+      "local_v1s": 0
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+{
+  "batch": "valid_rest_telecom",
+  "rows": 10,
+  "organiser_positives": 5,
+  "missing": {
+    "opus": 0
+  },
+  "agree_with_organiser": {
+    "opus": 10,
+    "local_v1": 10,
+    "local_v1s": 10
+  },
+  "rows_detail": [
+    {
+      "id": "telecom__mms_issueairplane_mode_on-bad_network_preference-bad_wifi_calling-break_app_sms_p::t7",
+      "organiser": 0,
+      "opus": 0,
+      "local_v1": 0,
+      "local_v1s": 0
+    },
+    {
+      "id": "telecom__mms_issueairplane_mode_on-bad_network_preference-bad_wifi_calling-data_usage_exce::t7",
+      "organiser": 1,
+      "opus": 1,
+      "local_v1": 1,
+      "local_v1s": 1
+    },
+    {
+      "id": "telecom__mms_issueairplane_mode_on-bad_network_preference-break_apn_mms_setting-break_app_::t10",
+      "organiser": 1,
+      "opus": 1,
+      "local_v1": 1,
+      "local_v1s": 1
+    },
+    {
+      "id": "telecom__mms_issueairplane_mode_on-bad_network_preference-break_app_both_permissions-data_::t12",
+      "organiser": 0,
+      "opus": 0,
+      "local_v1": 0,
+      "local_v1s": 0
+    },
+    {
+      "id": "telecom__mms_issueairplane_mode_on-bad_wifi_calling-break_app_both_permissions-data_mode_o::t15",
+      "organiser": 0,
+      "opus": 0,
+      "local_v1": 0,
+      "local_v1s": 0
+    },
+    {
+      "id": "telecom__mms_issueairplane_mode_on-break_app_both_permissionsPERSONA_Hard::t8",
+      "organiser": 0,
+      "opus": 0,
+      "local_v1": 0,
+      "local_v1s": 0
+    },
+    {
+      "id": "telecom__mms_issuebreak_apn_mms_setting-user_abroad_roaming_enabled_offPERSONA_Hard::t27",
+      "organiser": 1,
+      "opus": 1,
+      "local_v1": 1,
+      "local_v1s": 1
+    },
+    {
+      "id": "telecom__mobile_data_issueairplane_mode_on-bad_network_preference-bad_vpn-data_saver_mode_::t7",
+      "organiser": 0,
+      "opus": 0,
+      "local_v1": 0,
+      "local_v1s": 0
+    },
+    {
+      "id": "telecom__service_issueairplane_mode_on-break_apn_settings-lock_sim_card_pin-overdue_bill_s::t15",
+      "organiser": 1,
+      "opus": 1,
+      "local_v1": 1,
+      "local_v1s": 1
+    },
+    {
+      "id": "telecom__service_issuebreak_apn_settings-contract_end_suspension-lock_sim_card_pin-unseat_::t13",
+      "organiser": 1,
+      "opus": 1,
+      "local_v1": 1,
+      "local_v1s": 1
+    }
+  ]
+}
