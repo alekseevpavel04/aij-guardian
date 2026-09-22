@@ -1,0 +1,374 @@
+{
+  "judge_baseline": {
+    "all": {
+      "rows": 46,
+      "true_positive": 12,
+      "miss": 11,
+      "false_alarm": 2,
+      "true_negative": 21
+    },
+    "by_half": {
+      "derive": {
+        "rows": 24,
+        "true_positive": 5,
+        "miss": 7,
+        "false_alarm": 1,
+        "true_negative": 11
+      },
+      "holdout": {
+        "rows": 22,
+        "true_positive": 7,
+        "miss": 4,
+        "false_alarm": 1,
+        "true_negative": 10
+      }
+    },
+    "by_domain": {
+      "airline": {
+        "rows": 12,
+        "true_positive": 4,
+        "miss": 2,
+        "false_alarm": 2,
+        "true_negative": 4
+      },
+      "banking_knowledge": {
+        "rows": 11,
+        "true_positive": 1,
+        "miss": 5,
+        "false_alarm": 0,
+        "true_negative": 5
+      },
+      "retail": {
+        "rows": 11,
+        "true_positive": 2,
+        "miss": 3,
+        "false_alarm": 0,
+        "true_negative": 6
+      },
+      "telecom": {
+        "rows": 12,
+        "true_positive": 5,
+        "miss": 1,
+        "false_alarm": 0,
+        "true_negative": 6
+      }
+    },
+    "misses": [
+      "airline__7::t6",
+      "airline__9::t6",
+      "banking_knowledge__task_003::t7",
+      "banking_knowledge__task_005::t6",
+      "banking_knowledge__task_018::t6",
+      "banking_knowledge__task_051::t15",
+      "banking_knowledge__task_083::t10",
+      "retail__29::t13",
+      "retail__36::t10",
+      "retail__48::t4",
+      "telecom__mms_issueairplane_mode_on-bad_network_preference-bad_wifi_calling-data_usage_exce::t7"
+    ],
+    "false_alarms": [
+      "airline__10::t19",
+      "airline__3::t4"
+    ]
+  },
+  "local_v1": {
+    "all": {
+      "rows": 46,
+      "true_positive": 21,
+      "miss": 2,
+      "false_alarm": 0,
+      "true_negative": 23
+    },
+    "by_half": {
+      "derive": {
+        "rows": 24,
+        "true_positive": 11,
+        "miss": 1,
+        "false_alarm": 0,
+        "true_negative": 12
+      },
+      "holdout": {
+        "rows": 22,
+        "true_positive": 10,
+        "miss": 1,
+        "false_alarm": 0,
+        "true_negative": 11
+      }
+    },
+    "by_domain": {
+      "airline": {
+        "rows": 12,
+        "true_positive": 6,
+        "miss": 0,
+        "false_alarm": 0,
+        "true_negative": 6
+      },
+      "banking_knowledge": {
+        "rows": 11,
+        "true_positive": 5,
+        "miss": 1,
+        "false_alarm": 0,
+        "true_negative": 5
+      },
+      "retail": {
+        "rows": 11,
+        "true_positive": 4,
+        "miss": 1,
+        "false_alarm": 0,
+        "true_negative": 6
+      },
+      "telecom": {
+        "rows": 12,
+        "true_positive": 6,
+        "miss": 0,
+        "false_alarm": 0,
+        "true_negative": 6
+      }
+    },
+    "misses": [
+      "banking_knowledge__task_005::t6",
+      "retail__36::t10"
+    ],
+    "false_alarms": []
+  },
+  "local_v1s": {
+    "all": {
+      "rows": 46,
+      "true_positive": 19,
+      "miss": 4,
+      "false_alarm": 1,
+      "true_negative": 22
+    },
+    "by_half": {
+      "derive": {
+        "rows": 24,
+        "true_positive": 10,
+        "miss": 2,
+        "false_alarm": 0,
+        "true_negative": 12
+      },
+      "holdout": {
+        "rows": 22,
+        "true_positive": 9,
+        "miss": 2,
+        "false_alarm": 1,
+        "true_negative": 10
+      }
+    },
+    "by_domain": {
+      "airline": {
+        "rows": 12,
+        "true_positive": 5,
+        "miss": 1,
+        "false_alarm": 0,
+        "true_negative": 6
+      },
+      "banking_knowledge": {
+        "rows": 11,
+        "true_positive": 4,
+        "miss": 2,
+        "false_alarm": 1,
+        "true_negative": 4
+      },
+      "retail": {
+        "rows": 11,
+        "true_positive": 4,
+        "miss": 1,
+        "false_alarm": 0,
+        "true_negative": 6
+      },
+      "telecom": {
+        "rows": 12,
+        "true_positive": 6,
+        "miss": 0,
+        "false_alarm": 0,
+        "true_negative": 6
+      }
+    },
+    "misses": [
+      "airline__8::t7",
+      "banking_knowledge__task_005::t6",
+      "banking_knowledge__task_018::t6",
+      "retail__36::t10"
+    ],
+    "false_alarms": [
+      "banking_knowledge__task_063::t8"
+    ]
+  },
+  "sonnet": {
+    "all": {
+      "rows": 10,
+      "true_positive": 4,
+      "miss": 3,
+      "false_alarm": 0,
+      "true_negative": 3
+    },
+    "by_half": {
+      "derive": {
+        "rows": 6,
+        "true_positive": 1,
+        "miss": 3,
+        "false_alarm": 0,
+        "true_negative": 2
+      },
+      "holdout": {
+        "rows": 4,
+        "true_positive": 3,
+        "miss": 0,
+        "false_alarm": 0,
+        "true_negative": 1
+      }
+    },
+    "by_domain": {
+      "airline": {
+        "rows": 1,
+        "true_positive": 1,
+        "miss": 0,
+        "false_alarm": 0,
+        "true_negative": 0
+      },
+      "banking_knowledge": {
+        "rows": 2,
+        "true_positive": 1,
+        "miss": 1,
+        "false_alarm": 0,
+        "true_negative": 0
+      },
+      "retail": {
+        "rows": 5,
+        "true_positive": 1,
+        "miss": 2,
+        "false_alarm": 0,
+        "true_negative": 2
+      },
+      "telecom": {
+        "rows": 2,
+        "true_positive": 1,
+        "miss": 0,
+        "false_alarm": 0,
+        "true_negative": 1
+      }
+    },
+    "misses": [
+      "banking_knowledge__task_018::t6",
+      "retail__29::t13",
+      "retail__36::t10"
+    ],
+    "false_alarms": []
+  },
+  "opus": {
+    "all": {
+      "rows": 37,
+      "true_positive": 18,
+      "miss": 1,
+      "false_alarm": 2,
+      "true_negative": 16
+    },
+    "by_half": {
+      "derive": {
+        "rows": 19,
+        "true_positive": 9,
+        "miss": 1,
+        "false_alarm": 1,
+        "true_negative": 8
+      },
+      "holdout": {
+        "rows": 18,
+        "true_positive": 9,
+        "miss": 0,
+        "false_alarm": 1,
+        "true_negative": 8
+      }
+    },
+    "by_domain": {
+      "airline": {
+        "rows": 12,
+        "true_positive": 6,
+        "miss": 0,
+        "false_alarm": 2,
+        "true_negative": 4
+      },
+      "banking_knowledge": {
+        "rows": 2,
+        "true_positive": 2,
+        "miss": 0,
+        "false_alarm": 0,
+        "true_negative": 0
+      },
+      "retail": {
+        "rows": 11,
+        "true_positive": 4,
+        "miss": 1,
+        "false_alarm": 0,
+        "true_negative": 6
+      },
+      "telecom": {
+        "rows": 12,
+        "true_positive": 6,
+        "miss": 0,
+        "false_alarm": 0,
+        "true_negative": 6
+      }
+    },
+    "misses": [
+      "retail__29::t13"
+    ],
+    "false_alarms": [
+      "airline__10::t19",
+      "airline__10::t21"
+    ]
+  },
+  "opus_v4": {
+    "all": {
+      "rows": 22,
+      "true_positive": 11,
+      "miss": 0,
+      "false_alarm": 2,
+      "true_negative": 9
+    },
+    "by_half": {
+      "holdout": {
+        "rows": 22,
+        "true_positive": 11,
+        "miss": 0,
+        "false_alarm": 2,
+        "true_negative": 9
+      }
+    },
+    "by_domain": {
+      "airline": {
+        "rows": 6,
+        "true_positive": 3,
+        "miss": 0,
+        "false_alarm": 1,
+        "true_negative": 2
+      },
+      "banking_knowledge": {
+        "rows": 5,
+        "true_positive": 3,
+        "miss": 0,
+        "false_alarm": 1,
+        "true_negative": 1
+      },
+      "retail": {
+        "rows": 5,
+        "true_positive": 2,
+        "miss": 0,
+        "false_alarm": 0,
+        "true_negative": 3
+      },
+      "telecom": {
+        "rows": 6,
+        "true_positive": 3,
+        "miss": 0,
+        "false_alarm": 0,
+        "true_negative": 3
+      }
+    },
+    "misses": [],
+    "false_alarms": [
+      "airline__10::t21",
+      "banking_knowledge__task_063::t8"
+    ]
+  }
+}
