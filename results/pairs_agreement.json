@@ -1,0 +1,153 @@
+{
+  "batches": [
+    "airline_01",
+    "retail_01"
+  ],
+  "labeller_journals": {
+    "natural": "labeler_v1s_pilot",
+    "written": "labeler_v1s_pilot_written"
+  },
+  "style_by_batch": {
+    "airline_01": {
+      "correct": {
+        "turns": 10,
+        "chars": 326.3,
+        "calls": 0.8,
+        "bold_share": 0.1
+      },
+      "error": {
+        "turns": 30,
+        "chars": 233.4,
+        "calls": 0.53,
+        "bold_share": 0.1
+      },
+      "original": {
+        "turns": 10,
+        "chars": 563.2,
+        "calls": 0.8,
+        "bold_share": 0.5
+      }
+    },
+    "retail_01": {
+      "correct": {
+        "turns": 7,
+        "chars": 445.3,
+        "calls": 0.43,
+        "bold_share": 0.43
+      },
+      "error": {
+        "turns": 21,
+        "chars": 442.3,
+        "calls": 0.43,
+        "bold_share": 0.43
+      },
+      "original": {
+        "turns": 7,
+        "chars": 555.9,
+        "calls": 0.43,
+        "bold_share": 0.43
+      }
+    }
+  },
+  "natural": {
+    "agree": 17,
+    "of": 17,
+    "sonnet_positive": 1,
+    "local_positive": 1,
+    "by_batch": {
+      "airline_01": {
+        "agree": 10,
+        "of": 10
+      },
+      "retail_01": {
+        "agree": 7,
+        "of": 7
+      }
+    },
+    "disagreements": []
+  },
+  "written": {
+    "agree": 67,
+    "of": 68,
+    "correct": {
+      "agree": 17,
+      "of": 17
+    },
+    "error": {
+      "agree": 50,
+      "of": 51
+    },
+    "by_batch": {
+      "airline_01": {
+        "correct": {
+          "agree": 10,
+          "of": 10
+        },
+        "error": {
+          "agree": 29,
+          "of": 30
+        }
+      },
+      "retail_01": {
+        "correct": {
+          "agree": 7,
+          "of": 7
+        },
+        "error": {
+          "agree": 21,
+          "of": 21
+        }
+      }
+    },
+    "error_by_type": {
+      "arg_schema_violation": {
+        "agree": 7,
+        "of": 7
+      },
+      "claimed_unperformed_action": {
+        "agree": 2,
+        "of": 2
+      },
+      "contradicts_tool_result": {
+        "agree": 10,
+        "of": 10
+      },
+      "fabricated_value": {
+        "agree": 8,
+        "of": 8
+      },
+      "invalid_modification": {
+        "agree": 0,
+        "of": 1
+      },
+      "policy_violation": {
+        "agree": 6,
+        "of": 6
+      },
+      "premature_escalation": {
+        "agree": 5,
+        "of": 5
+      },
+      "stale_request": {
+        "agree": 1,
+        "of": 1
+      },
+      "unavailable_tool": {
+        "agree": 5,
+        "of": 5
+      },
+      "wrong_calculation": {
+        "agree": 6,
+        "of": 6
+      }
+    },
+    "disagreements": [
+      {
+        "id": "pair__airline_01__airline__10::t17__29",
+        "kind": "error",
+        "error_type": "invalid_modification",
+        "local": 0.0
+      }
+    ]
+  }
+}

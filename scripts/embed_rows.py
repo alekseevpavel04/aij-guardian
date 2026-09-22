@@ -6,9 +6,12 @@ with `--pooling last` the server returns that token's final hidden state. Vector
 data/interim/embeddings/<name>.jsonl as base64 float32, one durable line per row, so a run that
 stops continues with the same command.
 
-The server has to be started for this, generation is not available in embedding mode:
+The server has to be started for this, generation is not available in embedding mode. Long rows are
+processed in chunks of ubatch tokens, so there is no length limit, but in this mode ubatch 4096 takes
+7.8 of the card's 8 GB and pushes the machine into paging (113 tokens/s); ubatch 2048 holds 6.4 GB and
+runs at about 850 tokens/s, the longest row of the 46 (65 481 tokens) in 79 s:
 
-    python scripts/serve_judge.py --set ctx-size=70000 embeddings= pooling=last embd-normalize=-1
+    python scripts/serve_judge.py --set embeddings= pooling=last embd-normalize=-1 ubatch-size=2048 batch-size=2048
     python scripts/embed_rows.py --data valid --name q4_last_valid
     python scripts/embed_rows.py --data ext_val --limit 400 --name q4_last_extval400
 """
