@@ -6,6 +6,10 @@ On Windows a CUDA allocation that does not fit the card is not refused: the driv
 CPU, and Windows counts them as shared GPU memory too (0.4 GB at ubatch 2048, 0.7-0.9 GB at 4096;
 they vanish with GGML_CUDA_NO_PINNED=1 while the card's own usage stays the same). A spill is
 shared memory while the card is full, so the warning needs both.
+
+Low free RAM is not by itself trouble either: most of llama-server's working set is pages of the
+mapped model file, which the system drops without writing anything. Trouble is paging, pages read
+back from disk every second (13.5 thousand a second once the server's RAM prompt cache filled it).
 """
 
 import json
@@ -14,7 +18,8 @@ from dataclasses import dataclass
 
 # free card memory below this, with shared memory in use, means allocations were pushed off the card
 GPU_FREE_LIMIT_GB = 0.3
-RAM_FREE_LIMIT_GB = 3.0
+RAM_FREE_LIMIT_GB = 0.5
+PAGES_IN_LIMIT = 2000  # pages read from disk per second
 
 
 @dataclass
@@ -25,6 +30,7 @@ class Memory:
     shared_gb: dict[int, float]  # pid -> GB in shared GPU memory
     ram_free_gb: float
     ram_total_gb: float
+    pages_in_per_s: float
 
     def warnings(self) -> list[str]:
         out = []
@@ -35,6 +41,8 @@ class Memory:
             )
         if self.ram_free_gb < RAM_FREE_LIMIT_GB:
             out.append(f"only {self.ram_free_gb:.1f} GB of RAM free")
+        if self.pages_in_per_s > PAGES_IN_LIMIT:
+            out.append(f"paging: {self.pages_in_per_s:.0f} pages read from disk per second")
         return out
 
 
@@ -70,6 +78,14 @@ def measure() -> Memory:
             " | ConvertTo-Json -Compress"
         )
     )
+    pages_in = json.loads(
+        # the CIM class, not Get-Counter: counter paths like \Memory are localised on a Russian Windows
+        # one snapshot jumps by two orders of magnitude, so the median of three seconds
+        _powershell(
+            "$v = 1..3 | ForEach-Object { (Get-CimInstance Win32_PerfFormattedData_PerfOS_Memory).PagesInputPersec;"
+            " Start-Sleep 1 }; ($v | Sort-Object)[1]"
+        )
+    )
     return Memory(
         gpu_used_gb=float(smi[0]) / 1024,
         gpu_total_gb=float(smi[1]) / 1024,
@@ -77,4 +93,5 @@ def measure() -> Memory:
         shared_gb={p: g for p, g in shared.items() if g > 0.05},
         ram_free_gb=ram["FreePhysicalMemory"] / 2**20,
         ram_total_gb=ram["TotalVisibleMemorySize"] / 2**20,
+        pages_in_per_s=float(pages_in),
     )
