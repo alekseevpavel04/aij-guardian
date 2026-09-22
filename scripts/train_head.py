@@ -5,7 +5,7 @@ The head is a logistic regression on the standardised vector, optionally with th
 by trajectory, so steps of one trajectory never sit on both sides of a fold. The evaluation sets are
 never used for any choice; the judge's scores on the same rows are reported next to the head's.
 
-    python scripts/train_head.py --train q4_last_extdev --eval q4_last_extval400 q4_last_valid
+    python scripts/train_head.py --train q4_last_extdev1000 --eval q4_last_extval400 q4_last_valid
 """
 
 import argparse
@@ -32,7 +32,7 @@ from judge_eval import load  # noqa: E402
 
 # embedding run -> the rows it was computed on (data, limit), as in scripts/embed_rows.py
 RUNS = {
-    "q4_last_extdev": ("ext_dev", None),
+    "q4_last_extdev1000": ("ext_dev", 1000),
     "q4_last_extval400": ("ext_val", 400),
     "q4_last_valid": ("valid", None),
 }
@@ -60,7 +60,7 @@ def matrix(name: str, with_rules: bool) -> tuple[np.ndarray, np.ndarray, np.ndar
 def main() -> None:
     setup()
     ap = argparse.ArgumentParser()
-    ap.add_argument("--train", default="q4_last_extdev")
+    ap.add_argument("--train", default="q4_last_extdev1000")
     ap.add_argument("--eval", nargs="+", default=["q4_last_extval400", "q4_last_valid"])
     ap.add_argument("--rules", action="store_true", help="append the rule features to the vector")
     ap.add_argument("--out", type=Path, default=None)
