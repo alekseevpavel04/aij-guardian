@@ -46,12 +46,14 @@ def main() -> None:
         prompt = without_one_call_rule(row.prompt)
         cut = prompt.index(MARKER)
         system = prompt[:cut].rstrip()
-        if systems.setdefault(domain, system) != system:
-            raise SystemExit(f"{row_id}: the {domain} system block differs from the first row of that domain")
+        # rows of one domain usually share the block; a variant gets a file of its own
+        variants = [k for k, text in systems.items() if k.startswith(domain) and text == system]
+        key = variants[0] if variants else f"{domain}_{sum(k.startswith(domain) for k in systems) + 1}"
+        systems.setdefault(key, system)
         task = unique_task(row_id)
         reference = reference_text(task) if task else "нет (задача не восстанавливается однозначно)"
         parts.append(
-            f"# Строка `{row_id}` (домен {domain}, системный блок в system_{domain}.md)\n\n"
+            f"# Строка `{row_id}` (домен {domain}, системный блок в system_{key}.md)\n\n"
             f"## Эталон задачи (агент его не видел)\n\n{reference}\n\n"
             f"## Диалог после системного блока\n\n```\n{prompt[cut:]}\n```\n\n"
             f"## Размечаемый ход\n\n```\n{row.response}\n```\n"
