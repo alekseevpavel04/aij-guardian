@@ -14,6 +14,7 @@ runs at about 850 tokens/s, the longest row of the 46 (65 481 tokens) in 79 s:
     python scripts/serve_judge.py --set embeddings= pooling=last embd-normalize=-1 ubatch-size=2048 batch-size=2048
     python scripts/embed_rows.py --data valid --name q4_last_valid
     python scripts/embed_rows.py --data ext_val --limit 400 --name q4_last_extval400
+    python scripts/embed_rows.py --rows data/synthetic/organizer_contexts.parquet --name q4_last_org
 """
 
 import argparse
@@ -25,6 +26,7 @@ import urllib.request
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 
 from guardian import journal
 from guardian.env import setup
@@ -61,7 +63,9 @@ def decode(text: str) -> np.ndarray:
 def main() -> None:
     setup()
     ap = argparse.ArgumentParser()
-    ap.add_argument("--data", choices=("valid", "ext_dev", "ext_val"), required=True)
+    source = ap.add_mutually_exclusive_group(required=True)
+    source.add_argument("--data", choices=("valid", "ext_dev", "ext_val"))
+    source.add_argument("--rows", type=Path, help="any parquet with id, prompt and response columns")
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--name", required=True)
@@ -71,7 +75,7 @@ def main() -> None:
     ap.add_argument("--longest-first", action="store_true", help="probe: start with the longest rows")
     args = ap.parse_args()
 
-    frame = load(args.data, args.limit, args.seed)
+    frame = pd.read_parquet(args.rows) if args.rows else load(args.data, args.limit, args.seed)
     system_prompt = args.system_prompt.read_text(encoding="utf-8")
     log = ROOT / "data/interim/embeddings" / f"{args.name}.jsonl"
     log.parent.mkdir(parents=True, exist_ok=True)
