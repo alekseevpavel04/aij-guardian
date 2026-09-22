@@ -57,6 +57,22 @@ def matrix(name: str, with_rules: bool) -> tuple[np.ndarray, np.ndarray, np.ndar
     return x, rows.label.to_numpy().astype(int), groups, rows.reset_index()
 
 
+def auroc_diff_ci(
+    y: np.ndarray, a: np.ndarray, b: np.ndarray, groups: np.ndarray, n: int = 2000, seed: int = 42
+) -> tuple[float, float]:
+    """Paired bootstrap over whole trajectories of AUROC(a) - AUROC(b); steps of one trajectory move together."""
+    rng = np.random.default_rng(seed)
+    names = np.unique(groups)
+    index = {g: np.flatnonzero(groups == g) for g in names}
+    stats = []
+    for _ in range(n):
+        idx = np.concatenate([index[g] for g in rng.choice(names, len(names))])
+        if 0 < y[idx].sum() < len(idx):
+            stats.append(roc_auc_score(y[idx], a[idx]) - roc_auc_score(y[idx], b[idx]))
+    lo, hi = np.quantile(stats, [0.025, 0.975])
+    return round(float(lo), 4), round(float(hi), 4)
+
+
 def main() -> None:
     setup()
     ap = argparse.ArgumentParser()
@@ -88,7 +104,7 @@ def main() -> None:
         "eval": {},
     }
     for name in args.eval:
-        xe, ye, _, rows = matrix(name, args.rules)
+        xe, ye, egroups, rows = matrix(name, args.rules)
         score = model.predict_proba(xe)[:, 1]
         entry = {"rows": len(ye), "positives": int(ye.sum()), "head_auroc": round(float(roc_auc_score(ye, score)), 4)}
         if name in JUDGE:
@@ -99,6 +115,7 @@ def main() -> None:
             # the two scores on one scale: rank average, no fitting on the evaluation rows
             ranks = (pd.Series(score).rank().to_numpy() + pd.Series(js).rank().to_numpy()) / 2
             entry["rank_mean_auroc"] = round(float(roc_auc_score(ye, ranks)), 4)
+            entry["head_minus_judge_ci95"] = auroc_diff_ci(ye, score, js, egroups)
         result["eval"][name] = entry
     out = args.out or ROOT / "results" / f"head_{args.train}{'_rules' if args.rules else ''}.json"
     out.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
