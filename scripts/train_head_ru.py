@@ -125,8 +125,14 @@ def main() -> None:
 
 
 def measure(
-    train: pd.DataFrame, context_vecs: dict, contexts: pd.DataFrame, rules: bool, scores: dict | None = None
+    train: pd.DataFrame,
+    context_vecs: dict,
+    contexts: pd.DataFrame,
+    rules: bool,
+    scores: dict | None = None,
+    prefix: str = "q4_last",
 ) -> dict:
+    """Fit on `train` and measure; `prefix` names the vectors of the 46 rows and ext_val (one per prompt)."""
     train = train.dropna(subset=["label"])
     x, y, groups = design(train, context_vecs, rules), train.label.to_numpy().astype(int), train.group.to_numpy()
     # optional: per-row weights, and a "written" indicator that takes up what tells a written turn from a
@@ -165,7 +171,7 @@ def measure(
     valid["task"] = valid.id.str.split("::").str[0]
     train_tasks = set(contexts[contexts.split == "train"].task)
     valid["half"] = np.where(valid.task.isin(train_tasks), "leaked", "clean")
-    valid_score = model.predict_proba(features_of(valid, vectors("q4_last_valid")))[:, 1]
+    valid_score = model.predict_proba(features_of(valid, vectors(f"{prefix}_valid")))[:, 1]
     if scores is not None:
         scores.update(zip(valid.id, valid_score, strict=True))
     judged = {r["id"]: r["score"] for r in journal.read(ROOT / "data/interim/judge" / f"{JUDGE}.jsonl")}
@@ -215,7 +221,7 @@ def measure(
     }
     # the English external rows with their own weak labels: a check that nothing broke, not of gain
     ext = load("ext_val", 400, 0)
-    ext_score = model.predict_proba(features_of(ext, vectors("q4_last_extval400")))[:, 1]
+    ext_score = model.predict_proba(features_of(ext, vectors(f"{prefix}_extval400")))[:, 1]
     judged = {r["id"]: r["score"] for r in journal.read(ROOT / "data/interim/judge" / f"{JUDGE_EXT}.jsonl")}
     result["ext_val"] = {
         "rows": len(ext),
