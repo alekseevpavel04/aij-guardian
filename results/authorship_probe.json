@@ -1,0 +1,33 @@
+{
+  "correct": {
+    "natural": 165,
+    "written": 202,
+    "auroc": 0.776
+  },
+  "error": {
+    "natural": 47,
+    "written": 280,
+    "auroc": 0.8537
+  },
+  "written_batches_with_vectors": [
+    "airline_02",
+    "airline_03a",
+    "airline_03b",
+    "airline_03c",
+    "airline_03d",
+    "airline_03e",
+    "airline_03f",
+    "banking_02a",
+    "banking_02b",
+    "banking_03a",
+    "banking_03b",
+    "banking_03f",
+    "retail_02a",
+    "retail_02b",
+    "retail_03",
+    "telecom_02a",
+    "telecom_02b",
+    "telecom_03a",
+    "telecom_03b"
+  ]
+}

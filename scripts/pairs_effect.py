@@ -74,6 +74,7 @@ def summary(result: dict) -> dict:
         "check_agreed_auroc": result["check_contexts_agreed"]["head_auroc"],
         "check_v1s_auroc": result["check_contexts"]["head_auroc"],
         "valid_clean_auroc": result["valid"]["clean"]["head_auroc"],
+        "valid_leaked_auroc": result["valid"]["leaked"]["head_auroc"],
         "ext_val_auroc": result["ext_val"]["head_auroc"],
     }
 
@@ -126,27 +127,32 @@ def main() -> None:
     out["curve"]["1.0"] = out["sets"]["all_opus"]
 
     check = contexts[contexts.split == "check"].set_index("id")
-    ids = np.array(sorted(base_scores))
-    tasks = check.task.reindex(ids).to_numpy()
-    groups = [np.where(tasks == t)[0] for t in np.unique(tasks)]
-    s0, s1 = np.array([base_scores[i] for i in ids]), np.array([all_scores[i] for i in ids])
     opus = labels(TEACHERS["opus"].format(split="check"))
     v1s = labels(TEACHERS["v1s"].format(split="check"))
-    y = np.array([opus[i] for i in ids])
-    agreed = np.array([opus[i] == v1s[i] for i in ids])
+    valid = pd.read_parquet(ROOT / "data/raw/valid.parquet").set_index("id")
+    clean = valid[~valid.index.str.split("::").str[0].isin(set(contexts.task[contexts.split == "train"]))]
+    ids = np.array(sorted(check.index) + sorted(clean.index))
+    tasks = np.concatenate([check.task.reindex(sorted(check.index)), clean.index.str.split("::").str[0].sort_values()])
+    groups = [np.where(tasks == t)[0] for t in np.unique(tasks)]
+    s0, s1 = np.array([base_scores[i] for i in ids]), np.array([all_scores[i] for i in ids])
+    in_check = np.isin(ids, check.index)
+    # validation contexts carry Opus labels, the clean rows of valid.parquet the organiser's
+    y = np.array([opus[i] if c else int(valid.at[i, "label"]) for i, c in zip(ids, in_check, strict=True)])
+    agreed = np.array([c and opus[i] == v1s[i] for i, c in zip(ids, in_check, strict=True)])
     out["all_opus_minus_none"] = {}
-    for name, mask in (("check_opus", np.ones(len(ids), bool)), ("check_agreed", agreed)):
+    for name, mask in (("check_opus", in_check), ("check_agreed", agreed), ("valid_clean", ~in_check)):
         boot = np.random.default_rng(args.seed)
+        own = [g[mask[g]] for g in groups if mask[g].any()]
         diffs = []
         for _ in range(args.repeats):
-            idx = np.concatenate([groups[i] for i in boot.integers(0, len(groups), len(groups))])
-            idx = idx[mask[idx]]
+            idx = np.concatenate([own[i] for i in boot.integers(0, len(own), len(own))])
             if 0 < y[idx].sum() < len(idx):
                 diffs.append(auroc(y[idx], s1[idx]) - auroc(y[idx], s0[idx]))
         out["all_opus_minus_none"][name] = {
             "difference": round(auroc(y[mask], s1[mask]) - auroc(y[mask], s0[mask]), 4),
             "ci95": [round(float(v), 3) for v in np.percentile(diffs, [2.5, 97.5])],
-            "dialogues": len(groups),
+            "rows": int(mask.sum()),
+            "dialogues": len(np.unique(tasks[mask])),
         }
     args.out.write_text(json.dumps(out, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(out, ensure_ascii=False, indent=2))

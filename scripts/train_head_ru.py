@@ -153,6 +153,8 @@ def measure(
     train_tasks = set(contexts[contexts.split == "train"].task)
     valid["half"] = np.where(valid.task.isin(train_tasks), "leaked", "clean")
     valid_score = model.predict_proba(design(valid, vectors("q4_last_valid"), rules))[:, 1]
+    if scores is not None:
+        scores.update(zip(valid.id, valid_score, strict=True))
     judged = {r["id"]: r["score"] for r in journal.read(ROOT / "data/interim/judge" / f"{JUDGE}.jsonl")}
     judge_score = valid.id.map(judged).to_numpy(dtype=float)
 
