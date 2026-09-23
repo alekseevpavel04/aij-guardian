@@ -57,10 +57,15 @@ def with_vllm(texts: list[str]) -> tuple[np.ndarray, float]:
 
 
 def with_transformers(texts: list[str]) -> np.ndarray:
-    from transformers import AutoModelForImageTextToText, AutoTokenizer
+    from transformers import AutoConfig, AutoModelForImageTextToText, AutoTokenizer
 
     tokenizer = AutoTokenizer.from_pretrained(MODEL)
-    model = AutoModelForImageTextToText.from_pretrained(MODEL, torch_dtype=torch.float16, device_map="cuda")
+    config = AutoConfig.from_pretrained(MODEL)
+    # the transformers that vLLM 0.19.1 installs cannot build this checkpoint's vision tower without it;
+    # the vision tower is not used on text input
+    if not hasattr(config.vision_config, "rope_parameters"):
+        config.vision_config.rope_parameters = {"rope_type": "default", "rope_theta": 10000.0}
+    model = AutoModelForImageTextToText.from_pretrained(MODEL, config=config, dtype=torch.float16, device_map="cuda")
     vectors = []
     for text in texts:
         ids = tokenizer(text, return_tensors="pt").input_ids.cuda()
