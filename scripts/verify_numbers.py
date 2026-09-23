@@ -91,6 +91,7 @@ GENERATED = {
             ("head_a", ("--teacher", "opus", "--calls-only", "--pair-share", "0.25")),
             ("head_a_bag10", ("--teacher", "opus", "--calls-only", "--pair-share", "0.25", "--bag", "10")),
             ("head_b_bag10", ("--teacher", "v1s", "--pair-share", "0.25", "--bag", "10")),
+            ("head_b0", ("--teacher", "v1s", "--pair-share", "0")),
         )
     },
     **{
@@ -149,7 +150,7 @@ REQUIRES = {
     "data_variants.json": [DATA, ROOT / "data/interim/embeddings", ROOT / "data/interim/labels", *EXTERNAL],
     **{
         f"{n}.json": [DATA, ROOT / "data/interim/embeddings", ROOT / "data/interim/labels"]
-        for n in ("head_a", "head_a_bag10", "head_b_bag10")
+        for n in ("head_a", "head_a_bag10", "head_b_bag10", "head_b0")
     },
     **{
         f"head_ru{n}.json": [DATA, ROOT / "data/interim/embeddings", ROOT / "data/interim/labels"]
