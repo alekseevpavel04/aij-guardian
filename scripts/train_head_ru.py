@@ -107,8 +107,24 @@ def main() -> None:
             if (ROOT / "data/interim/embeddings" / f"{name}.jsonl").exists():
                 context_vecs |= vectors(name)
         train = pd.concat([train, pairs[["id", "prompt", "response", "label", "group"]]], ignore_index=True)
+    result = {
+        "pairs": batches is not None,
+        "pair_batches": batches,
+        "rules": args.rules,
+        "teacher": args.teacher,
+        "drop_copies": args.drop_copies,
+        **measure(train, context_vecs, contexts, args.rules),
+    }
+    name = "head_ru" + ("_opus" if args.teacher == "opus" else "") + ("_pairs" if batches else "")
+    name += "_rules" if args.rules else ""
+    out = args.out or ROOT / "results" / f"{name}.json"
+    out.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+
+
+def measure(train: pd.DataFrame, context_vecs: dict, contexts: pd.DataFrame, rules: bool) -> dict:
     train = train.dropna(subset=["label"])
-    x, y, groups = design(train, context_vecs, args.rules), train.label.to_numpy().astype(int), train.group.to_numpy()
+    x, y, groups = design(train, context_vecs, rules), train.label.to_numpy().astype(int), train.group.to_numpy()
 
     cv = {}
     for c in C_GRID:
@@ -123,25 +139,20 @@ def main() -> None:
     check = contexts[contexts.split == "check"].copy()
     check["label"] = check.id.map(labels("labeler_v1s_org_check"))
     check = check.dropna(subset=["label"])
-    check_score = model.predict_proba(design(check, context_vecs, args.rules))[:, 1]
+    check_score = model.predict_proba(design(check, context_vecs, rules))[:, 1]
     check_opus = check.id.map(labels(TEACHERS["opus"].format(split="check"))).to_numpy().astype(int)
 
     valid = pd.read_parquet(ROOT / "data/raw/valid.parquet")
     valid["task"] = valid.id.str.split("::").str[0]
     train_tasks = set(contexts[contexts.split == "train"].task)
     valid["half"] = np.where(valid.task.isin(train_tasks), "leaked", "clean")
-    valid_score = model.predict_proba(design(valid, vectors("q4_last_valid"), args.rules))[:, 1]
+    valid_score = model.predict_proba(design(valid, vectors("q4_last_valid"), rules))[:, 1]
     judged = {r["id"]: r["score"] for r in journal.read(ROOT / "data/interim/judge" / f"{JUDGE}.jsonl")}
     judge_score = valid.id.map(judged).to_numpy(dtype=float)
 
     result = {
         "train_rows": len(y),
         "train_positives": int(y.sum()),
-        "pairs": batches is not None,
-        "pair_batches": batches,
-        "rules": args.rules,
-        "teacher": args.teacher,
-        "drop_copies": args.drop_copies,
         "cv_auroc_by_c": {str(c): v for c, v in cv.items()},
         "chosen_c": best,
         "check_contexts": {
@@ -167,11 +178,7 @@ def main() -> None:
             "head_auroc": auroc(yv, valid_score[mask]),
             "judge_auroc": auroc(yv, judge_score[mask]),
         }
-    name = "head_ru" + ("_opus" if args.teacher == "opus" else "") + ("_pairs" if batches else "")
-    name += "_rules" if args.rules else ""
-    out = args.out or ROOT / "results" / f"{name}.json"
-    out.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(json.dumps(result, ensure_ascii=False, indent=2))
+    return result
 
 
 if __name__ == "__main__":
