@@ -1,0 +1,46 @@
+{
+  "head_b_train_half": {
+    "rows": 212,
+    "ext_val": 0.8792,
+    "agentprocessbench": 0.8614,
+    "trajerrbench": 0.9262
+  },
+  "plus_check_contexts": {
+    "rows": 384,
+    "ext_val": 0.8736,
+    "agentprocessbench": 0.8466,
+    "trajerrbench": 0.939
+  },
+  "plus_check_and_organiser_46": {
+    "rows": 430,
+    "ext_val": 0.8679,
+    "agentprocessbench": 0.8403,
+    "trajerrbench": 0.9366
+  },
+  "plus_all_ext_dev_same_sources": {
+    "rows": 1433,
+    "ext_val": 0.9336,
+    "agentprocessbench": 0.9188,
+    "trajerrbench": 0.9663
+  },
+  "plus_ext_dev_trajerrbench_only": {
+    "rows": 955,
+    "ext_val": 0.8388,
+    "agentprocessbench": 0.7739,
+    "trajerrbench": 0.9783
+  },
+  "plus_ext_dev_agentprocessbench_only": {
+    "rows": 908,
+    "ext_val": 0.9169,
+    "agentprocessbench": 0.9232,
+    "trajerrbench": 0.8363
+  },
+  "russian_all_minus_head_b": {
+    "difference": -0.0113,
+    "ci95": [
+      -0.03,
+      0.013
+    ],
+    "trajectories": 34
+  }
+}

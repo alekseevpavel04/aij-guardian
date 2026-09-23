@@ -83,6 +83,7 @@ GENERATED = {
     "test_normalisation.json": ("test_normalisation.py", lambda tmp: ["--out", str(tmp / "x.json")]),
     "label_variants.json": ("label_variants.py", lambda tmp: ["--out", str(tmp / "x.json")]),
     "head_variants.json": ("head_variants.py", lambda tmp: ["--out", str(tmp / "x.json")]),
+    "data_variants.json": ("data_variants.py", lambda tmp: ["--out", str(tmp / "x.json")]),
     # the exported heads: the summary is recomputed into tmp/results/<name>.json (see the run loop)
     **{
         f"{name}.json": ("export_head.py", lambda tmp, n=name, a=flags: [*a, "--name", n, "--root", str(tmp)])
@@ -145,6 +146,7 @@ REQUIRES = {
     "test_normalisation.json": [DATA, ROOT / "data/interim/embeddings", ROOT / "data/interim/labels"],
     "label_variants.json": [DATA, ROOT / "data/interim/embeddings", ROOT / "data/interim/labels"],
     "head_variants.json": [DATA, ROOT / "data/interim/embeddings", ROOT / "data/interim/labels"],
+    "data_variants.json": [DATA, ROOT / "data/interim/embeddings", ROOT / "data/interim/labels", *EXTERNAL],
     **{
         f"{n}.json": [DATA, ROOT / "data/interim/embeddings", ROOT / "data/interim/labels"]
         for n in ("head_a", "head_a_bag10", "head_b_bag10")
