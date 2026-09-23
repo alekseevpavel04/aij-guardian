@@ -52,11 +52,32 @@ def main() -> None:
             "points": points,
         }
 
+    def tp_at(k: float, dd: float) -> float:
+        cut = brentq(lambda c: positives * norm.sf(c - dd) + negatives * norm.sf(c) - k, -10, 10)
+        return positives * norm.sf(cut - dd)
+
+    # which test AUROC a submission's (TP, k) implies, and the F1 each AUROC gives at our budget
+    implied = {}
+    for name, tp, k in (
+        ("cascade_think0", 71, 173),
+        ("baseline", baseline["true_positives"], baseline["true_positives"] + baseline["false_positives"]),
+    ):
+        dd = brentq(lambda x, tp=tp, k=k: tp_at(k, x) - tp, 0.01, 5)
+        implied[name] = round(float(norm.cdf(dd / 2**0.5)), 3)
+    by_auroc = []
+    for auc in (0.70, 0.75, 0.78, 0.80, 0.82, 0.85, 0.87, 0.90):
+        dd = float(2**0.5 * norm.ppf(auc))
+        f1s = {k: 2 * tp_at(k, dd) / (k + positives) for k in range(60, 331, 2)}
+        best = max(f1s, key=f1s.get)
+        by_auroc.append({"auroc": auc, "f1_at_172": round(f1s[172], 4), "best_k": best, "best_f1": round(f1s[best], 4)})
+
     result = {
         "baseline_point": {"tp": baseline["true_positives"], "fp": baseline["false_positives"]},
         "positives": positives,
         "negatives": negatives,
         "curves": curves,
+        "implied_test_auroc": implied,
+        "f1_by_auroc": by_auroc,
     }
     args.out.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     for label, c in curves.items():
