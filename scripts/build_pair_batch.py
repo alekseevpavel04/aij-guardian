@@ -9,7 +9,9 @@ before that turn is visible there. A manifest lists the contexts the answers mus
 skipping every context that some earlier batch already has. A batch holds whole dialogues up to
 `--max-batch` contexts, since a split dialogue's history is read twice; only a dialogue with more
 contexts than that is cut into runs of consecutive turns. Several batches get the suffixes a, b, ...
-With `--labels` the writer sees each original turn's label and reason from that label journal.
+With `--labels` the writer sees each original turn's label and reason from that label journal. With
+`--correct-by` only contexts that every given label journal scores 0 are taken, and the writer is told
+that the original turn was judged correct (pair_writer_v5 plants one error in the original turn).
 
     python scripts/build_pair_batch.py --domain airline --batch airline_03 --labels opus_v4_org_train
     # the batches of 23.09 (decision 22) were built with --count and pair_writer_v3.md
@@ -52,7 +54,12 @@ def pick(frame: pd.DataFrame, count: int | None, skip: set[str], rng: random.Ran
 
 
 def write_batch(
-    out: Path, frame: pd.DataFrame, picks: list[tuple[str, list[int]]], writer: str, known: dict[str, dict]
+    out: Path,
+    frame: pd.DataFrame,
+    picks: list[tuple[str, list[int]]],
+    writer: str,
+    known: dict[str, dict],
+    args_correct: bool = False,
 ) -> int:
     out.mkdir(parents=True, exist_ok=True)
     system = frame.prompt.iloc[0][: frame.prompt.iloc[0].find("⟦ASSISTANT⟧")].rstrip()
@@ -67,7 +74,9 @@ def write_batch(
         for turn in turns:
             row = rows[rows.turn == turn].iloc[0]
             manifest.append({"context_id": row.id, "task": task, "turn": turn})
-            if row.id in known:
+            if args_correct:
+                heading, reason = "Исходный ход агента (два независимых разметчика считают его правильным)", ""
+            elif row.id in known:
                 label = known[row.id]
                 heading = f"Исходный ход агента, метка независимого разметчика {int(label['score'])}"
                 reason = f"\nПричина метки: {label['explanation']}\n"
@@ -99,10 +108,15 @@ def main() -> None:
     ap.add_argument("--writer-prompt", type=Path, default=ROOT / "configs/prompts/pair_writer_v4.md")
     ap.add_argument("--answers", default="opus.jsonl", help="file the subagent writes into the batch folder")
     ap.add_argument("--labels", default=None, help="label journal whose label and reason the writer is shown")
+    ap.add_argument("--correct-by", nargs="+", default=None, help="keep contexts all these journals score 0")
     args = ap.parse_args()
 
     frame = pd.read_parquet(args.contexts)
     frame = frame[(frame.domain == args.domain) & (frame.split == args.split) & (frame.turn >= 2)]
+    if args.correct_by:
+        journals = [ROOT / "data/interim/labels" / f"{name}.jsonl" for name in args.correct_by]
+        scored = [{r["id"]: r["score"] for r in journal.read(path)} for path in journals]
+        frame = frame[[all(s.get(i, 1) < 0.5 for s in scored) for i in frame.id]]
     picks = pick(frame, args.count, used_contexts(args.out), random.Random(args.seed))
     known = (
         {r["id"]: r for r in journal.read(ROOT / "data/interim/labels" / f"{args.labels}.jsonl")} if args.labels else {}
@@ -122,7 +136,7 @@ def main() -> None:
     writer = writer.replace("{domain}", args.domain).replace("{answers}", args.answers)
     for n, group in enumerate(groups):
         name = args.batch if len(groups) == 1 else f"{args.batch}{string.ascii_lowercase[n]}"
-        count = write_batch(args.out / name, frame, group, writer, known)
+        count = write_batch(args.out / name, frame, group, writer, known, bool(args.correct_by))
         size = sum((args.out / name / f).stat().st_size for f in ("batch.md", "system.md"))
         print(f"{name}: {count} contexts from {len(group)} dialogues, {size / 1024:.0f} KiB")
 
