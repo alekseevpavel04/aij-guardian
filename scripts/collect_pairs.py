@@ -12,10 +12,12 @@ dropping it, so a person can look at what was caught:
 - `rules_fire_on_correct`: a deterministic check fires on a turn written as correct.
 
     python scripts/collect_pairs.py --batch airline_01
+    python scripts/collect_pairs.py --batch banking_02a --answers opus.jsonl
 """
 
 import argparse
 import json
+from collections import Counter
 from pathlib import Path
 
 import pandas as pd
@@ -40,7 +42,10 @@ ERROR_TYPES = {
     "unavailable_tool",
     "invalid_modification",
 }
-AUTHOR = "claude-sonnet"
+AUTHORS = {
+    "sonnet.jsonl": "claude-sonnet",
+    "opus.jsonl": "claude-opus",
+}
 
 
 def render_turn(turn: int, text: str, calls: list[dict]) -> str:
@@ -100,12 +105,13 @@ def main() -> None:
     ap.add_argument("--batch", required=True)
     ap.add_argument("--contexts", type=Path, default=ROOT / "data/synthetic/organizer_contexts.parquet")
     ap.add_argument("--pairs", type=Path, default=ROOT / "data/synthetic/pairs")
+    ap.add_argument("--answers", default="sonnet.jsonl", choices=sorted(AUTHORS))
     args = ap.parse_args()
 
     folder = args.pairs / args.batch
     manifest = {m["context_id"]: m for m in json.loads((folder / "manifest.json").read_text(encoding="utf-8"))}
     contexts = pd.read_parquet(args.contexts).set_index("id")
-    items = journal.read(folder / "sonnet.jsonl")
+    items = journal.read(folder / args.answers)
     rows, naturals, problems = [], [], []
     for n, item in enumerate(items):
         cid = item.get("context_id")
@@ -130,6 +136,7 @@ def main() -> None:
                 "response": response,
                 "label": int(item["kind"] == "error"),
                 "kind": item["kind"],
+                "pair": item.get("pair"),
                 "error_type": item.get("error_type") if item["kind"] == "error" else None,
                 "difficulty": item.get("difficulty"),
                 "explanation": item.get("explanation"),
@@ -138,9 +145,11 @@ def main() -> None:
                 "task": ctx.task,
                 "split": ctx.split,
                 "batch": args.batch,
-                "author": AUTHOR,
+                "author": AUTHORS[args.answers],
             }
         )
+    per_context = Counter(item.get("context_id") for item in items)
+    problems += [f"{cid}: {per_context[cid]} lines, expected 5" for cid in manifest if per_context[cid] != 5]
     frame = pd.DataFrame(rows)
     frame.to_parquet(folder / "pairs.parquet", index=False)
     pd.DataFrame(naturals).to_parquet(folder / "natural_labels.parquet", index=False)
