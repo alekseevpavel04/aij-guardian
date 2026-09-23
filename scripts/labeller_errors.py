@@ -21,6 +21,7 @@ LOCAL = {
     "judge_baseline": "baseline_prompt_q4_valid",
     "local_v1": "labeler_v1_think2048_valid",
     "local_v1s": "labeler_v1s_think2048_valid",
+    "local_v4": "labeler_v4_think2048_valid",
 }
 CLAUDE = {"sonnet": "sonnet.jsonl", "opus": "opus.jsonl", "opus_v4": "opus_v4.jsonl"}
 

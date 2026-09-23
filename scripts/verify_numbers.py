@@ -224,6 +224,20 @@ JUDGE_RUNS = {
         "Метка: ",
         "--strip-one-call-rule",
     ],
+    "labeler_v4_think2048_valid": [
+        "--data",
+        "valid",
+        "--system-prompt",
+        "configs/prompts/labeler_v4.md",
+        "--reference",
+        "tau2",
+        "--thinking",
+        "--thinking-tokens",
+        "2048",
+        "--answer-prefix",
+        "Метка: ",
+        "--strip-one-call-rule",
+    ],
 }
 JUDGE_COMPARES = {
     "v1_q4_valid__baseline_prompt_q4_valid": ["--a", "v1_q4_valid", "--b", "baseline_prompt_q4_valid"],

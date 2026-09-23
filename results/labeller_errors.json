@@ -195,6 +195,68 @@
       "banking_knowledge__task_063::t8"
     ]
   },
+  "local_v4": {
+    "all": {
+      "rows": 46,
+      "true_positive": 19,
+      "miss": 4,
+      "false_alarm": 0,
+      "true_negative": 23
+    },
+    "by_half": {
+      "derive": {
+        "rows": 24,
+        "true_positive": 10,
+        "miss": 2,
+        "false_alarm": 0,
+        "true_negative": 12
+      },
+      "holdout": {
+        "rows": 22,
+        "true_positive": 9,
+        "miss": 2,
+        "false_alarm": 0,
+        "true_negative": 11
+      }
+    },
+    "by_domain": {
+      "airline": {
+        "rows": 12,
+        "true_positive": 5,
+        "miss": 1,
+        "false_alarm": 0,
+        "true_negative": 6
+      },
+      "banking_knowledge": {
+        "rows": 11,
+        "true_positive": 6,
+        "miss": 0,
+        "false_alarm": 0,
+        "true_negative": 5
+      },
+      "retail": {
+        "rows": 11,
+        "true_positive": 2,
+        "miss": 3,
+        "false_alarm": 0,
+        "true_negative": 6
+      },
+      "telecom": {
+        "rows": 12,
+        "true_positive": 6,
+        "miss": 0,
+        "false_alarm": 0,
+        "true_negative": 6
+      }
+    },
+    "misses": [
+      "airline__8::t7",
+      "retail__27::t10",
+      "retail__29::t13",
+      "retail__36::t10"
+    ],
+    "false_alarms": []
+  },
   "sonnet": {
     "all": {
       "rows": 10,
