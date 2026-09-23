@@ -84,7 +84,19 @@ GENERATED = {
     "label_variants.json": ("label_variants.py", lambda tmp: ["--out", str(tmp / "x.json")]),
     "head_variants.json": ("head_variants.py", lambda tmp: ["--out", str(tmp / "x.json")]),
     "data_variants.json": ("data_variants.py", lambda tmp: ["--out", str(tmp / "x.json")]),
-    "context_ruler.json": ("context_ruler.py", lambda tmp: ["--out", str(tmp / "x.json")]),
+    "context_ruler.json": (
+        "context_ruler.py",
+        lambda tmp: [
+            "--extra-pairs",
+            *(
+                f"{d}_05{s}"
+                for d, ss in (("airline", "ab"), ("retail", "ab"), ("telecom", "abcde"), ("banking", "abc"))
+                for s in ss
+            ),
+            "--out",
+            str(tmp / "x.json"),
+        ],
+    ),
     # the exported heads: the summary is recomputed into tmp/results/<name>.json (see the run loop)
     **{
         f"{name}.json": ("export_head.py", lambda tmp, n=name, a=flags: [*a, "--name", n, "--root", str(tmp)])

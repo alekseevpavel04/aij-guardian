@@ -151,11 +151,9 @@ def main() -> None:
         "v1s_25pct_pairs_plus_ext_dev_weight_0_5": ruler.scores(v1s, 0.25, external_weight=0.5),
     }
     if args.extra_pairs:
-        extra = written(args.extra_pairs, contexts)
+        extra = written(args.extra_pairs, contexts, ("train", "check"))
         ruler_extra = Ruler(contexts, vecs, pd.concat([ruler.pairs, extra]), external)
-        variants["v1s_25pct_pairs_plus_" + "_".join(sorted({b.split("_")[1] for b in args.extra_pairs}))] = (
-            ruler_extra.scores(v1s, 0.25)
-        )
+        variants["v1s_25pct_pairs_plus_extra_pairs"] = ruler_extra.scores(v1s, 0.25)
     result = {
         "rows": len(ruler.ctx),
         "agreed_rows": int(ruler.agree.sum()),

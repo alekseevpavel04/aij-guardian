@@ -48,9 +48,11 @@ SHARES = (0.25, 0.5, 0.75)
 DRAWS = 3
 
 
-def written(batches: list[str], contexts: pd.DataFrame) -> pd.DataFrame:
+def written(batches: list[str], contexts: pd.DataFrame, splits: tuple[str, ...] = ("train",)) -> pd.DataFrame:
+    """Written turns of the given batches used for training; the context ruler takes every split and
+    leaves the held-out dialogues' turns out itself."""
     frame = pd.concat([pd.read_parquet(ROOT / "data/synthetic/pairs" / b / "pairs.parquet") for b in batches])
-    frame = frame[frame.context_id.map(contexts.set_index("id").split) == "train"]
+    frame = frame[frame.context_id.map(contexts.set_index("id").split).isin(splits)]
     rejected = {
         r["id"]
         for r in journal.read(ROOT / "data/interim/labels/opus_verify_pairs.jsonl")

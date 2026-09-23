@@ -115,6 +115,21 @@
         ],
         "share_above_zero": 0.945
       }
+    },
+    "v1s_25pct_pairs_plus_extra_pairs": {
+      "auroc": 0.8995,
+      "ci95": [
+        0.806,
+        0.967
+      ],
+      "minus_head_b": {
+        "difference": 0.0006,
+        "ci95": [
+          -0.013,
+          0.011
+        ],
+        "share_above_zero": 0.487
+      }
     }
   }
 }
