@@ -9,7 +9,9 @@ dropping it, so a person can look at what was caught:
 - `value_not_in_context`: an argument value absent from the visible history, which for any other
   planted error than an invented value means the writer looked past the cut;
 - `same_as_original`: the written turn repeats the agent's own turn;
-- `rules_fire_on_correct`: a deterministic check fires on a turn written as correct.
+- `rules_fire_on_correct`: a deterministic check fires on a turn written as correct;
+- `edit_mismatch`: the error turn is not its pair's correct turn with the declared fragment replaced
+  (only for writers that declare the edit; `edit_ratio` keeps how similar the two turns are anyway).
 
     python scripts/collect_pairs.py --batch airline_01
     python scripts/collect_pairs.py --batch banking_02a --answers opus.jsonl
@@ -18,6 +20,7 @@ dropping it, so a person can look at what was caught:
 import argparse
 import json
 from collections import Counter
+from difflib import SequenceMatcher
 from pathlib import Path
 
 import pandas as pd
@@ -100,6 +103,32 @@ def checks(item: dict, context: str, response: str, original: str, tools: dict) 
     return flags
 
 
+def replaced_once(correct: str, old: str, new: str, error: str) -> bool:
+    start = correct.find(old)
+    while start >= 0:
+        if correct[:start] + new + correct[start + len(old) :] == error:
+            return True
+        start = correct.find(old, start + 1)
+    return False
+
+
+def twin_checks(frame: pd.DataFrame) -> None:
+    frame["edit_ratio"] = None
+    for _, group in frame.groupby(["context_id", "pair"]):
+        correct, error = group[group.kind == "correct"], group[group.kind == "error"]
+        if len(correct) != 1 or len(error) != 1:
+            for i in group.index:
+                frame.at[i, "flags"] = [*frame.at[i, "flags"], "no_twin"]
+            continue
+        c, e = correct.iloc[0], error.iloc[0]
+        frame.at[e.name, "edit_ratio"] = round(SequenceMatcher(None, c.response, e.response, autojunk=False).ratio(), 3)
+        old, new = e.edit_from, e.edit_to
+        if old is None and new is None:
+            continue
+        if not old or not replaced_once(c.response, old, new or "", e.response):
+            frame.at[e.name, "flags"] = [*frame.at[e.name, "flags"], "edit_mismatch" if old else "edit_unchecked"]
+
+
 def main() -> None:
     setup()
     ap = argparse.ArgumentParser()
@@ -141,6 +170,8 @@ def main() -> None:
                 "error_type": item.get("error_type") if item["kind"] == "error" else None,
                 "difficulty": item.get("difficulty"),
                 "explanation": item.get("explanation"),
+                "edit_from": (item.get("edit") or {}).get("from"),
+                "edit_to": (item.get("edit") or {}).get("to"),
                 "flags": checks(item, ctx.prompt, response, ctx.response, tools),
                 "domain": ctx.domain,
                 "task": ctx.task,
@@ -150,8 +181,13 @@ def main() -> None:
             }
         )
     per_context = Counter(item.get("context_id") for item in items)
-    problems += [f"{cid}: {per_context[cid]} lines, expected 5" for cid in manifest if per_context[cid] != 5]
+    # writers up to v3 also label the original turn, one line more per context
+    expected = 5 if naturals else 4
+    problems += [
+        f"{cid}: {per_context[cid]} lines, expected {expected}" for cid in manifest if per_context[cid] != expected
+    ]
     frame = pd.DataFrame(rows)
+    twin_checks(frame)
     frame.to_parquet(folder / "pairs.parquet", index=False)
     pd.DataFrame(naturals).to_parquet(folder / "natural_labels.parquet", index=False)
     flagged = frame[frame["flags"].map(len) > 0] if len(frame) else frame
