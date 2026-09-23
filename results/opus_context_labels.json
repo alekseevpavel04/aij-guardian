@@ -1,0 +1,91 @@
+{
+  "labeller": "claude-opus, configs/prompts/labeler_v4.md",
+  "splits": {
+    "train": {
+      "contexts": 212,
+      "opus_positives": 47,
+      "with_local_label": 212,
+      "agree": 188,
+      "opus_1_local_0": 19,
+      "opus_0_local_1": 5,
+      "unlabelled": [],
+      "by_domain": {
+        "airline": {
+          "contexts": 65,
+          "opus_positives": 11,
+          "with_local_label": 65,
+          "agree": 57,
+          "opus_1_local_0": 6,
+          "opus_0_local_1": 2
+        },
+        "banking_knowledge": {
+          "contexts": 76,
+          "opus_positives": 24,
+          "with_local_label": 76,
+          "agree": 65,
+          "opus_1_local_0": 10,
+          "opus_0_local_1": 1
+        },
+        "retail": {
+          "contexts": 32,
+          "opus_positives": 5,
+          "with_local_label": 32,
+          "agree": 28,
+          "opus_1_local_0": 3,
+          "opus_0_local_1": 1
+        },
+        "telecom": {
+          "contexts": 39,
+          "opus_positives": 7,
+          "with_local_label": 39,
+          "agree": 38,
+          "opus_1_local_0": 0,
+          "opus_0_local_1": 1
+        }
+      }
+    },
+    "check": {
+      "contexts": 172,
+      "opus_positives": 33,
+      "with_local_label": 172,
+      "agree": 155,
+      "opus_1_local_0": 8,
+      "opus_0_local_1": 9,
+      "unlabelled": [],
+      "by_domain": {
+        "airline": {
+          "contexts": 22,
+          "opus_positives": 3,
+          "with_local_label": 22,
+          "agree": 22,
+          "opus_1_local_0": 0,
+          "opus_0_local_1": 0
+        },
+        "banking_knowledge": {
+          "contexts": 45,
+          "opus_positives": 7,
+          "with_local_label": 45,
+          "agree": 39,
+          "opus_1_local_0": 4,
+          "opus_0_local_1": 2
+        },
+        "retail": {
+          "contexts": 22,
+          "opus_positives": 2,
+          "with_local_label": 22,
+          "agree": 21,
+          "opus_1_local_0": 1,
+          "opus_0_local_1": 0
+        },
+        "telecom": {
+          "contexts": 83,
+          "opus_positives": 21,
+          "with_local_label": 83,
+          "agree": 73,
+          "opus_1_local_0": 3,
+          "opus_0_local_1": 7
+        }
+      }
+    }
+  }
+}
