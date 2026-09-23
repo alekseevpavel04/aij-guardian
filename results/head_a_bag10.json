@@ -1,0 +1,56 @@
+{
+  "head": "configs/heads/head_a_bag10.json",
+  "teacher": "opus",
+  "calls_only": true,
+  "pair_share": 0.25,
+  "bag_seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "chosen_c": [
+    0.003,
+    0.01,
+    0.003,
+    0.003,
+    0.003,
+    0.001,
+    0.001,
+    0.03,
+    0.01,
+    0.01
+  ],
+  "valid": {
+    "all": {
+      "rows": 46,
+      "head_auroc": 0.8601
+    },
+    "clean": {
+      "rows": 24,
+      "head_auroc": 0.9786
+    },
+    "leaked": {
+      "rows": 22,
+      "head_auroc": 0.6838
+    }
+  },
+  "ext_val": {
+    "rows": 405,
+    "head_auroc": 0.8527
+  },
+  "check_contexts_agreed": {
+    "rows": 155,
+    "head_auroc": 0.9283
+  },
+  "check_contexts_opus_labels": {
+    "rows": 172,
+    "head_auroc": 0.8648
+  }
+}

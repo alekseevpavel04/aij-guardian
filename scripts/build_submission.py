@@ -54,8 +54,9 @@ MODEL_DIR = ROOT / "data/raw/baseline/baseline/model"
 # left to the rules (scripts/predict.py)
 CASCADE = {"served_name": "judge", "port": 8000, "max_model_len": 131072, "workers": 32, "server_minutes": 15}
 CASCADE["total_minutes"] = 25
-# the head's own deadline for its scores; below min_scored of the rows it gives way to the cascade
-HEAD = {"head": "head.json", "head_minutes": 20, "min_scored": 0.5}
+# the head scores until the cascade's own deadline; it gives way to the cascade only when more than
+# max_errors of its requests fail (scripts/predict.py)
+HEAD = {"head": "head.json", "head_minutes": CASCADE["total_minutes"], "max_errors": 0.5}
 
 PYPROJECT = """[build-system]
 requires = ["setuptools"]

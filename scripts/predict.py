@@ -11,8 +11,8 @@ server that is already up instead, which is how it is tested locally.
 
 With the `head` strategy the same model is served in pooling mode and a linear head scores its
 last-token hidden state (guardian/head.py; GUARDIAN_EMBED_URL for a server that is already up). If
-the pooling server does not come up or scores too few rows, the run falls back to the cascade with
-the cascade's own deadlines, so a head that fails early costs nothing against the known result.
+the pooling server does not come up or most of its requests fail, the run falls back to the cascade
+with the cascade's own deadlines, so a head that fails early costs nothing against the known result.
 """
 
 import json
@@ -135,7 +135,9 @@ def head(rows: list[dict], config: dict, started: float) -> list[int] | None:
         stop(process)
     scored = sum(s is not None for s in run.scores)
     print(f"head scored {scored} of {len(rows)} rows in {run.seconds:.0f} s, {run.errors} errors", file=sys.stderr)
-    if scored < config["min_scored"] * len(rows):
+    # most requests failing means the pooling path does not work, and the cascade may still have time;
+    # rows left unscored at the deadline are only a lack of time, and the cascade would have even less
+    if run.errors > config["max_errors"] * len(rows) or scored == 0:
         return None
     labels = combine(rules, top_share(run.scores, config["share"]))
     print(f"rules fired on {sum(rules)}; with the top {config['share']} of head scores {sum(labels)}", file=sys.stderr)

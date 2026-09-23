@@ -6,7 +6,10 @@ guardian.judge. Every step has a deadline: a server that does not come up in tim
 the rules alone instead of failing it.
 """
 
+import contextlib
 import json
+import os
+import signal
 import subprocess
 import sys
 import time
@@ -49,7 +52,8 @@ def start_vllm(
         ]
         command.remove("--enable-prefix-caching")
     handle = log.open("w", encoding="utf-8")
-    return subprocess.Popen(command, stdout=handle, stderr=subprocess.STDOUT)
+    # a session of its own, so that stop() can take the engine's child processes down with the server
+    return subprocess.Popen(command, stdout=handle, stderr=subprocess.STDOUT, start_new_session=True)
 
 
 def wait_ready(port: int, deadline: float, process: subprocess.Popen | None = None) -> bool:
@@ -69,10 +73,26 @@ def wait_ready(port: int, deadline: float, process: subprocess.Popen | None = No
 
 
 def stop(process: subprocess.Popen | None) -> None:
-    if process is None or process.poll() is not None:
+    """Stop the server and every process it started.
+
+    vLLM runs the engine in a child process that holds the GPU memory; if it outlived the server, a
+    second server (the head's fallback to the cascade) could not load the model. On Linux the whole
+    process group is signalled, even when the server itself has already exited.
+    """
+    if process is None:
         return
-    process.terminate()
-    try:
-        process.wait(timeout=30)
-    except subprocess.TimeoutExpired:
-        process.kill()
+    if not hasattr(os, "killpg"):
+        if process.poll() is None:
+            process.terminate()
+            try:
+                process.wait(timeout=30)
+            except subprocess.TimeoutExpired:
+                process.kill()
+        return
+    for sig in (signal.SIGTERM, signal.SIGKILL):
+        try:
+            os.killpg(process.pid, sig)
+        except ProcessLookupError:
+            return
+        with contextlib.suppress(subprocess.TimeoutExpired):
+            process.wait(timeout=30)
