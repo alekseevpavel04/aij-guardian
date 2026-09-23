@@ -124,7 +124,9 @@ def main() -> None:
     print(json.dumps(result, ensure_ascii=False, indent=2))
 
 
-def measure(train: pd.DataFrame, context_vecs: dict, contexts: pd.DataFrame, rules: bool) -> dict:
+def measure(
+    train: pd.DataFrame, context_vecs: dict, contexts: pd.DataFrame, rules: bool, scores: dict | None = None
+) -> dict:
     train = train.dropna(subset=["label"])
     x, y, groups = design(train, context_vecs, rules), train.label.to_numpy().astype(int), train.group.to_numpy()
 
@@ -143,6 +145,8 @@ def measure(train: pd.DataFrame, context_vecs: dict, contexts: pd.DataFrame, rul
     check = check.dropna(subset=["label"])
     check_score = model.predict_proba(design(check, context_vecs, rules))[:, 1]
     check_opus = check.id.map(labels(TEACHERS["opus"].format(split="check"))).to_numpy().astype(int)
+    if scores is not None:  # for a paired comparison of heads on the same contexts
+        scores.update(zip(check.id, check_score, strict=True))
 
     valid = pd.read_parquet(ROOT / "data/raw/valid.parquet")
     valid["task"] = valid.id.str.split("::").str[0]
