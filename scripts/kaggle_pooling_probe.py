@@ -72,6 +72,8 @@ def main() -> None:
     try:
         v, seconds = with_vllm(texts)
         result["vllm"] = {"ok": True, "seconds": round(seconds, 2), "dim": int(v.shape[1])}
+        # the main answer, printed before the transformers pass that may run out of memory
+        print(json.dumps(result, ensure_ascii=False), flush=True)
     except Exception as error:  # the point of the probe is to see how it fails
         result["vllm"] = {"ok": False, "error": f"{type(error).__name__}: {error}"[:2000]}
         print(json.dumps(result, ensure_ascii=False, indent=2))
