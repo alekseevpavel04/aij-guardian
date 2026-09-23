@@ -15,16 +15,16 @@
       "ext_val": 0.8453
     },
     "lr_l1": {
-      "cv_auroc": 0.8709,
-      "check_opus": 0.879,
-      "check_agreed": 0.9434,
+      "cv_auroc": 0.8713,
+      "check_opus": 0.8775,
+      "check_agreed": 0.9418,
       "valid_all": 0.7599,
       "valid_clean": 0.8929,
       "valid_all_minus_judge_ci95": [
         -0.166,
         0.045
       ],
-      "ext_val": 0.8057
+      "ext_val": 0.8055
     },
     "lr_unit_norm": {
       "cv_auroc": 0.8782,
@@ -123,16 +123,16 @@
       "ext_val": 0.8502
     },
     "lr_l1_extra": {
-      "cv_auroc": 0.9067,
+      "cv_auroc": 0.9066,
       "check_opus": 0.9071,
-      "check_agreed": 0.9606,
+      "check_agreed": 0.9603,
       "valid_all": 0.775,
-      "valid_clean": 0.9143,
+      "valid_clean": 0.9214,
       "valid_all_minus_judge_ci95": [
-        -0.161,
-        0.077
+        -0.16,
+        0.076
       ],
-      "ext_val": 0.7765
+      "ext_val": 0.774
     },
     "lr_unit_norm_extra": {
       "cv_auroc": 0.8827,

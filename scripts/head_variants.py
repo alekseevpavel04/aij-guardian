@@ -76,7 +76,10 @@ def variants() -> dict[str, list]:
     return {
         "lr": lr,
         "lr_l1": [
-            make_pipeline(StandardScaler(), LogisticRegression(C=c, penalty="l1", solver="liblinear", max_iter=5000))
+            make_pipeline(
+                StandardScaler(),
+                LogisticRegression(C=c, penalty="l1", solver="liblinear", max_iter=5000, random_state=0),
+            )
             for c in (0.01, 0.1, 1.0)
         ],
         "lr_unit_norm": [
