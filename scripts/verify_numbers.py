@@ -76,6 +76,8 @@ GENERATED = {
     # rewrites the Opus label journals with the same content, the head runs below read them
     "opus_context_labels.json": ("context_labels.py", lambda tmp: ["--out", str(tmp / "x.json")]),
     "head_ru_teacher_compare.json": ("teacher_compare.py", lambda tmp: ["--out", str(tmp / "x.json")]),
+    # rewrites the checker's label journal with the same content
+    "pair_verification.json": ("pair_verification.py", lambda tmp: ["--out", str(tmp / "x.json")]),
     **{
         f"head_ru{name}.json": ("train_head_ru.py", lambda tmp, a=flags: [*a, "--out", str(tmp / "x.json")])
         for name, flags in (
@@ -122,6 +124,7 @@ REQUIRES = {
     "pairs_agreement.json": [ROOT / "data/synthetic/pairs", ROOT / "data/interim/labels"],
     "opus_context_labels.json": [ROOT / "data/synthetic/opus_labels", ROOT / "data/interim/labels"],
     "head_ru_teacher_compare.json": [ROOT / "data/interim/embeddings", ROOT / "data/interim/labels"],
+    "pair_verification.json": [ROOT / "data/synthetic/verify", ROOT / "data/synthetic/pairs"],
     **{
         f"head_ru{n}.json": [DATA, ROOT / "data/interim/embeddings", ROOT / "data/interim/labels"]
         for n in ("", "_rules", "_pairs", "_pairs_rules", "_opus", "_opus_pairs")

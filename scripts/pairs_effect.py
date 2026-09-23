@@ -8,7 +8,10 @@ duplicate a context), and so are turns written as correct that the blind checker
 - no pairs, the v3 batches of 23.09 only, the v4 batches only, all Opus pairs, all plus the Sonnet pilot;
 - a curve over the share of contexts whose pairs are kept (a share of contexts, not of turns, so a
   kept context brings all its turns), three random draws per share;
-- pairs A only and pairs B only.
+- pairs A only and pairs B only;
+- full pairs only: an error turn is kept only with its written correct twin. Dropping copies leaves
+  their error twins behind, so written turns lean to label 1, and the vector can tell a written turn
+  from a natural one (scripts/authorship_probe.py): a head may then learn "written, so an error".
 
 The head with all Opus pairs is compared with the head without pairs on the validation contexts by a
 bootstrap over dialogues.
@@ -53,6 +56,11 @@ def written(batches: list[str], contexts: pd.DataFrame) -> pd.DataFrame:
     }
     copy = frame["flags"].map(lambda f: "same_as_original" in list(f))
     return frame[~copy & ~frame.id.isin(rejected)].assign(group=lambda f: f.task)
+
+
+def full_pairs(frame: pd.DataFrame) -> pd.DataFrame:
+    kinds = frame.groupby(["context_id", "pair"]).kind.transform("nunique")
+    return frame[kinds == 2]
 
 
 def summary(result: dict) -> dict:
@@ -102,6 +110,8 @@ def main() -> None:
     out["sets"]["all_opus_and_pilot"] = head(pd.concat([opus_pairs, written(PILOT, contexts)]))
     out["sets"]["pairs_A"] = head(opus_pairs[opus_pairs.pair == "A"])
     out["sets"]["pairs_B"] = head(opus_pairs[opus_pairs.pair == "B"])
+    out["sets"]["full_pairs"] = head(full_pairs(opus_pairs))
+    out["sets"]["full_pairs_B"] = head(full_pairs(opus_pairs[opus_pairs.pair == "B"]))
 
     rng = np.random.default_rng(args.seed)
     kept_contexts = np.array(sorted(opus_pairs.context_id.unique()))
