@@ -29,10 +29,18 @@ def opus_labels() -> pd.DataFrame:
         ids = [g["id"] for g in got]
         if sorted(ids) != sorted(expected):
             raise SystemExit(f"{folder.name}: {len(ids)} labels for {len(expected)} contexts")
-        rows += [{"id": g["id"], "opus": int(g["label"]), "source": f"label:{folder.name}"} for g in got]
+        rows += [
+            {"id": g["id"], "opus": int(g["label"]), "explanation": g["explanation"], "source": f"label:{folder.name}"}
+            for g in got
+        ]
     for answers in sorted((ROOT / "data/synthetic/pairs").glob("*/opus.jsonl")):
         rows += [
-            {"id": g["context_id"], "opus": int(g["label"]), "source": f"pairs:{answers.parent.name}"}
+            {
+                "id": g["context_id"],
+                "opus": int(g["label"]),
+                "explanation": g["explanation"],
+                "source": f"pairs:{answers.parent.name}",
+            }
             for g in journal.read(answers)
             if g.get("kind") == "natural"
         ]
@@ -80,7 +88,7 @@ def main() -> None:
         log = ROOT / "data/interim/labels" / f"opus_v4_org_{split}.jsonl"
         log.unlink(missing_ok=True)
         for r in part.sort_values("id").itertuples():
-            journal.append(log, {"id": r.id, "score": float(r.opus), "source": r.source})
+            journal.append(log, {"id": r.id, "score": float(r.opus), "explanation": r.explanation, "source": r.source})
     args.out.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(
         json.dumps({s: {k: v for k, v in r.items() if k != "by_domain"} for s, r in result["splits"].items()}, indent=2)
