@@ -9,7 +9,9 @@ context gets an out-of-fold score. The measure is AUROC on the contexts where v1
 neither teacher is favoured, and a recipe is compared with head B by a paired bootstrap over dialogues.
 
 Checked against the test: it ranks head A far below B (-0.064 [-0.094; -0.029]; test AUROC about 0.66
-against 0.76) and B without pairs level with B (test 0.500 against 0.513).
+against 0.76) and B without pairs level with B (test 0.500 against 0.513). The judge needs no run of its
+own: its score is the vector times the difference of the output rows of the tokens "1" and "0" (on the 46
+rows Pearson 0.99 with the judge's logit), and the ruler puts it below B by about as much as the test.
 
     python scripts/context_ruler.py
 """
@@ -33,6 +35,7 @@ from judge_eval import load  # noqa: E402
 from pairs_effect import written  # noqa: E402
 from train_head_ru import PAIR_VECTORS, TEACHERS, auroc, labels, vectors  # noqa: E402
 
+GGUF = Path("D:/VScode_projects/llm-models/qwen3.6-35b-a3b/Qwen3.6-35B-A3B-Q4_K_M.gguf")
 C = 0.003
 DRAWS = 3
 FOLDS = 5
@@ -41,6 +44,18 @@ V3_V4 = [
     *(f"airline_03{s}" for s in "abcdef"),
     *("retail_03", "telecom_03a", "telecom_03b", "banking_03a", "banking_03b", "banking_03f"),
 ]
+
+
+def judge_direction() -> np.ndarray:
+    """Output row of "1" minus that of "0" (token ids 16 and 15), read from the GGUF once and cached."""
+    cached = ROOT / "data/interim/judge_direction.npy"
+    if not cached.exists():
+        import gguf
+
+        tensor = next(t for t in gguf.GGUFReader(GGUF).tensors if t.name == "output.weight")
+        rows = gguf.quants.dequantize(tensor.data[[15, 16]], tensor.tensor_type)
+        np.save(cached, rows[1] - rows[0])
+    return np.load(cached)
 
 
 class Ruler:
@@ -149,6 +164,7 @@ def main() -> None:
         "v1s_all_pairs": ruler.scores(v1s, 1.0),
         "opus_all_labels_25pct_pairs": ruler.scores(opus, 0.25),
         "v1s_25pct_pairs_plus_ext_dev_weight_0_5": ruler.scores(v1s, 0.25, external_weight=0.5),
+        "judge_no_thinking": ruler.x @ judge_direction(),
     }
     if args.extra_pairs:
         extra = written(args.extra_pairs, contexts, ("train", "check"))

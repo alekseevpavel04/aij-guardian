@@ -116,6 +116,21 @@
         "share_above_zero": 0.945
       }
     },
+    "judge_no_thinking": {
+      "auroc": 0.8524,
+      "ci95": [
+        0.748,
+        0.928
+      ],
+      "minus_head_b": {
+        "difference": -0.0465,
+        "ci95": [
+          -0.073,
+          -0.019
+        ],
+        "share_above_zero": 0.002
+      }
+    },
     "v1s_25pct_pairs_plus_extra_pairs": {
       "auroc": 0.8995,
       "ci95": [

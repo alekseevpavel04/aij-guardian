@@ -19,7 +19,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest", "ruff"]
+dev = ["gguf", "pytest", "ruff"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
