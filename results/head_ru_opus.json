@@ -1,11 +1,11 @@
 {
-  "train_rows": 212,
-  "train_positives": 47,
   "pairs": false,
   "pair_batches": null,
   "rules": false,
   "teacher": "opus",
   "drop_copies": false,
+  "train_rows": 212,
+  "train_positives": 47,
   "cv_auroc_by_c": {
     "0.001": 0.7957,
     "0.003": 0.796,
@@ -49,5 +49,16 @@
       "head_auroc": 0.5726,
       "judge_auroc": 0.6752
     }
+  },
+  "check_contexts_agreed": {
+    "rows": 155,
+    "positives": 25,
+    "head_auroc": 0.9631
+  },
+  "ext_val": {
+    "rows": 405,
+    "positives": 161,
+    "head_auroc": 0.8785,
+    "judge_auroc": 0.8199
   }
 }

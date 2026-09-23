@@ -1,0 +1,85 @@
+{
+  "checker": "claude-opus, labeler_v4.md, blind to the intended label",
+  "correct_turns": {
+    "turns": 203,
+    "checker_1": 1,
+    "by_writer_and_pair": {
+      "v3_A": {
+        "turns": 27,
+        "checker_1": 0
+      },
+      "v3_B": {
+        "turns": 50,
+        "checker_1": 1
+      },
+      "v4_A": {
+        "turns": 36,
+        "checker_1": 0
+      },
+      "v4_B": {
+        "turns": 90,
+        "checker_1": 0
+      }
+    },
+    "by_domain": {
+      "airline": {
+        "turns": 71,
+        "checker_1": 0
+      },
+      "banking_knowledge": {
+        "turns": 62,
+        "checker_1": 1
+      },
+      "retail": {
+        "turns": 28,
+        "checker_1": 0
+      },
+      "telecom": {
+        "turns": 42,
+        "checker_1": 0
+      }
+    }
+  },
+  "control_error_turns": {
+    "turns": 77,
+    "checker_1": 77,
+    "by_error_type": {
+      "arg_schema_violation": {
+        "turns": 13,
+        "checker_1": 13
+      },
+      "contradicts_tool_result": {
+        "turns": 13,
+        "checker_1": 13
+      },
+      "fabricated_value": {
+        "turns": 23,
+        "checker_1": 23
+      },
+      "policy_violation": {
+        "turns": 6,
+        "checker_1": 6
+      },
+      "premature_escalation": {
+        "turns": 1,
+        "checker_1": 1
+      },
+      "repeated_failed_call": {
+        "turns": 3,
+        "checker_1": 3
+      },
+      "stale_request": {
+        "turns": 1,
+        "checker_1": 1
+      },
+      "unavailable_tool": {
+        "turns": 15,
+        "checker_1": 15
+      },
+      "wrong_calculation": {
+        "turns": 2,
+        "checker_1": 2
+      }
+    }
+  }
+}

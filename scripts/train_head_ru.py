@@ -38,12 +38,14 @@ from guardian.rules import features
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from embed_rows import decode  # noqa: E402
+from judge_eval import load  # noqa: E402
 
 C_GRID = (0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1.0)
 PILOT = ["airline_01", "retail_01"]
 # every embedding journal of written turns; a batch's rows are looked up by id
-PAIR_VECTORS = ("q4_last_pilot_written", "q4_last_pairs_02")
+PAIR_VECTORS = ("q4_last_pilot_written", "q4_last_pairs_02", "q4_last_pairs_03")
 JUDGE = "baseline_prompt_q4_valid"
+JUDGE_EXT = "baseline_prompt_q4_extval400"
 TEACHERS = {"v1s": "labeler_v1s_org_{split}", "opus": "opus_v4_org_{split}"}
 TEST_SHARE = 0.2372  # share of positives on the competition's test, the rate the submission flags at
 
@@ -178,6 +180,23 @@ def measure(train: pd.DataFrame, context_vecs: dict, contexts: pd.DataFrame, rul
             "head_auroc": auroc(yv, valid_score[mask]),
             "judge_auroc": auroc(yv, judge_score[mask]),
         }
+    # both labellers agree: fewer label errors, a check that does not side with either teacher
+    agreed = check.label.to_numpy().astype(int) == check_opus
+    result["check_contexts_agreed"] = {
+        "rows": int(agreed.sum()),
+        "positives": int(check_opus[agreed].sum()),
+        "head_auroc": auroc(check_opus[agreed], check_score[agreed]),
+    }
+    # the English external rows with their own weak labels: a check that nothing broke, not of gain
+    ext = load("ext_val", 400, 0)
+    ext_score = model.predict_proba(design(ext, vectors("q4_last_extval400"), rules))[:, 1]
+    judged = {r["id"]: r["score"] for r in journal.read(ROOT / "data/interim/judge" / f"{JUDGE_EXT}.jsonl")}
+    result["ext_val"] = {
+        "rows": len(ext),
+        "positives": int(ext.label.sum()),
+        "head_auroc": auroc(ext.label.to_numpy().astype(int), ext_score),
+        "judge_auroc": auroc(ext.label.to_numpy().astype(int), ext.id.map(judged).to_numpy(dtype=float)),
+    }
     return result
 
 

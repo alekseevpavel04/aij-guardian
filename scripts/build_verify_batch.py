@@ -38,9 +38,8 @@ def latest(rows: pd.DataFrame, contexts: pd.DataFrame) -> pd.Series:
 def candidates(frame: pd.DataFrame) -> pd.DataFrame:
     copy = frame["flags"].map(lambda f: "same_as_original" in list(f))
     copied_pairs = set(zip(frame.context_id[copy], frame.pair[copy], strict=True))
-    control = (frame.kind == "error") & [
-        (c, p) in copied_pairs for c, p in zip(frame.context_id, frame.pair, strict=True)
-    ]
+    twin_copied = pd.Series([(c, p) in copied_pairs for c, p in zip(frame.context_id, frame.pair, strict=True)])
+    control = (frame.kind == "error") & twin_copied.to_numpy()
     frame = frame.assign(role=None)
     frame.loc[(frame.kind == "correct") & ~copy, "role"] = "check"
     frame.loc[control, "role"] = "control"

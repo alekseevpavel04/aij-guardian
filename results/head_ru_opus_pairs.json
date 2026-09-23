@@ -1,6 +1,4 @@
 {
-  "train_rows": 280,
-  "train_positives": 98,
   "pairs": true,
   "pair_batches": [
     "airline_01",
@@ -9,6 +7,8 @@
   "rules": false,
   "teacher": "opus",
   "drop_copies": false,
+  "train_rows": 280,
+  "train_positives": 98,
   "cv_auroc_by_c": {
     "0.001": 0.8787,
     "0.003": 0.8832,
@@ -52,5 +52,16 @@
       "head_auroc": 0.5812,
       "judge_auroc": 0.6752
     }
+  },
+  "check_contexts_agreed": {
+    "rows": 155,
+    "positives": 25,
+    "head_auroc": 0.9532
+  },
+  "ext_val": {
+    "rows": 405,
+    "positives": 161,
+    "head_auroc": 0.8586,
+    "judge_auroc": 0.8199
   }
 }
