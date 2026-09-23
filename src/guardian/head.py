@@ -97,3 +97,23 @@ def head_scores(
         print("head deadline reached, unscored rows fall back to the rules", file=sys.stderr)
     pool.shutdown(wait=False, cancel_futures=True)
     return HeadRun(scores, errors, time.monotonic() - started)
+
+
+def to_home_scale(score: float, platform_ref: list[float], home_ref: list[float]) -> float:
+    """Map a platform score onto the home scale by matching quantiles of a calibration set.
+
+    `platform_ref` and `home_ref` are the scores of the same calibration rows on the platform and at home,
+    each sorted. The score's position among the platform scores is carried over to the home scores by
+    linear interpolation, and clamped at the ends. The map is monotone, so the order of rows is kept; it
+    removes whatever shifts the scores between the home engine (Q4, llama.cpp) and the platform's (FP8,
+    vLLM) as long as it moves the calibration rows the same way.
+    """
+    if score <= platform_ref[0]:
+        return home_ref[0]
+    if score >= platform_ref[-1]:
+        return home_ref[-1]
+    hi = next(i for i, v in enumerate(platform_ref) if v >= score)
+    lo = hi - 1
+    span = platform_ref[hi] - platform_ref[lo]
+    t = 0.0 if span == 0 else (score - platform_ref[lo]) / span
+    return home_ref[lo] + t * (home_ref[hi] - home_ref[lo])

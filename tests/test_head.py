@@ -38,3 +38,13 @@ def test_turns_with_a_tool_call_are_scored_first_and_shorter_first():
         {"prompt": "x" * 5, "response": "ok\n\t→ TOOL_CALL cancel: {}"},
     ]
     assert scoring_order(rows) == [3, 1, 2, 0]
+
+
+def test_scores_shifted_on_the_platform_map_back_to_the_home_scale():
+    from guardian.head import to_home_scale
+
+    home = [0.05, 0.1, 0.2, 0.4, 0.8]
+    platform = [2 * h + 0.3 for h in home]  # the same rows, another engine: scaled and shifted
+    assert all(abs(to_home_scale(p, platform, home) - h) < 1e-12 for p, h in zip(platform, home, strict=True))
+    assert abs(to_home_scale(2 * 0.3 + 0.3, platform, home) - 0.3) < 1e-12
+    assert to_home_scale(-5, platform, home) == 0.05 and to_home_scale(5, platform, home) == 0.8

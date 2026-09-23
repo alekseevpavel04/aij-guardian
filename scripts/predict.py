@@ -106,7 +106,7 @@ def cascade(rows: list[dict], config: dict, started: float) -> list[int]:
 def head(rows: list[dict], config: dict, started: float) -> list[int] | None:
     """Rules, then the head on the judge model's hidden state; None when it could not score the file."""
     from guardian.cascade import combine, rule_labels, top_share
-    from guardian.head import Head, head_scores
+    from guardian.head import Head, head_scores, to_home_scale
     from guardian.serving import start_vllm, stop, wait_ready
 
     rules = rule_labels(rows, tuple(config["checks"]))
@@ -122,16 +122,21 @@ def head(rows: list[dict], config: dict, started: float) -> list[int] | None:
             return None
         url = f"http://127.0.0.1:{port}/v1"
     prompt = (ROOT / "model" / config["prompt"]).read_text(encoding="utf-8")
+    model = Head.load(ROOT / "model" / config["head"])
+    deadline = started + 60 * config["head_minutes"]
+    calibration = None
     try:
-        run = head_scores(
-            rows,
-            Head.load(ROOT / "model" / config["head"]),
-            url,
-            config["served_name"],
-            prompt,
-            started + 60 * config["head_minutes"],
-            config["workers"],
-        )
+        if config.get("threshold") is not None:
+            # the calibration rows first, through the same engine: they carry the home scores the platform
+            # scores are mapped onto, so that each test row is then decided on its own
+            reference = json.loads((ROOT / "model" / config["calibration"]).read_text(encoding="utf-8"))
+            cal = head_scores(reference, model, url, config["served_name"], prompt, deadline, config["workers"])
+            pairs = [(p, r["home_score"]) for p, r in zip(cal.scores, reference, strict=True) if p is not None]
+            print(f"calibration scored {len(pairs)} of {len(reference)} rows", file=sys.stderr)
+            if len(pairs) < 0.8 * len(reference):
+                return None
+            calibration = (sorted(p for p, _ in pairs), sorted(h for _, h in pairs))
+        run = head_scores(rows, model, url, config["served_name"], prompt, deadline, config["workers"])
     finally:
         stop(process)
     scored = sum(s is not None for s in run.scores)
@@ -140,6 +145,13 @@ def head(rows: list[dict], config: dict, started: float) -> list[int] | None:
     # rows left unscored at the deadline are only a lack of time, and the cascade would have even less
     if run.errors > config["max_errors"] * len(rows) or scored == 0:
         return None
+    if calibration is not None:
+        platform_ref, home_ref = calibration
+        home = [None if s is None else to_home_scale(s, platform_ref, home_ref) for s in run.scores]
+        flags = [int(h is not None and h >= config["threshold"]) for h in home]
+        labels = combine(rules, flags)
+        print(f"rules fired on {sum(rules)}; with the threshold {config['threshold']} {sum(labels)}", file=sys.stderr)
+        return labels
     labels = combine(rules, top_share(run.scores, config["share"]))
     print(f"rules fired on {sum(rules)}; with the top {config['share']} of head scores {sum(labels)}", file=sys.stderr)
     return labels

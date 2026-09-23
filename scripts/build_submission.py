@@ -102,6 +102,8 @@ def build(
     append_prompt: Path | None = None,
     head: Path | None = None,
     fallback: str = "cascade",
+    threshold: float | None = None,
+    calibration: Path | None = None,
 ) -> None:
     if out_dir.exists():
         shutil.rmtree(out_dir)
@@ -121,6 +123,10 @@ def build(
     if strategy == "head":
         config |= HEAD | {"fallback": fallback}
         shutil.copy(head, out_dir / "model/head.json")
+        if threshold is not None:
+            # each row is decided on its own against a threshold on the home scale (DECISIONS.md, 33 and 35)
+            config |= {"threshold": threshold, "calibration": "calibration.json"}
+            shutil.copy(calibration, out_dir / "model/calibration.json")
     if strategy in ("cascade", "head"):
         config |= CASCADE | {"share": share, "prompt": "judge_prompt.md", "thinking_tokens": thinking_tokens}
         text = prompt.read_text(encoding="utf-8")
@@ -200,6 +206,8 @@ def main() -> None:
     ap.add_argument(
         "--fallback", choices=("cascade", "rules"), default="cascade", help="head: what runs if the head cannot"
     )
+    ap.add_argument("--threshold", type=float, default=None, help="head: per-row threshold on the home scale")
+    ap.add_argument("--calibration", type=Path, default=None, help="head: calibration rows with home scores")
     ap.add_argument("--share", type=float, default=0.3, help="cascade: share of rows the judge labels 1")
     ap.add_argument("--prompt", type=Path, default=ROOT / "configs/prompts/judge_v1.md")
     ap.add_argument("--model-dir", type=Path, default=MODEL_DIR)
@@ -224,6 +232,8 @@ def main() -> None:
         args.append_prompt,
         args.head,
         args.fallback,
+        args.threshold,
+        args.calibration,
     )
     suffix = f"_{args.label}" if args.strategy == "constant" else "".join(f"_no_{c}" for c in args.without)
     if args.strategy == "cascade":
@@ -232,6 +242,7 @@ def main() -> None:
     if args.strategy == "head":
         suffix += f"_{args.head.stem}_{args.prompt.stem}_share{args.share}"
         suffix += "_fallback_rules" if args.fallback == "rules" else ""
+        suffix += f"_threshold{args.threshold}" if args.threshold is not None else ""
     name = f"guardian_{args.strategy}{suffix}.zip"
     archive = args.archive or ROOT / "submissions" / name
     if args.strategy in ("cascade", "head"):
