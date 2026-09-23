@@ -1,0 +1,25 @@
+{
+  "dialogues": 19,
+  "contexts": 172,
+  "repeats": 2000,
+  "by_labels": {
+    "v1s": {
+      "auroc_v1s_teacher": 0.9203,
+      "auroc_opus_teacher": 0.9252,
+      "difference": 0.0049,
+      "ci95": [
+        -0.045,
+        0.037
+      ]
+    },
+    "opus": {
+      "auroc_v1s_teacher": 0.8563,
+      "auroc_opus_teacher": 0.9137,
+      "difference": 0.0574,
+      "ci95": [
+        0.019,
+        0.113
+      ]
+    }
+  }
+}

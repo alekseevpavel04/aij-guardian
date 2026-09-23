@@ -73,6 +73,20 @@ GENERATED = {
             *("--out", str(tmp / "x.json")),
         ],
     ),
+    # rewrites the Opus label journals with the same content, the head runs below read them
+    "opus_context_labels.json": ("context_labels.py", lambda tmp: ["--out", str(tmp / "x.json")]),
+    "head_ru_teacher_compare.json": ("teacher_compare.py", lambda tmp: ["--out", str(tmp / "x.json")]),
+    **{
+        f"head_ru{name}.json": ("train_head_ru.py", lambda tmp, a=flags: [*a, "--out", str(tmp / "x.json")])
+        for name, flags in (
+            ("", ()),
+            ("_rules", ("--rules",)),
+            ("_pairs", ("--pairs",)),
+            ("_pairs_rules", ("--pairs", "--rules")),
+            ("_opus", ("--teacher", "opus")),
+            ("_opus_pairs", ("--teacher", "opus", "--pairs")),
+        )
+    },
     **{
         f"sonnet_labels_{batch}.json": (
             "sonnet_label_agreement.py",
@@ -106,6 +120,12 @@ REQUIRES = {
     # label journals and Claude batches live in data/, which is not in git
     "labeller_errors.json": [DATA, ROOT / "data/synthetic/sonnet_labels", ROOT / "data/interim/judge"],
     "pairs_agreement.json": [ROOT / "data/synthetic/pairs", ROOT / "data/interim/labels"],
+    "opus_context_labels.json": [ROOT / "data/synthetic/opus_labels", ROOT / "data/interim/labels"],
+    "head_ru_teacher_compare.json": [ROOT / "data/interim/embeddings", ROOT / "data/interim/labels"],
+    **{
+        f"head_ru{n}.json": [DATA, ROOT / "data/interim/embeddings", ROOT / "data/interim/labels"]
+        for n in ("", "_rules", "_pairs", "_pairs_rules", "_opus", "_opus_pairs")
+    },
     **{
         f"sonnet_labels_{b}.json": [DATA, ROOT / "data/synthetic/sonnet_labels" / b]
         for b in ("valid_10", "valid_rest_airline", "valid_rest_retail", "valid_rest_telecom")

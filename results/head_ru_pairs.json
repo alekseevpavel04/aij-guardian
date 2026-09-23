@@ -2,7 +2,13 @@
   "train_rows": 280,
   "train_positives": 84,
   "pairs": true,
+  "pair_batches": [
+    "airline_01",
+    "retail_01"
+  ],
   "rules": false,
+  "teacher": "v1s",
+  "drop_copies": false,
   "cv_auroc_by_c": {
     "0.001": 0.8837,
     "0.003": 0.8868,
@@ -16,7 +22,22 @@
   "check_contexts": {
     "rows": 172,
     "positives": 34,
-    "head_auroc": 0.9263
+    "head_auroc": 0.9263,
+    "head_at_test_share": {
+      "flagged": 41,
+      "true_positives": 27,
+      "f1": 0.72
+    }
+  },
+  "check_contexts_opus_labels": {
+    "rows": 172,
+    "positives": 33,
+    "head_auroc": 0.8696,
+    "head_at_test_share": {
+      "flagged": 41,
+      "true_positives": 24,
+      "f1": 0.6486
+    }
   },
   "valid": {
     "clean": {

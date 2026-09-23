@@ -32,6 +32,7 @@ from sklearn.preprocessing import StandardScaler
 
 from guardian import journal
 from guardian.env import setup
+from guardian.metrics import binary_scores
 from guardian.rules import features
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -43,6 +44,8 @@ PILOT = ["airline_01", "retail_01"]
 # every embedding journal of written turns; a batch's rows are looked up by id
 PAIR_VECTORS = ("q4_last_pilot_written", "q4_last_pairs_02")
 JUDGE = "baseline_prompt_q4_valid"
+TEACHERS = {"v1s": "labeler_v1s_org_{split}", "opus": "opus_v4_org_{split}"}
+TEST_SHARE = 0.2372  # share of positives on the competition's test, the rate the submission flags at
 
 
 def vectors(name: str) -> dict[str, np.ndarray]:
@@ -51,6 +54,13 @@ def vectors(name: str) -> dict[str, np.ndarray]:
 
 def labels(name: str) -> dict[str, int]:
     return {r["id"]: int(r["score"] >= 0.5) for r in journal.read(ROOT / "data/interim/labels" / f"{name}.jsonl")}
+
+
+def at_share(y: np.ndarray, s: np.ndarray, share: float = TEST_SHARE) -> dict:
+    flagged = np.zeros(len(s), dtype=int)
+    flagged[np.argsort(-s)[: round(share * len(s))]] = 1
+    scores = binary_scores(y, flagged)
+    return {"flagged": int(flagged.sum()), "true_positives": scores.true_positives, "f1": round(scores.f1, 4)}
 
 
 def design(rows: pd.DataFrame, vecs: dict[str, np.ndarray], with_rules: bool) -> np.ndarray:
@@ -76,19 +86,23 @@ def main() -> None:
         "--pairs", nargs="*", metavar="BATCH", help="add the minimal pairs of these batches (no names: the pilot)"
     )
     ap.add_argument("--rules", action="store_true", help="append the rule features to the vector")
+    ap.add_argument("--teacher", choices=sorted(TEACHERS), default="v1s", help="labels of the training contexts")
+    ap.add_argument("--drop-copies", action="store_true", help="leave out written turns equal to the original")
     ap.add_argument("--out", type=Path, default=None)
     args = ap.parse_args()
 
     contexts = pd.read_parquet(args.contexts)
     context_vecs = vectors("q4_last_org")
     train = contexts[contexts.split == "train"].copy()
-    train["label"] = train.id.map(labels("labeler_v1s_org_train"))
+    train["label"] = train.id.map(labels(TEACHERS[args.teacher].format(split="train")))
     train["group"] = train.task
     batches = None if args.pairs is None else args.pairs or PILOT
     if batches:
         pairs = pd.concat([pd.read_parquet(ROOT / "data/synthetic/pairs" / b / "pairs.parquet") for b in batches])
         pairs = pairs[pairs.context_id.map(contexts.set_index("id").split) == "train"].copy()
         pairs["group"] = pairs.task
+        if args.drop_copies:
+            pairs = pairs[~pairs["flags"].map(lambda f: "same_as_original" in list(f))]
         for name in PAIR_VECTORS:
             if (ROOT / "data/interim/embeddings" / f"{name}.jsonl").exists():
                 context_vecs |= vectors(name)
@@ -110,6 +124,7 @@ def main() -> None:
     check["label"] = check.id.map(labels("labeler_v1s_org_check"))
     check = check.dropna(subset=["label"])
     check_score = model.predict_proba(design(check, context_vecs, args.rules))[:, 1]
+    check_opus = check.id.map(labels(TEACHERS["opus"].format(split="check"))).to_numpy().astype(int)
 
     valid = pd.read_parquet(ROOT / "data/raw/valid.parquet")
     valid["task"] = valid.id.str.split("::").str[0]
@@ -125,12 +140,21 @@ def main() -> None:
         "pairs": batches is not None,
         "pair_batches": batches,
         "rules": args.rules,
+        "teacher": args.teacher,
+        "drop_copies": args.drop_copies,
         "cv_auroc_by_c": {str(c): v for c, v in cv.items()},
         "chosen_c": best,
         "check_contexts": {
             "rows": len(check),
             "positives": int(check.label.sum()),
             "head_auroc": auroc(check.label.to_numpy().astype(int), check_score),
+            "head_at_test_share": at_share(check.label.to_numpy().astype(int), check_score),
+        },
+        "check_contexts_opus_labels": {
+            "rows": len(check_opus),
+            "positives": int(check_opus.sum()),
+            "head_auroc": auroc(check_opus, check_score),
+            "head_at_test_share": at_share(check_opus, check_score),
         },
         "valid": {},
     }
@@ -143,7 +167,8 @@ def main() -> None:
             "head_auroc": auroc(yv, valid_score[mask]),
             "judge_auroc": auroc(yv, judge_score[mask]),
         }
-    name = "head_ru" + ("_pairs" if batches else "") + ("_rules" if args.rules else "")
+    name = "head_ru" + ("_opus" if args.teacher == "opus" else "") + ("_pairs" if batches else "")
+    name += "_rules" if args.rules else ""
     out = args.out or ROOT / "results" / f"{name}.json"
     out.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(result, ensure_ascii=False, indent=2))

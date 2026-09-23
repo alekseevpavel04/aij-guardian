@@ -1,0 +1,56 @@
+{
+  "train_rows": 280,
+  "train_positives": 98,
+  "pairs": true,
+  "pair_batches": [
+    "airline_01",
+    "retail_01"
+  ],
+  "rules": false,
+  "teacher": "opus",
+  "drop_copies": false,
+  "cv_auroc_by_c": {
+    "0.001": 0.8787,
+    "0.003": 0.8832,
+    "0.01": 0.8844,
+    "0.03": 0.8829,
+    "0.1": 0.8792,
+    "0.3": 0.8772,
+    "1.0": 0.8747
+  },
+  "chosen_c": 0.01,
+  "check_contexts": {
+    "rows": 172,
+    "positives": 34,
+    "head_auroc": 0.9092,
+    "head_at_test_share": {
+      "flagged": 41,
+      "true_positives": 27,
+      "f1": 0.72
+    }
+  },
+  "check_contexts_opus_labels": {
+    "rows": 172,
+    "positives": 33,
+    "head_auroc": 0.8973,
+    "head_at_test_share": {
+      "flagged": 41,
+      "true_positives": 24,
+      "f1": 0.6486
+    }
+  },
+  "valid": {
+    "clean": {
+      "rows": 24,
+      "positives": 10,
+      "head_auroc": 0.85,
+      "judge_auroc": 0.9214
+    },
+    "leaked": {
+      "rows": 22,
+      "positives": 13,
+      "head_auroc": 0.5812,
+      "judge_auroc": 0.6752
+    }
+  }
+}

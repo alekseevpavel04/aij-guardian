@@ -2,7 +2,10 @@
   "train_rows": 212,
   "train_positives": 33,
   "pairs": false,
+  "pair_batches": null,
   "rules": true,
+  "teacher": "v1s",
+  "drop_copies": false,
   "cv_auroc_by_c": {
     "0.001": 0.7799,
     "0.003": 0.7764,
@@ -16,7 +19,22 @@
   "check_contexts": {
     "rows": 172,
     "positives": 34,
-    "head_auroc": 0.9214
+    "head_auroc": 0.9214,
+    "head_at_test_share": {
+      "flagged": 41,
+      "true_positives": 26,
+      "f1": 0.6933
+    }
+  },
+  "check_contexts_opus_labels": {
+    "rows": 172,
+    "positives": 33,
+    "head_auroc": 0.8579,
+    "head_at_test_share": {
+      "flagged": 41,
+      "true_positives": 22,
+      "f1": 0.5946
+    }
   },
   "valid": {
     "clean": {

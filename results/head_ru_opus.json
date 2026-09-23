@@ -1,0 +1,53 @@
+{
+  "train_rows": 212,
+  "train_positives": 47,
+  "pairs": false,
+  "pair_batches": null,
+  "rules": false,
+  "teacher": "opus",
+  "drop_copies": false,
+  "cv_auroc_by_c": {
+    "0.001": 0.7957,
+    "0.003": 0.796,
+    "0.01": 0.7939,
+    "0.03": 0.7919,
+    "0.1": 0.7881,
+    "0.3": 0.787,
+    "1.0": 0.7862
+  },
+  "chosen_c": 0.003,
+  "check_contexts": {
+    "rows": 172,
+    "positives": 34,
+    "head_auroc": 0.9252,
+    "head_at_test_share": {
+      "flagged": 41,
+      "true_positives": 28,
+      "f1": 0.7467
+    }
+  },
+  "check_contexts_opus_labels": {
+    "rows": 172,
+    "positives": 33,
+    "head_auroc": 0.9137,
+    "head_at_test_share": {
+      "flagged": 41,
+      "true_positives": 25,
+      "f1": 0.6757
+    }
+  },
+  "valid": {
+    "clean": {
+      "rows": 24,
+      "positives": 10,
+      "head_auroc": 0.8286,
+      "judge_auroc": 0.9214
+    },
+    "leaked": {
+      "rows": 22,
+      "positives": 13,
+      "head_auroc": 0.5726,
+      "judge_auroc": 0.6752
+    }
+  }
+}
