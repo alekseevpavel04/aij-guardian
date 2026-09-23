@@ -84,6 +84,7 @@ def main() -> None:
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--bag", type=int, default=0, help="mean of this many heads over pair seeds 0..N-1")
     ap.add_argument("--name", required=True)
+    ap.add_argument("--root", type=Path, default=ROOT, help="where configs/heads/ and results/ are written")
     args = ap.parse_args()
 
     contexts = pd.read_parquet(args.contexts)
@@ -92,10 +93,11 @@ def main() -> None:
         vecs |= vectors(name)
     base = natural(contexts, args.teacher, args.calls_only)
     all_pairs = written(V3 + V4, contexts)
-    out = ROOT / "configs/heads" / f"{args.name}.json"
+    out = args.root / "configs/heads" / f"{args.name}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
+    (args.root / "results").mkdir(parents=True, exist_ok=True)
     summary = {
-        "head": out.relative_to(ROOT).as_posix(),
+        "head": f"configs/heads/{args.name}.json",
         "teacher": args.teacher,
         "calls_only": args.calls_only,
         "pair_share": args.pair_share,
@@ -145,7 +147,7 @@ def main() -> None:
             "check_contexts_opus_labels": measured["check_contexts_opus_labels"],
         }
     out.write_text(json.dumps(head) + "\n", encoding="utf-8")
-    (ROOT / "results" / f"{args.name}.json").write_text(
+    (args.root / "results" / f"{args.name}.json").write_text(
         json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
     print(json.dumps(summary, ensure_ascii=False, indent=2))

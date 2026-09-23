@@ -83,6 +83,15 @@ GENERATED = {
     "test_normalisation.json": ("test_normalisation.py", lambda tmp: ["--out", str(tmp / "x.json")]),
     "label_variants.json": ("label_variants.py", lambda tmp: ["--out", str(tmp / "x.json")]),
     "head_variants.json": ("head_variants.py", lambda tmp: ["--out", str(tmp / "x.json")]),
+    # the exported heads: the summary is recomputed into tmp/results/<name>.json (see the run loop)
+    **{
+        f"{name}.json": ("export_head.py", lambda tmp, n=name, a=flags: [*a, "--name", n, "--root", str(tmp)])
+        for name, flags in (
+            ("head_a", ("--teacher", "opus", "--calls-only", "--pair-share", "0.25")),
+            ("head_a_bag10", ("--teacher", "opus", "--calls-only", "--pair-share", "0.25", "--bag", "10")),
+            ("head_b_bag10", ("--teacher", "v1s", "--pair-share", "0.25", "--bag", "10")),
+        )
+    },
     **{
         f"head_ru{name}.json": ("train_head_ru.py", lambda tmp, a=flags: [*a, "--out", str(tmp / "x.json")])
         for name, flags in (
@@ -136,6 +145,10 @@ REQUIRES = {
     "test_normalisation.json": [DATA, ROOT / "data/interim/embeddings", ROOT / "data/interim/labels"],
     "label_variants.json": [DATA, ROOT / "data/interim/embeddings", ROOT / "data/interim/labels"],
     "head_variants.json": [DATA, ROOT / "data/interim/embeddings", ROOT / "data/interim/labels"],
+    **{
+        f"{n}.json": [DATA, ROOT / "data/interim/embeddings", ROOT / "data/interim/labels"]
+        for n in ("head_a", "head_a_bag10", "head_b_bag10")
+    },
     **{
         f"head_ru{n}.json": [DATA, ROOT / "data/interim/embeddings", ROOT / "data/interim/labels"]
         for n in ("", "_rules", "_pairs", "_pairs_rules", "_opus", "_opus_pairs")
@@ -401,7 +414,9 @@ def main() -> None:
                 done.add(key)
             committed_path = args.results / name
             # scripts that take --out write to the name given there, scripts that take --out-dir keep theirs
-            recomputed_path = tmp / ("x.json" if "--out" in extra(tmp) else name)
+            recomputed_path = tmp / (
+                "x.json" if "--out" in extra(tmp) else f"results/{name}" if "--root" in extra(tmp) else name
+            )
             if not committed_path.exists():
                 failures.append(f"{name}: not committed")
                 continue
