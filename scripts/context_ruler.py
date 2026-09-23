@@ -76,8 +76,14 @@ class Ruler:
         self.groups = [np.where(self.tasks == t)[0] for t in np.unique(self.tasks)]
 
     def scores(
-        self, y: np.ndarray, pair_share: float, pair_filter=None, external_weight: float | None = None
+        self,
+        y: np.ndarray,
+        pair_share: float,
+        pair_filter=None,
+        external_weight: float | None = None,
+        make=None,
     ) -> np.ndarray:
+        """Out-of-fold scores; `make` builds another model than the logistic head (scripts/head_models.py)."""
         out = np.zeros(len(self.ctx))
         for fit, held in GroupKFold(FOLDS).split(self.x, y, self.tasks):
             held_tasks = set(self.tasks[held])
@@ -103,8 +109,13 @@ class Ruler:
                     weights.append(np.full(len(y_ext), external_weight * n_russian / len(y_ext)))
                 xf, yf, wf = np.vstack(xs), np.concatenate(ys), np.concatenate(weights)
                 scaler = StandardScaler().fit(xf)
-                model = LogisticRegression(C=C, max_iter=5000).fit(scaler.transform(xf), yf, sample_weight=wf)
-                total += model.decision_function(scaler.transform(self.x[held]))
+                model = make() if make else LogisticRegression(C=C, max_iter=5000)
+                model.fit(scaler.transform(xf), yf, sample_weight=wf)
+                x_held = scaler.transform(self.x[held])
+                if hasattr(model, "decision_function"):
+                    total += model.decision_function(x_held)
+                else:
+                    total += model.predict_proba(x_held)[:, 1]
             out[held] = total
         return out
 
