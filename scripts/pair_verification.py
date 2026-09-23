@@ -6,6 +6,7 @@ them found is the checker's attention on known errors. Every manifest id must ha
 The checker's labels go to data/interim/labels/opus_verify_pairs.jsonl for the head scripts.
 
     python scripts/pair_verification.py
+    python scripts/pair_verification.py --rows data/interim/written_correct.parquet   # for the local labeller
 """
 
 import argparse
@@ -25,6 +26,7 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--prefix", default="v1")
     ap.add_argument("--out", type=Path, default=ROOT / "results/pair_verification.json")
+    ap.add_argument("--rows", type=Path, default=None, help="also write the checked correct turns, with references")
     args = ap.parse_args()
 
     rows = []
@@ -42,6 +44,11 @@ def main() -> None:
         [pd.read_parquet(f) for f in (ROOT / "data/synthetic/pairs").glob("*/pairs.parquet")], ignore_index=True
     )
     frame = frame.merge(written[["id", "batch", "pair", "kind", "error_type", "domain"]], on="id")
+    if args.rows:
+        contexts = pd.read_parquet(ROOT / "data/synthetic/organizer_contexts.parquet").set_index("id")
+        rows = written[written.id.isin(frame.id[frame.role == "check"])].copy()
+        rows["reference"] = rows.context_id.map(contexts.reference)
+        rows[["id", "context_id", "prompt", "response", "reference", "domain", "task"]].to_parquet(args.rows)
     frame["writer"] = frame.batch.str.extract(r"_(0\d)")[0].map({"02": "v3", "03": "v4"})
 
     def summary(part: pd.DataFrame) -> dict:
