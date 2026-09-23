@@ -1,0 +1,52 @@
+{
+  "head": "configs/heads/head_a.json",
+  "teacher": "opus",
+  "calls_only": true,
+  "pair_share": 0.25,
+  "seed": 0,
+  "train_rows": 332,
+  "train_positives": 87,
+  "written_rows": 120,
+  "chosen_c": 0.003,
+  "valid": {
+    "clean": {
+      "rows": 24,
+      "positives": 10,
+      "head_auroc": 1.0,
+      "judge_auroc": 0.9214
+    },
+    "leaked": {
+      "rows": 22,
+      "positives": 13,
+      "head_auroc": 0.7009,
+      "judge_auroc": 0.6752
+    },
+    "all": {
+      "rows": 46,
+      "positives": 23,
+      "head_auroc": 0.8733,
+      "judge_auroc": 0.8166
+    }
+  },
+  "ext_val": {
+    "rows": 405,
+    "positives": 161,
+    "head_auroc": 0.8603,
+    "judge_auroc": 0.8199
+  },
+  "check_contexts_agreed": {
+    "rows": 155,
+    "positives": 25,
+    "head_auroc": 0.9317
+  },
+  "check_contexts_opus_labels": {
+    "rows": 172,
+    "positives": 33,
+    "head_auroc": 0.8694,
+    "head_at_test_share": {
+      "flagged": 41,
+      "true_positives": 23,
+      "f1": 0.6216
+    }
+  }
+}

@@ -8,6 +8,11 @@ chance, not a habit to carry into the rest of the code.
 With the `cascade` strategy the judge model in model/ is served by vLLM (guardian/serving.py) and
 the whole file is labelled at once (guardian/cascade.py). GUARDIAN_JUDGE_URL points the run at a
 server that is already up instead, which is how it is tested locally.
+
+With the `head` strategy the same model is served in pooling mode and a linear head scores its
+last-token hidden state (guardian/head.py; GUARDIAN_EMBED_URL for a server that is already up). If
+the pooling server does not come up or scores too few rows, the run falls back to the cascade with
+the cascade's own deadlines, so a head that fails early costs nothing against the known result.
 """
 
 import json
@@ -97,6 +102,46 @@ def cascade(rows: list[dict], config: dict, started: float) -> list[int]:
     return labels
 
 
+def head(rows: list[dict], config: dict, started: float) -> list[int] | None:
+    """Rules, then the head on the judge model's hidden state; None when it could not score the file."""
+    from guardian.cascade import combine, rule_labels, top_share
+    from guardian.head import Head, head_scores
+    from guardian.serving import start_vllm, stop, wait_ready
+
+    rules = rule_labels(rows, tuple(config["checks"]))
+    url, process = os.environ.get("GUARDIAN_EMBED_URL"), None
+    if url is None:
+        port = config.get("port", 8000)
+        process = start_vllm(
+            ROOT / "model", port, config["served_name"], config["max_model_len"], ROOT / "vllm_pooling.log", True
+        )
+        if not wait_ready(port, started + 60 * config["server_minutes"], process):
+            print("vLLM in pooling mode did not come up in time", file=sys.stderr)
+            stop(process)
+            return None
+        url = f"http://127.0.0.1:{port}/v1"
+    prompt = (ROOT / "model" / config["prompt"]).read_text(encoding="utf-8")
+    try:
+        run = head_scores(
+            rows,
+            Head.load(ROOT / "model" / config["head"]),
+            url,
+            config["served_name"],
+            prompt,
+            started + 60 * config["head_minutes"],
+            config["workers"],
+        )
+    finally:
+        stop(process)
+    scored = sum(s is not None for s in run.scores)
+    print(f"head scored {scored} of {len(rows)} rows in {run.seconds:.0f} s, {run.errors} errors", file=sys.stderr)
+    if scored < config["min_scored"] * len(rows):
+        return None
+    labels = combine(rules, top_share(run.scores, config["share"]))
+    print(f"rules fired on {sum(rules)}; with the top {config['share']} of head scores {sum(labels)}", file=sys.stderr)
+    return labels
+
+
 def main() -> None:
     started = time.monotonic()
     input_path, output_path = main_argv()
@@ -108,13 +153,21 @@ def main() -> None:
     unrecognised = sum(not format_recognised(row.get("prompt", "")) for row in rows)
 
     failures = 0
-    if config.get("strategy") == "cascade":
+    labels = None
+    if config.get("strategy") == "head":
+        try:
+            labels = head(rows, config, started)
+        except Exception as error:  # the head is the experiment, the cascade below is the known result
+            print(f"head failed: {type(error).__name__}: {error}", file=sys.stderr)
+        if labels is None:
+            print("falling back to the cascade", file=sys.stderr)
+    if labels is None and config.get("strategy") in ("cascade", "head"):
         try:
             labels = cascade(rows, config, started)
         except Exception as error:  # the judge must never cost the run: fall back to the rules
             print(f"cascade failed, rules only: {type(error).__name__}: {error}", file=sys.stderr)
             labels, failures = per_row(rows, Predictor(checks=tuple(config["checks"])))
-    else:
+    elif labels is None:
         labels, failures = per_row(rows, Predictor.from_config(CONFIG) if CONFIG.exists() else Predictor())
 
     written = write_predictions(ids, labels, output_path)

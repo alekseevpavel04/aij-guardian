@@ -3,6 +3,10 @@
     python scripts/build_submission.py --strategy constant --label 1
     python scripts/build_submission.py --strategy rules
     python scripts/build_submission.py --strategy cascade --share 0.3 --prompt configs/prompts/judge_v1.md
+    python scripts/build_submission.py --strategy head --head configs/heads/head_a.json \
+        --without repeated_call --prompt data/raw/baseline/baseline/src/hallucination_detector/prompt.md
+
+A head archive carries the same weights and the cascade's settings as its fallback (scripts/predict.py).
 
 The cascade archive carries the judge weights (the organiser's FP8 checkpoint, about 35 GiB).
 Compressing them takes a quarter of an hour, so they go into a base archive once
@@ -34,12 +38,24 @@ from pathlib import Path
 from guardian.predictor import DEFAULT_CHECKS
 
 ROOT = Path(__file__).resolve().parents[1]
-MODULES = ("__init__.py", "io.py", "parsing.py", "predictor.py", "rules.py", "judge.py", "serving.py", "cascade.py")
+MODULES = (
+    "__init__.py",
+    "io.py",
+    "parsing.py",
+    "predictor.py",
+    "rules.py",
+    "judge.py",
+    "serving.py",
+    "cascade.py",
+    "head.py",
+)
 MODEL_DIR = ROOT / "data/raw/baseline/baseline/model"
 # vLLM start and the whole run must fit the platform's 30 minutes; what is not scored by then is
 # left to the rules (scripts/predict.py)
 CASCADE = {"served_name": "judge", "port": 8000, "max_model_len": 131072, "workers": 32, "server_minutes": 15}
 CASCADE["total_minutes"] = 25
+# the head's own deadline for its scores; below min_scored of the rows it gives way to the cascade
+HEAD = {"head": "head.json", "head_minutes": 20, "min_scored": 0.5}
 
 PYPROJECT = """[build-system]
 requires = ["setuptools"]
@@ -83,6 +99,7 @@ def build(
     prompt: Path | None = None,
     thinking_tokens: int = 0,
     append_prompt: Path | None = None,
+    head: Path | None = None,
 ) -> None:
     if out_dir.exists():
         shutil.rmtree(out_dir)
@@ -97,9 +114,12 @@ def build(
     (out_dir / "pyproject.toml").write_text(PYPROJECT.format(version=version), encoding="utf-8")
     (out_dir / "README.md").write_text(README.format(strategy=strategy), encoding="utf-8")
     config = {"strategy": strategy, "label": label}
-    if without or strategy == "cascade":
+    if without or strategy in ("cascade", "head"):
         config["checks"] = [c for c in DEFAULT_CHECKS if c not in without]
-    if strategy == "cascade":
+    if strategy == "head":
+        config |= HEAD
+        shutil.copy(head, out_dir / "model/head.json")
+    if strategy in ("cascade", "head"):
         config |= CASCADE | {"share": share, "prompt": "judge_prompt.md", "thinking_tokens": thinking_tokens}
         text = prompt.read_text(encoding="utf-8")
         if append_prompt:
@@ -173,7 +193,8 @@ def check_archive(archive: Path) -> list[str]:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--strategy", choices=("constant", "rules", "cascade"), default="rules")
+    ap.add_argument("--strategy", choices=("constant", "rules", "cascade", "head"), default="rules")
+    ap.add_argument("--head", type=Path, default=None, help="head: exported head (scripts/export_head.py)")
     ap.add_argument("--share", type=float, default=0.3, help="cascade: share of rows the judge labels 1")
     ap.add_argument("--prompt", type=Path, default=ROOT / "configs/prompts/judge_v1.md")
     ap.add_argument("--model-dir", type=Path, default=MODEL_DIR)
@@ -196,14 +217,17 @@ def main() -> None:
         args.prompt,
         args.thinking_tokens,
         args.append_prompt,
+        args.head,
     )
     suffix = f"_{args.label}" if args.strategy == "constant" else "".join(f"_no_{c}" for c in args.without)
     if args.strategy == "cascade":
         prompt_name = args.prompt.stem + (f"+{args.append_prompt.stem}" if args.append_prompt else "")
         suffix += f"_{prompt_name}_share{args.share}_think{args.thinking_tokens}"
+    if args.strategy == "head":
+        suffix += f"_{args.head.stem}_{args.prompt.stem}_share{args.share}"
     name = f"guardian_{args.strategy}{suffix}.zip"
     archive = args.archive or ROOT / "submissions" / name
-    if args.strategy == "cascade":
+    if args.strategy in ("cascade", "head"):
         shutil.copyfile(weights_base(args.model_dir), archive)
         zip_dir(args.out, archive, mode="a")
     else:

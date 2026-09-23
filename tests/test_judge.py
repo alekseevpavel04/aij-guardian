@@ -84,6 +84,8 @@ def test_a_missing_reference_never_becomes_a_block():
     assert user_text("P", "R", "gold").endswith("<reference>\ngold\n</reference>")
 
 
-def test_verdict_tokens_are_read_through_markdown_wrappers():
-    assert p_one([("`", -0.1), ("`0", -0.5), ("1", -3.0)]) < 0.5
-    assert p_one([("**1", -0.2), ("0", -2.0)]) > 0.5
+def test_verdict_tokens_are_read_through_markdown_wrappers_after_an_answer_prefix():
+    assert p_one([("`", -0.1), ("`0", -0.5), ("1", -3.0)], markdown=True) < 0.5
+    assert p_one([("**1", -0.2), ("0", -2.0)], markdown=True) > 0.5
+    # the quick judge reads bare digits only, as in the submitted cascade
+    assert p_one([("**1", -0.2), ("0", -2.0)]) == 0.0

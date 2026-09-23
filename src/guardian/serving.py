@@ -6,6 +6,7 @@ guardian.judge. Every step has a deadline: a server that does not come up in tim
 the rules alone instead of failing it.
 """
 
+import json
 import subprocess
 import sys
 import time
@@ -14,7 +15,9 @@ import urllib.request
 from pathlib import Path
 
 
-def start_vllm(model_dir: Path, port: int, served_name: str, max_model_len: int, log: Path) -> subprocess.Popen:
+def start_vllm(
+    model_dir: Path, port: int, served_name: str, max_model_len: int, log: Path, pooling: bool = False
+) -> subprocess.Popen:
     command = [
         sys.executable,
         "-m",
@@ -33,6 +36,18 @@ def start_vllm(model_dir: Path, port: int, served_name: str, max_model_len: int,
         # the checkpoint is a vision-language model; only its text part is needed
         "--language-model-only",
     ]
+    if pooling:
+        # the head reads the final normalised hidden state of the last token, not L2-normalised,
+        # like llama-server with --pooling last --embd-normalize -1
+        command += [
+            "--runner",
+            "pooling",
+            "--convert",
+            "embed",
+            "--pooler-config",
+            json.dumps({"pooling_type": "LAST", "use_activation": False}),
+        ]
+        command.remove("--enable-prefix-caching")
     handle = log.open("w", encoding="utf-8")
     return subprocess.Popen(command, stdout=handle, stderr=subprocess.STDOUT)
 

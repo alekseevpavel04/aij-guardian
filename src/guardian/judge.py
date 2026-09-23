@@ -41,11 +41,17 @@ def render(system_prompt: str, prompt: str, response: str, thinking: bool, refer
     return text if thinking else text + CLOSE_THINK
 
 
-def p_one(top: list[tuple[str, float]]) -> float | None:
-    """P("1") from the top log-probabilities of the verdict position, renormalised over "1" and "0"."""
+def p_one(top: list[tuple[str, float]], markdown: bool = False) -> float | None:
+    """P("1") from the top log-probabilities of the verdict position, renormalised over "1" and "0".
+
+    After reasoning and an answer prefix the model may wrap the digit in markdown (`1`, **1**), so
+    `markdown` reads through backticks, asterisks and quotes. The quick judge reads bare digits, as
+    in the submitted cascade, whose results depend on it.
+    """
+    wrappers = " `*\"'" if markdown else None
 
     def best(label: str) -> float | None:
-        values = [lp for token, lp in top if token.strip(" `*\"'") == label]
+        values = [lp for token, lp in top if token.strip(wrappers) == label]
         return max(values) if values else None
 
     one, zero = best("1"), best("0")
@@ -156,7 +162,7 @@ class JudgeClient:
         usage = data.get("usage") or {}
         cached = (usage.get("prompt_tokens_details") or {}).get("cached_tokens")
         return Verdict(
-            p_one(top) if top else None,
+            p_one(top, markdown=bool(self.answer_prefix)) if top else None,
             usage.get("prompt_tokens"),
             cached,
             reasoning_tokens,
