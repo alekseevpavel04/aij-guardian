@@ -106,7 +106,8 @@ GENERATED = {
     },
 }
 # runtime.json is a timing, tau2_match.json needs the network, baseline_inventory.json the unpacked
-# organiser archive and tau2_reference.json a local clone of tau2-bench, so none of them is re-checked here
+# organiser archive, tau2_reference.json a local clone of tau2-bench and kaggle_pooling_probe.json a Kaggle GPU,
+# so none of them is re-checked here
 DATA = ROOT / "data/raw/valid.parquet"
 # downloaded sources, not in git
 EXTERNAL = [ROOT / "data/external/apb/tau2/test.jsonl", Path("D:/VScode_projects/TrajDebug/data/trajerrbench")]

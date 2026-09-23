@@ -1,0 +1,17 @@
+{
+  "script": "scripts/kaggle_pooling_probe.py at commit eb5f52a",
+  "run": "Kaggle notebook, GPU T4, vllm==0.19.1, run by the author on 2026-09-23; output pasted from the notebook, not recomputable locally",
+  "model": "Qwen/Qwen3.5-0.8B",
+  "lengths_in_tokens": [500, 4000, 16000, 30000],
+  "vllm": {"ok": true, "seconds": 38.43, "dim": 1024},
+  "default_vs_one_chunk_no_cache": {
+    "cosine": [1.0, 1.0, 1.0, 1.0],
+    "norm_ratio": [1.0, 1.0, 1.0, 1.0],
+    "seconds_one_chunk": 60.63
+  },
+  "earlier_runs": [
+    "commit d19dd63: prompts over the model length (lengths in words, not tokens), rejected before compute; engine had started with 'Supported pooling task: embed'",
+    "commit e6173c7: FlashInfer JIT build failed on Kaggle (cannot find -lcuda) for full-attention layers on the T4",
+    "commit 8afc63e and 3debc04: vLLM embedded all four prompts (38-43 s); the transformers reference could not build the checkpoint's vision tower"
+  ]
+}
