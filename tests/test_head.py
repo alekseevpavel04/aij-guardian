@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 
-from guardian.head import Head
+from guardian.head import Head, scoring_order
 
 
 def test_head_scores_as_the_sklearn_model_it_was_exported_from(tmp_path):
@@ -28,3 +28,13 @@ def test_head_rejects_a_vector_of_another_size():
     except ValueError:
         return
     raise AssertionError("a vector of the wrong size was scored")
+
+
+def test_turns_with_a_tool_call_are_scored_first_and_shorter_first():
+    rows = [
+        {"prompt": "x" * 30, "response": "text only"},
+        {"prompt": "x" * 20, "response": "\t→ TOOL_CALL get_order: {}"},
+        {"prompt": "x" * 10, "response": "text only"},
+        {"prompt": "x" * 5, "response": "ok\n\t→ TOOL_CALL cancel: {}"},
+    ]
+    assert scoring_order(rows) == [3, 1, 2, 0]

@@ -57,10 +57,23 @@ class HeadRun:
     seconds: float = 0.0
 
 
+def scoring_order(rows: list[dict]) -> list[int]:
+    """Turns with a tool call first, shorter first within each group.
+
+    Without a prefix cache (vLLM switches it off for this hybrid model in pooling mode) the scores may
+    not all be in by the deadline. The organiser's positives are nearly all turns that call a tool
+    (21 of 23 on the 46 labelled rows), so those go first, and shorter prompts fit more rows in.
+    """
+    return sorted(
+        range(len(rows)),
+        key=lambda i: ("TOOL_CALL" not in rows[i].get("response", ""), len(rows[i].get("prompt", ""))),
+    )
+
+
 def head_scores(
     rows: list[dict], head: Head, url: str, model: str, system_prompt: str, deadline: float, workers: int
 ) -> HeadRun:
-    """Score rows until the monotonic `deadline`; rows not scored by then, or failed, stay None."""
+    """Score rows in `scoring_order` until the monotonic `deadline`; rows not scored by then, or failed, stay None."""
     started = time.monotonic()
     scores: list[float | None] = [None] * len(rows)
     errors = 0
@@ -70,7 +83,7 @@ def head_scores(
         return head.score(embed(url, model, text, timeout=max(deadline - time.monotonic(), 1)))
 
     pool = ThreadPoolExecutor(max_workers=workers)
-    futures = {pool.submit(one, i): i for i in range(len(rows))}
+    futures = {pool.submit(one, i): i for i in scoring_order(rows)}
     try:
         for future in as_completed(futures, timeout=max(deadline - time.monotonic(), 1)):
             i = futures[future]
