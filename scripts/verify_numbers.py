@@ -81,6 +81,8 @@ GENERATED = {
     "pairs_effect.json": ("pairs_effect.py", lambda tmp: ["--out", str(tmp / "x.json")]),
     "authorship_probe.json": ("authorship_probe.py", lambda tmp: ["--out", str(tmp / "x.json")]),
     "test_normalisation.json": ("test_normalisation.py", lambda tmp: ["--out", str(tmp / "x.json")]),
+    "label_variants.json": ("label_variants.py", lambda tmp: ["--out", str(tmp / "x.json")]),
+    "head_variants.json": ("head_variants.py", lambda tmp: ["--out", str(tmp / "x.json")]),
     **{
         f"head_ru{name}.json": ("train_head_ru.py", lambda tmp, a=flags: [*a, "--out", str(tmp / "x.json")])
         for name, flags in (
@@ -132,6 +134,8 @@ REQUIRES = {
     "pairs_effect.json": [DATA, ROOT / "data/interim/embeddings", ROOT / "data/synthetic/pairs"],
     "authorship_probe.json": [ROOT / "data/interim/embeddings", ROOT / "data/synthetic/pairs"],
     "test_normalisation.json": [DATA, ROOT / "data/interim/embeddings", ROOT / "data/interim/labels"],
+    "label_variants.json": [DATA, ROOT / "data/interim/embeddings", ROOT / "data/interim/labels"],
+    "head_variants.json": [DATA, ROOT / "data/interim/embeddings", ROOT / "data/interim/labels"],
     **{
         f"head_ru{n}.json": [DATA, ROOT / "data/interim/embeddings", ROOT / "data/interim/labels"]
         for n in ("", "_rules", "_pairs", "_pairs_rules", "_opus", "_opus_pairs")

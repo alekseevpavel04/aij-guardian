@@ -1,0 +1,181 @@
+{
+  "organiser_46": {
+    "positives": 23,
+    "positives_with_call": 21,
+    "negatives_with_call": 2
+  },
+  "labellers": {
+    "v1s_train": {
+      "positives": 33,
+      "with_call": 16
+    },
+    "v1s_check": {
+      "positives": 34,
+      "with_call": 13
+    },
+    "opus_train": {
+      "positives": 47,
+      "with_call": 17
+    },
+    "opus_check": {
+      "positives": 33,
+      "with_call": 15
+    }
+  },
+  "heads": {
+    "v1s": {
+      "no_pairs": {
+        "train_rows": 212,
+        "train_positives": 33,
+        "valid_all": 0.7769,
+        "valid_clean": 0.8357,
+        "valid_other": 0.6667,
+        "ext_val": 0.915,
+        "check_agreed": 0.9394
+      },
+      "pairs_25": {
+        "train_rows": 332,
+        "train_positives": 103,
+        "valid_all": 0.8336,
+        "valid_clean": 0.9643,
+        "valid_other": 0.6838,
+        "ext_val": 0.8788,
+        "check_agreed": 0.9538
+      },
+      "all_pairs": {
+        "train_rows": 694,
+        "train_positives": 313,
+        "valid_all": 0.8336,
+        "valid_clean": 0.9714,
+        "valid_other": 0.6581,
+        "ext_val": 0.8485,
+        "check_agreed": 0.9412
+      }
+    },
+    "v1s_calls_only": {
+      "no_pairs": {
+        "train_rows": 212,
+        "train_positives": 16,
+        "valid_all": 0.8393,
+        "valid_clean": 0.9143,
+        "valid_other": 0.7607,
+        "ext_val": 0.8492,
+        "check_agreed": 0.7209
+      },
+      "pairs_25": {
+        "train_rows": 332,
+        "train_positives": 86,
+        "valid_all": 0.845,
+        "valid_clean": 0.9929,
+        "valid_other": 0.6667,
+        "ext_val": 0.8321,
+        "check_agreed": 0.9151
+      },
+      "all_pairs": {
+        "train_rows": 694,
+        "train_positives": 296,
+        "valid_all": 0.8601,
+        "valid_clean": 0.9857,
+        "valid_other": 0.7179,
+        "ext_val": 0.8189,
+        "check_agreed": 0.9191
+      }
+    },
+    "opus": {
+      "no_pairs": {
+        "train_rows": 212,
+        "train_positives": 47,
+        "valid_all": 0.7183,
+        "valid_clean": 0.8286,
+        "valid_other": 0.5726,
+        "ext_val": 0.8785,
+        "check_agreed": 0.9631
+      },
+      "pairs_25": {
+        "train_rows": 332,
+        "train_positives": 117,
+        "valid_all": 0.811,
+        "valid_clean": 0.9214,
+        "valid_other": 0.641,
+        "ext_val": 0.8522,
+        "check_agreed": 0.9575
+      },
+      "all_pairs": {
+        "train_rows": 694,
+        "train_positives": 327,
+        "valid_all": 0.8053,
+        "valid_clean": 0.9357,
+        "valid_other": 0.6325,
+        "ext_val": 0.8453,
+        "check_agreed": 0.9388
+      }
+    },
+    "opus_calls_only": {
+      "no_pairs": {
+        "train_rows": 212,
+        "train_positives": 17,
+        "valid_all": 0.8166,
+        "valid_clean": 0.9286,
+        "valid_other": 0.6667,
+        "ext_val": 0.8858,
+        "check_agreed": 0.7812
+      },
+      "pairs_25": {
+        "train_rows": 332,
+        "train_positives": 87,
+        "valid_all": 0.8733,
+        "valid_clean": 1.0,
+        "valid_other": 0.7009,
+        "ext_val": 0.8603,
+        "check_agreed": 0.9317
+      },
+      "all_pairs": {
+        "train_rows": 694,
+        "train_positives": 297,
+        "valid_all": 0.862,
+        "valid_clean": 0.9857,
+        "valid_other": 0.7094,
+        "ext_val": 0.8257,
+        "check_agreed": 0.9218
+      }
+    }
+  },
+  "v1s_calls_only_pair_curve": {
+    "0.1": {
+      "train_rows": 259.6667,
+      "train_positives": 44.0,
+      "valid_all": 0.8891,
+      "valid_clean": 0.9833,
+      "valid_other": 0.7607,
+      "ext_val": 0.8241,
+      "check_agreed": 0.8531
+    },
+    "0.25": {
+      "train_rows": 332.3333,
+      "train_positives": 86.0,
+      "valid_all": 0.8431,
+      "valid_clean": 0.9691,
+      "valid_other": 0.6895,
+      "ext_val": 0.8463,
+      "check_agreed": 0.8801
+    },
+    "0.5": {
+      "train_rows": 451.3333,
+      "train_positives": 156.0,
+      "valid_all": 0.833,
+      "valid_clean": 0.9786,
+      "valid_other": 0.6724,
+      "ext_val": 0.7781,
+      "check_agreed": 0.9105
+    },
+    "0.75": {
+      "train_rows": 573.3333,
+      "train_positives": 226.0,
+      "valid_all": 0.8463,
+      "valid_clean": 0.9857,
+      "valid_other": 0.6923,
+      "ext_val": 0.7959,
+      "check_agreed": 0.9208
+    }
+  }
+}
