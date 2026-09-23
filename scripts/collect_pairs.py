@@ -58,8 +58,9 @@ def render_turn(turn: int, text: str, calls: list[dict]) -> str:
     return "\n".join(lines)
 
 
-# arguments the agent composes itself (a handover summary, an arithmetic expression), not values it copies
-FREE_TEXT = {"summary", "expression"}
+# arguments the agent composes itself (a handover summary, an arithmetic expression, a search query or
+# pattern), not values it copies
+FREE_TEXT = {"summary", "expression", "query", "pattern"}
 
 
 def scalar_values(value: object) -> list[object]:
