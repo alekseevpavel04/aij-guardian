@@ -199,6 +199,13 @@ def measure(
             "head_auroc": auroc(yv, valid_score[mask]),
             "judge_auroc": auroc(yv, judge_score[mask]),
         }
+    yv = valid.label.to_numpy().astype(int)
+    result["valid"]["all"] = {
+        "rows": len(yv),
+        "positives": int(yv.sum()),
+        "head_auroc": auroc(yv, valid_score),
+        "judge_auroc": auroc(yv, judge_score),
+    }
     # both labellers agree: fewer label errors, a check that does not side with either teacher
     agreed = check.label.to_numpy().astype(int) == check_opus
     result["check_contexts_agreed"] = {

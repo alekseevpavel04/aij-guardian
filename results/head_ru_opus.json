@@ -48,6 +48,12 @@
       "positives": 13,
       "head_auroc": 0.5726,
       "judge_auroc": 0.6752
+    },
+    "all": {
+      "rows": 46,
+      "positives": 23,
+      "head_auroc": 0.7183,
+      "judge_auroc": 0.8166
     }
   },
   "check_contexts_agreed": {

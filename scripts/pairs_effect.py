@@ -34,7 +34,7 @@ from guardian.env import setup
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
-from train_head_ru import PAIR_VECTORS, PILOT, TEACHERS, auroc, labels, measure, vectors  # noqa: E402
+from train_head_ru import JUDGE, PAIR_VECTORS, PILOT, TEACHERS, auroc, labels, measure, vectors  # noqa: E402
 
 V3 = ["airline_02", "retail_02a", "retail_02b", "telecom_02a", "telecom_02b", "banking_02a", "banking_02b"]
 V4 = [
@@ -77,6 +77,7 @@ def summary(result: dict) -> dict:
         "check_v1s_auroc": result["check_contexts"]["head_auroc"],
         "valid_clean_auroc": result["valid"]["clean"]["head_auroc"],
         "valid_leaked_auroc": result["valid"]["leaked"]["head_auroc"],
+        "valid_all_auroc": result["valid"]["all"]["head_auroc"],
         "ext_val_auroc": result["ext_val"]["head_auroc"],
     }
 
@@ -167,6 +168,29 @@ def main() -> None:
             "ci95": [round(float(v), 3) for v in np.percentile(diffs, [2.5, 97.5])],
             "rows": int(mask.sum()),
             "dialogues": len(np.unique(tasks[mask])),
+        }
+    # the head with all pairs against the judge on the organiser's rows, the only rows labelled like the test
+    judged = {r["id"]: r["score"] for r in journal.read(ROOT / "data/interim/judge" / f"{JUDGE}.jsonl")}
+    rows = valid.index.to_numpy()
+    y_valid = valid.label.to_numpy().astype(int)
+    head_s, judge_s = np.array([all_scores[i] for i in rows]), np.array([judged[i] for i in rows])
+    row_tasks = np.array([i.split("::")[0] for i in rows])
+    in_clean = np.isin(rows, clean.index)
+    out["all_opus_minus_judge"] = {}
+    for name, mask in (("valid_clean", in_clean), ("valid_other", ~in_clean), ("valid_all", np.ones(len(rows), bool))):
+        own = [np.where(mask & (row_tasks == t))[0] for t in np.unique(row_tasks[mask])]
+        boot = np.random.default_rng(args.seed)
+        diffs = []
+        for _ in range(args.repeats):
+            idx = np.concatenate([own[i] for i in boot.integers(0, len(own), len(own))])
+            if 0 < y_valid[idx].sum() < len(idx):
+                diffs.append(auroc(y_valid[idx], head_s[idx]) - auroc(y_valid[idx], judge_s[idx]))
+        out["all_opus_minus_judge"][name] = {
+            "head": auroc(y_valid[mask], head_s[mask]),
+            "judge": auroc(y_valid[mask], judge_s[mask]),
+            "ci95": [round(float(v), 3) for v in np.percentile(diffs, [2.5, 97.5])],
+            "rows": int(mask.sum()),
+            "dialogues": len(own),
         }
     args.out.write_text(json.dumps(out, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(out, ensure_ascii=False, indent=2))

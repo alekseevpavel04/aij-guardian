@@ -10,6 +10,7 @@
       "check_v1s_auroc": 0.9252,
       "valid_clean_auroc": 0.8286,
       "valid_leaked_auroc": 0.5726,
+      "valid_all_auroc": 0.7183,
       "ext_val_auroc": 0.8785
     },
     "v3": {
@@ -21,6 +22,7 @@
       "check_v1s_auroc": 0.9182,
       "valid_clean_auroc": 0.9143,
       "valid_leaked_auroc": 0.6154,
+      "valid_all_auroc": 0.7958,
       "ext_val_auroc": 0.8561
     },
     "v4": {
@@ -32,6 +34,7 @@
       "check_v1s_auroc": 0.9094,
       "valid_clean_auroc": 0.95,
       "valid_leaked_auroc": 0.6239,
+      "valid_all_auroc": 0.8015,
       "ext_val_auroc": 0.8414
     },
     "all_opus": {
@@ -43,6 +46,7 @@
       "check_v1s_auroc": 0.8968,
       "valid_clean_auroc": 0.9357,
       "valid_leaked_auroc": 0.6325,
+      "valid_all_auroc": 0.8053,
       "ext_val_auroc": 0.8453
     },
     "all_opus_and_pilot": {
@@ -54,6 +58,7 @@
       "check_v1s_auroc": 0.8983,
       "valid_clean_auroc": 0.9286,
       "valid_leaked_auroc": 0.6325,
+      "valid_all_auroc": 0.7977,
       "ext_val_auroc": 0.8437
     },
     "pairs_A": {
@@ -65,6 +70,7 @@
       "check_v1s_auroc": 0.8975,
       "valid_clean_auroc": 0.95,
       "valid_leaked_auroc": 0.6752,
+      "valid_all_auroc": 0.8318,
       "ext_val_auroc": 0.8562
     },
     "pairs_B": {
@@ -76,6 +82,7 @@
       "check_v1s_auroc": 0.9216,
       "valid_clean_auroc": 0.8929,
       "valid_leaked_auroc": 0.6325,
+      "valid_all_auroc": 0.7845,
       "ext_val_auroc": 0.845
     },
     "full_pairs": {
@@ -87,6 +94,7 @@
       "check_v1s_auroc": 0.9211,
       "valid_clean_auroc": 0.9,
       "valid_leaked_auroc": 0.6068,
+      "valid_all_auroc": 0.7769,
       "ext_val_auroc": 0.8377
     },
     "full_pairs_B": {
@@ -98,6 +106,7 @@
       "check_v1s_auroc": 0.9201,
       "valid_clean_auroc": 0.8929,
       "valid_leaked_auroc": 0.6325,
+      "valid_all_auroc": 0.7845,
       "ext_val_auroc": 0.8457
     },
     "weight_25": {
@@ -109,6 +118,7 @@
       "check_v1s_auroc": 0.9171,
       "valid_clean_auroc": 0.9214,
       "valid_leaked_auroc": 0.6154,
+      "valid_all_auroc": 0.775,
       "ext_val_auroc": 0.8606
     },
     "weight_50": {
@@ -120,6 +130,7 @@
       "check_v1s_auroc": 0.9126,
       "valid_clean_auroc": 0.9214,
       "valid_leaked_auroc": 0.6154,
+      "valid_all_auroc": 0.7694,
       "ext_val_auroc": 0.8571
     },
     "indicator": {
@@ -131,6 +142,7 @@
       "check_v1s_auroc": 0.8964,
       "valid_clean_auroc": 0.9357,
       "valid_leaked_auroc": 0.6325,
+      "valid_all_auroc": 0.8072,
       "ext_val_auroc": 0.8459
     },
     "indicator_weight_50": {
@@ -142,6 +154,7 @@
       "check_v1s_auroc": 0.9122,
       "valid_clean_auroc": 0.9214,
       "valid_leaked_auroc": 0.6325,
+      "valid_all_auroc": 0.7732,
       "ext_val_auroc": 0.8578
     }
   },
@@ -155,6 +168,7 @@
       "check_v1s_auroc": 0.9181,
       "valid_clean_auroc": 0.9357,
       "valid_leaked_auroc": 0.6524,
+      "valid_all_auroc": 0.8141,
       "ext_val_auroc": 0.8511
     },
     "0.5": {
@@ -166,6 +180,7 @@
       "check_v1s_auroc": 0.9108,
       "valid_clean_auroc": 0.9309,
       "valid_leaked_auroc": 0.6581,
+      "valid_all_auroc": 0.8122,
       "ext_val_auroc": 0.8519
     },
     "0.75": {
@@ -177,6 +192,7 @@
       "check_v1s_auroc": 0.9062,
       "valid_clean_auroc": 0.9381,
       "valid_leaked_auroc": 0.6439,
+      "valid_all_auroc": 0.8072,
       "ext_val_auroc": 0.8385
     },
     "1.0": {
@@ -188,6 +204,7 @@
       "check_v1s_auroc": 0.8968,
       "valid_clean_auroc": 0.9357,
       "valid_leaked_auroc": 0.6325,
+      "valid_all_auroc": 0.8053,
       "ext_val_auroc": 0.8453
     }
   },
@@ -218,6 +235,38 @@
       ],
       "rows": 24,
       "dialogues": 24
+    }
+  },
+  "all_opus_minus_judge": {
+    "valid_clean": {
+      "head": 0.9357,
+      "judge": 0.9214,
+      "ci95": [
+        -0.089,
+        0.117
+      ],
+      "rows": 24,
+      "dialogues": 24
+    },
+    "valid_other": {
+      "head": 0.6325,
+      "judge": 0.6752,
+      "ci95": [
+        -0.205,
+        0.089
+      ],
+      "rows": 22,
+      "dialogues": 21
+    },
+    "valid_all": {
+      "head": 0.8053,
+      "judge": 0.8166,
+      "ci95": [
+        -0.099,
+        0.069
+      ],
+      "rows": 46,
+      "dialogues": 45
     }
   }
 }
