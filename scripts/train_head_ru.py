@@ -14,6 +14,7 @@ cross-validation on the training rows grouped by task.
 
     python scripts/train_head_ru.py
     python scripts/train_head_ru.py --pairs --rules
+    python scripts/train_head_ru.py --pairs airline_01 retail_01 airline_02 --out results/x.json
 """
 
 import argparse
@@ -38,6 +39,9 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from embed_rows import decode  # noqa: E402
 
 C_GRID = (0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1.0)
+PILOT = ["airline_01", "retail_01"]
+# every embedding journal of written turns; a batch's rows are looked up by id
+PAIR_VECTORS = ("q4_last_pilot_written", "q4_last_pairs_02")
 JUDGE = "baseline_prompt_q4_valid"
 
 
@@ -68,7 +72,9 @@ def main() -> None:
     setup()
     ap = argparse.ArgumentParser()
     ap.add_argument("--contexts", type=Path, default=ROOT / "data/synthetic/organizer_contexts.parquet")
-    ap.add_argument("--pairs", action="store_true", help="add the written minimal pairs to training")
+    ap.add_argument(
+        "--pairs", nargs="*", metavar="BATCH", help="add the minimal pairs of these batches (no names: the pilot)"
+    )
     ap.add_argument("--rules", action="store_true", help="append the rule features to the vector")
     ap.add_argument("--out", type=Path, default=None)
     args = ap.parse_args()
@@ -78,11 +84,14 @@ def main() -> None:
     train = contexts[contexts.split == "train"].copy()
     train["label"] = train.id.map(labels("labeler_v1s_org_train"))
     train["group"] = train.task
-    if args.pairs:
-        pairs = pd.read_parquet(ROOT / "data/interim/pilot_written.parquet")
+    batches = None if args.pairs is None else args.pairs or PILOT
+    if batches:
+        pairs = pd.concat([pd.read_parquet(ROOT / "data/synthetic/pairs" / b / "pairs.parquet") for b in batches])
         pairs = pairs[pairs.context_id.map(contexts.set_index("id").split) == "train"].copy()
         pairs["group"] = pairs.task
-        context_vecs |= vectors("q4_last_pilot_written")
+        for name in PAIR_VECTORS:
+            if (ROOT / "data/interim/embeddings" / f"{name}.jsonl").exists():
+                context_vecs |= vectors(name)
         train = pd.concat([train, pairs[["id", "prompt", "response", "label", "group"]]], ignore_index=True)
     train = train.dropna(subset=["label"])
     x, y, groups = design(train, context_vecs, args.rules), train.label.to_numpy().astype(int), train.group.to_numpy()
@@ -113,7 +122,8 @@ def main() -> None:
     result = {
         "train_rows": len(y),
         "train_positives": int(y.sum()),
-        "pairs": args.pairs,
+        "pairs": batches is not None,
+        "pair_batches": batches,
         "rules": args.rules,
         "cv_auroc_by_c": {str(c): v for c, v in cv.items()},
         "chosen_c": best,
@@ -133,7 +143,7 @@ def main() -> None:
             "head_auroc": auroc(yv, valid_score[mask]),
             "judge_auroc": auroc(yv, judge_score[mask]),
         }
-    name = "head_ru" + ("_pairs" if args.pairs else "") + ("_rules" if args.rules else "")
+    name = "head_ru" + ("_pairs" if batches else "") + ("_rules" if args.rules else "")
     out = args.out or ROOT / "results" / f"{name}.json"
     out.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(result, ensure_ascii=False, indent=2))
