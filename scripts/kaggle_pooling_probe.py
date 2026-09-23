@@ -3,13 +3,19 @@
 The platform model (Qwen3.6-35B-A3B, `Qwen3_5MoeForConditionalGeneration`) mixes linear and full
 attention, and vLLM's own comment says it has no pooling model of that kind, so the path is untested.
 Qwen3.5-0.8B has the same code (`qwen3_5.py`) and attention layout without the experts, and fits a T4.
-The probe embeds synthetic prompts of growing length with vLLM (runner pooling, convert embed, LAST,
-no normalisation) and compares each vector with the final normalised hidden state from transformers.
+
+The probe embeds synthetic prompts of growing length (runner pooling, convert embed, LAST, no
+normalisation) twice: with the defaults, where a long prompt is prefilled in chunks of 8192 tokens
+and prefixes may come from the cache, and as a reference with the whole prompt in one chunk and no
+prefix cache. The linear-attention state has to be carried between chunks and cached prefixes; if it
+is not, long prompts give vectors unlike the reference while short ones agree. The transformers
+build that comes with vLLM 0.19.1 cannot construct this checkpoint, so vLLM is its own reference.
 No competition data is used. Run in a notebook cell after `pip install vllm==0.19.1`:
 
     !python kaggle_pooling_probe.py
 """
 
+import gc
 import json
 import time
 
@@ -30,7 +36,7 @@ def prompts() -> list[str]:
     return [tokenizer.decode(ids[:n]) for n in LENGTHS]
 
 
-def with_vllm(texts: list[str]) -> tuple[np.ndarray, float]:
+def with_vllm(texts: list[str], **engine) -> tuple[np.ndarray, float]:
     from vllm import LLM
 
     llm = LLM(
@@ -46,52 +52,35 @@ def with_vllm(texts: list[str]) -> tuple[np.ndarray, float]:
         # Triton kernels need no C++ build (the platform's A100 would take FlashAttention 2)
         attention_config={"backend": "TRITON_ATTN"},
         gdn_prefill_backend="triton",
+        **engine,
     )
     start = time.monotonic()
     out = llm.embed(texts)
     seconds = time.monotonic() - start
     vectors = np.stack([np.asarray(o.outputs.embedding, dtype=np.float32) for o in out])
     del llm
+    gc.collect()
     torch.cuda.empty_cache()
     return vectors, seconds
-
-
-def with_transformers(texts: list[str]) -> np.ndarray:
-    from transformers import AutoConfig, AutoModelForImageTextToText, AutoTokenizer
-
-    tokenizer = AutoTokenizer.from_pretrained(MODEL)
-    config = AutoConfig.from_pretrained(MODEL)
-    # the transformers that vLLM 0.19.1 installs cannot build this checkpoint's vision tower without it;
-    # the vision tower is not used on text input
-    if not hasattr(config.vision_config, "rope_parameters"):
-        config.vision_config.rope_parameters = {"rope_type": "default", "rope_theta": 10000.0}
-    model = AutoModelForImageTextToText.from_pretrained(MODEL, config=config, dtype=torch.float16, device_map="cuda")
-    vectors = []
-    for text in texts:
-        ids = tokenizer(text, return_tensors="pt").input_ids.cuda()
-        with torch.no_grad():
-            hidden = model(input_ids=ids, output_hidden_states=True).hidden_states[-1]
-        vectors.append(hidden[0, -1].float().cpu().numpy())
-    return np.stack(vectors)
 
 
 def main() -> None:
     texts = prompts()
     result: dict = {"model": MODEL, "lengths_in_tokens": list(LENGTHS)}
     try:
-        v, seconds = with_vllm(texts)
-        result["vllm"] = {"ok": True, "seconds": round(seconds, 2), "dim": int(v.shape[1])}
-        # the main answer, printed before the transformers pass that may run out of memory
+        chunked, seconds = with_vllm(texts)
+        result["vllm"] = {"ok": True, "seconds": round(seconds, 2), "dim": int(chunked.shape[1])}
         print(json.dumps(result, ensure_ascii=False), flush=True)
+        whole, seconds = with_vllm(texts, max_num_batched_tokens=32768, enable_prefix_caching=False)
     except Exception as error:  # the point of the probe is to see how it fails
-        result["vllm"] = {"ok": False, "error": f"{type(error).__name__}: {error}"[:2000]}
+        result["error"] = f"{type(error).__name__}: {error}"[:2000]
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return
-    h = with_transformers(texts)
-    cos = (v * h).sum(1) / np.linalg.norm(v, axis=1) / np.linalg.norm(h, axis=1)
-    result["vllm_vs_transformers"] = {
+    cos = (chunked * whole).sum(1) / np.linalg.norm(chunked, axis=1) / np.linalg.norm(whole, axis=1)
+    result["default_vs_one_chunk_no_cache"] = {
         "cosine": [round(float(c), 5) for c in cos],
-        "norm_ratio": [round(float(r), 4) for r in np.linalg.norm(v, axis=1) / np.linalg.norm(h, axis=1)],
+        "norm_ratio": [round(float(r), 4) for r in np.linalg.norm(chunked, axis=1) / np.linalg.norm(whole, axis=1)],
+        "seconds_one_chunk": round(seconds, 2),
     }
     print(json.dumps(result, ensure_ascii=False, indent=2))
 
