@@ -42,6 +42,10 @@ def with_vllm(texts: list[str]) -> tuple[np.ndarray, float]:
         max_model_len=32768,
         language_model_only=True,
         gpu_memory_utilization=0.8,
+        # a T4 has no FlashAttention 2, and FlashInfer's JIT build cannot link libcuda on Kaggle;
+        # Triton kernels need no C++ build (the platform's A100 would take FlashAttention 2)
+        attention_config={"backend": "TRITON_ATTN"},
+        gdn_prefill_backend="triton",
     )
     start = time.monotonic()
     out = llm.embed(texts)
