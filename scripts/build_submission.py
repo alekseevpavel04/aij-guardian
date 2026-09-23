@@ -101,6 +101,7 @@ def build(
     thinking_tokens: int = 0,
     append_prompt: Path | None = None,
     head: Path | None = None,
+    fallback: str = "cascade",
 ) -> None:
     if out_dir.exists():
         shutil.rmtree(out_dir)
@@ -118,7 +119,7 @@ def build(
     if without or strategy in ("cascade", "head"):
         config["checks"] = [c for c in DEFAULT_CHECKS if c not in without]
     if strategy == "head":
-        config |= HEAD
+        config |= HEAD | {"fallback": fallback}
         shutil.copy(head, out_dir / "model/head.json")
     if strategy in ("cascade", "head"):
         config |= CASCADE | {"share": share, "prompt": "judge_prompt.md", "thinking_tokens": thinking_tokens}
@@ -196,6 +197,9 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--strategy", choices=("constant", "rules", "cascade", "head"), default="rules")
     ap.add_argument("--head", type=Path, default=None, help="head: exported head (scripts/export_head.py)")
+    ap.add_argument(
+        "--fallback", choices=("cascade", "rules"), default="cascade", help="head: what runs if the head cannot"
+    )
     ap.add_argument("--share", type=float, default=0.3, help="cascade: share of rows the judge labels 1")
     ap.add_argument("--prompt", type=Path, default=ROOT / "configs/prompts/judge_v1.md")
     ap.add_argument("--model-dir", type=Path, default=MODEL_DIR)
@@ -219,6 +223,7 @@ def main() -> None:
         args.thinking_tokens,
         args.append_prompt,
         args.head,
+        args.fallback,
     )
     suffix = f"_{args.label}" if args.strategy == "constant" else "".join(f"_no_{c}" for c in args.without)
     if args.strategy == "cascade":
@@ -226,6 +231,7 @@ def main() -> None:
         suffix += f"_{prompt_name}_share{args.share}_think{args.thinking_tokens}"
     if args.strategy == "head":
         suffix += f"_{args.head.stem}_{args.prompt.stem}_share{args.share}"
+        suffix += "_fallback_rules" if args.fallback == "rules" else ""
     name = f"guardian_{args.strategy}{suffix}.zip"
     archive = args.archive or ROOT / "submissions" / name
     if args.strategy in ("cascade", "head"):

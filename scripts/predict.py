@@ -12,7 +12,8 @@ server that is already up instead, which is how it is tested locally.
 With the `head` strategy the same model is served in pooling mode and a linear head scores its
 last-token hidden state (guardian/head.py; GUARDIAN_EMBED_URL for a server that is already up). If
 the pooling server does not come up or most of its requests fail, the run falls back to the cascade
-with the cascade's own deadlines, so a head that fails early costs nothing against the known result.
+with the cascade's own deadlines, so a head that fails early costs nothing against the known result;
+with "fallback": "rules" it falls back to the rules alone, whose score on the test is known exactly.
 """
 
 import json
@@ -161,7 +162,12 @@ def main() -> None:
             labels = head(rows, config, started)
         except Exception as error:  # the head is the experiment, the cascade below is the known result
             print(f"head failed: {type(error).__name__}: {error}", file=sys.stderr)
-        if labels is None:
+        if labels is None and config.get("fallback") == "rules":
+            # a probe archive: the rules alone score exactly as submission 1 did, so the leaderboard shows
+            # without doubt that the head did not run
+            print("falling back to the rules", file=sys.stderr)
+            labels, failures = per_row(rows, Predictor(checks=tuple(config["checks"])))
+        elif labels is None:
             print("falling back to the cascade", file=sys.stderr)
     if labels is None and config.get("strategy") in ("cascade", "head"):
         try:
