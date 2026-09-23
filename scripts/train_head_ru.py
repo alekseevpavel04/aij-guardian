@@ -43,7 +43,7 @@ from judge_eval import load  # noqa: E402
 C_GRID = (0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1.0)
 PILOT = ["airline_01", "retail_01"]
 # every embedding journal of written turns; a batch's rows are looked up by id
-PAIR_VECTORS = ("q4_last_pilot_written", "q4_last_pairs_02", "q4_last_pairs_03")
+PAIR_VECTORS = ("q4_last_pilot_written", "q4_last_pairs_02", "q4_last_pairs_03", "q4_last_pairs_05")
 JUDGE = "baseline_prompt_q4_valid"
 JUDGE_EXT = "baseline_prompt_q4_extval400"
 TEACHERS = {"v1s": "labeler_v1s_org_{split}", "opus": "opus_v4_org_{split}"}

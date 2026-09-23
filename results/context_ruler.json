@@ -1,0 +1,120 @@
+{
+  "rows": 384,
+  "agreed_rows": 343,
+  "agreed_positives": 53,
+  "dialogues": 40,
+  "head_b_v1s_25pct_pairs": {
+    "auroc": 0.8989,
+    "ci95": [
+      0.799,
+      0.97
+    ]
+  },
+  "variants": {
+    "head_a_opus_calls_only_25pct_pairs": {
+      "auroc": 0.8346,
+      "ci95": [
+        0.751,
+        0.919
+      ],
+      "minus_head_b": {
+        "difference": -0.0643,
+        "ci95": [
+          -0.094,
+          -0.029
+        ],
+        "share_above_zero": 0.0
+      }
+    },
+    "head_b0_v1s_no_pairs": {
+      "auroc": 0.8981,
+      "ci95": [
+        0.804,
+        0.965
+      ],
+      "minus_head_b": {
+        "difference": -0.0008,
+        "ci95": [
+          -0.013,
+          0.017
+        ],
+        "share_above_zero": 0.436
+      }
+    },
+    "v1s_10pct_pairs": {
+      "auroc": 0.8997,
+      "ci95": [
+        0.805,
+        0.968
+      ],
+      "minus_head_b": {
+        "difference": 0.0008,
+        "ci95": [
+          -0.007,
+          0.01
+        ],
+        "share_above_zero": 0.567
+      }
+    },
+    "v1s_50pct_pairs": {
+      "auroc": 0.8945,
+      "ci95": [
+        0.796,
+        0.966
+      ],
+      "minus_head_b": {
+        "difference": -0.0044,
+        "ci95": [
+          -0.015,
+          0.003
+        ],
+        "share_above_zero": 0.134
+      }
+    },
+    "v1s_all_pairs": {
+      "auroc": 0.8917,
+      "ci95": [
+        0.795,
+        0.964
+      ],
+      "minus_head_b": {
+        "difference": -0.0072,
+        "ci95": [
+          -0.033,
+          0.008
+        ],
+        "share_above_zero": 0.212
+      }
+    },
+    "opus_all_labels_25pct_pairs": {
+      "auroc": 0.8882,
+      "ci95": [
+        0.779,
+        0.965
+      ],
+      "minus_head_b": {
+        "difference": -0.0107,
+        "ci95": [
+          -0.029,
+          0.018
+        ],
+        "share_above_zero": 0.247
+      }
+    },
+    "v1s_25pct_pairs_plus_ext_dev_weight_0_5": {
+      "auroc": 0.9155,
+      "ci95": [
+        0.838,
+        0.975
+      ],
+      "minus_head_b": {
+        "difference": 0.0166,
+        "ci95": [
+          -0.002,
+          0.039
+        ],
+        "share_above_zero": 0.945
+      }
+    }
+  }
+}

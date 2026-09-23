@@ -112,10 +112,13 @@ def replaced_once(correct: str, old: str, new: str, error: str) -> bool:
     return False
 
 
-def twin_checks(frame: pd.DataFrame) -> None:
+def twin_checks(frame: pd.DataFrame, originals: pd.Series) -> None:
+    """Compare every error turn with its correct twin; for pair "O" the twin is the agent's own turn."""
     frame["edit_ratio"] = None
-    for _, group in frame.groupby(["context_id", "pair"]):
+    for (cid, pair), group in frame.groupby(["context_id", "pair"]):
         correct, error = group[group.kind == "correct"], group[group.kind == "error"]
+        if pair == "O" and len(correct) == 0:
+            correct = pd.DataFrame([{"response": originals[cid]}])
         if len(correct) != 1 or len(error) != 1:
             for i in group.index:
                 frame.at[i, "flags"] = [*frame.at[i, "flags"], "no_twin"]
@@ -181,13 +184,13 @@ def main() -> None:
             }
         )
     per_context = Counter(item.get("context_id") for item in items)
-    # writers up to v3 also label the original turn, one line more per context
-    expected = 5 if naturals else 4
+    # writers up to v3 also label the original turn, one line more per context; v5 writes one error turn
+    expected = 5 if naturals else 1 if all(item.get("pair") == "O" for item in items) else 4
     problems += [
         f"{cid}: {per_context[cid]} lines, expected {expected}" for cid in manifest if per_context[cid] != expected
     ]
     frame = pd.DataFrame(rows)
-    twin_checks(frame)
+    twin_checks(frame, contexts.response)
     frame.to_parquet(folder / "pairs.parquet", index=False)
     pd.DataFrame(naturals).to_parquet(folder / "natural_labels.parquet", index=False)
     flagged = frame[frame["flags"].map(len) > 0] if len(frame) else frame
