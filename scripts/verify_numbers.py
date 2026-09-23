@@ -80,6 +80,7 @@ GENERATED = {
     "pair_verification.json": ("pair_verification.py", lambda tmp: ["--out", str(tmp / "x.json")]),
     "pairs_effect.json": ("pairs_effect.py", lambda tmp: ["--out", str(tmp / "x.json")]),
     "authorship_probe.json": ("authorship_probe.py", lambda tmp: ["--out", str(tmp / "x.json")]),
+    "test_normalisation.json": ("test_normalisation.py", lambda tmp: ["--out", str(tmp / "x.json")]),
     **{
         f"head_ru{name}.json": ("train_head_ru.py", lambda tmp, a=flags: [*a, "--out", str(tmp / "x.json")])
         for name, flags in (
@@ -129,6 +130,7 @@ REQUIRES = {
     "pair_verification.json": [ROOT / "data/synthetic/verify", ROOT / "data/synthetic/pairs"],
     "pairs_effect.json": [DATA, ROOT / "data/interim/embeddings", ROOT / "data/synthetic/pairs"],
     "authorship_probe.json": [ROOT / "data/interim/embeddings", ROOT / "data/synthetic/pairs"],
+    "test_normalisation.json": [DATA, ROOT / "data/interim/embeddings", ROOT / "data/interim/labels"],
     **{
         f"head_ru{n}.json": [DATA, ROOT / "data/interim/embeddings", ROOT / "data/interim/labels"]
         for n in ("", "_rules", "_pairs", "_pairs_rules", "_opus", "_opus_pairs")
