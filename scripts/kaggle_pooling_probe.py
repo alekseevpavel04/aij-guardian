@@ -17,13 +17,17 @@ import numpy as np
 import torch
 
 MODEL = "Qwen/Qwen3.5-0.8B"
-LENGTHS = (500, 4000, 16000, 30000)
+LENGTHS = (500, 4000, 16000, 30000)  # tokens, under max_model_len
 
 
 def prompts() -> list[str]:
+    from transformers import AutoTokenizer
+
+    tokenizer = AutoTokenizer.from_pretrained(MODEL)
     rng = np.random.default_rng(0)
     words = ["заказ", "рейс", "возврат", "карта", "политика", "клиент", "статус", "order", "flight", "refund"]
-    return [" ".join(rng.choice(words, n)) for n in LENGTHS]
+    ids = tokenizer(" ".join(rng.choice(words, max(LENGTHS))))["input_ids"]
+    return [tokenizer.decode(ids[:n]) for n in LENGTHS]
 
 
 def with_vllm(texts: list[str]) -> tuple[np.ndarray, float]:
@@ -64,7 +68,7 @@ def with_transformers(texts: list[str]) -> np.ndarray:
 
 def main() -> None:
     texts = prompts()
-    result: dict = {"model": MODEL, "lengths_in_words": list(LENGTHS)}
+    result: dict = {"model": MODEL, "lengths_in_tokens": list(LENGTHS)}
     try:
         v, seconds = with_vllm(texts)
         result["vllm"] = {"ok": True, "seconds": round(seconds, 2), "dim": int(v.shape[1])}
