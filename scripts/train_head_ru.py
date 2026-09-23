@@ -129,21 +129,34 @@ def measure(
 ) -> dict:
     train = train.dropna(subset=["label"])
     x, y, groups = design(train, context_vecs, rules), train.label.to_numpy().astype(int), train.group.to_numpy()
+    # optional: per-row weights, and a "written" indicator that takes up what tells a written turn from a
+    # natural one during training and is 0 for every row the head is measured on
+    weight = train["weight"].to_numpy(dtype=float) if "weight" in train else np.ones(len(y))
+    indicator = "written" in train
+    if indicator:
+        x = np.hstack([x, train["written"].to_numpy(dtype=np.float32)[:, None]])
+
+    def features_of(rows: pd.DataFrame, vecs: dict) -> np.ndarray:
+        z = design(rows, vecs, rules)
+        return np.hstack([z, np.zeros((len(z), 1), dtype=np.float32)]) if indicator else z
+
+    def fitted(c: float, rows: np.ndarray):
+        model = make_pipeline(StandardScaler(), LogisticRegression(C=c, max_iter=5000))
+        return model.fit(x[rows], y[rows], logisticregression__sample_weight=weight[rows])
 
     cv = {}
     for c in C_GRID:
         oof = np.zeros(len(y))
         for fit, held in GroupKFold(n_splits=5).split(x, y, groups):
-            model = make_pipeline(StandardScaler(), LogisticRegression(C=c, max_iter=5000))
-            oof[held] = model.fit(x[fit], y[fit]).predict_proba(x[held])[:, 1]
+            oof[held] = fitted(c, fit).predict_proba(x[held])[:, 1]
         cv[c] = auroc(y, oof)
     best = max(cv, key=lambda c: cv[c] or 0)
-    model = make_pipeline(StandardScaler(), LogisticRegression(C=best, max_iter=5000)).fit(x, y)
+    model = fitted(best, np.arange(len(y)))
 
     check = contexts[contexts.split == "check"].copy()
     check["label"] = check.id.map(labels("labeler_v1s_org_check"))
     check = check.dropna(subset=["label"])
-    check_score = model.predict_proba(design(check, context_vecs, rules))[:, 1]
+    check_score = model.predict_proba(features_of(check, context_vecs))[:, 1]
     check_opus = check.id.map(labels(TEACHERS["opus"].format(split="check"))).to_numpy().astype(int)
     if scores is not None:  # for a paired comparison of heads on the same contexts
         scores.update(zip(check.id, check_score, strict=True))
@@ -152,7 +165,7 @@ def measure(
     valid["task"] = valid.id.str.split("::").str[0]
     train_tasks = set(contexts[contexts.split == "train"].task)
     valid["half"] = np.where(valid.task.isin(train_tasks), "leaked", "clean")
-    valid_score = model.predict_proba(design(valid, vectors("q4_last_valid"), rules))[:, 1]
+    valid_score = model.predict_proba(features_of(valid, vectors("q4_last_valid")))[:, 1]
     if scores is not None:
         scores.update(zip(valid.id, valid_score, strict=True))
     judged = {r["id"]: r["score"] for r in journal.read(ROOT / "data/interim/judge" / f"{JUDGE}.jsonl")}
@@ -195,7 +208,7 @@ def measure(
     }
     # the English external rows with their own weak labels: a check that nothing broke, not of gain
     ext = load("ext_val", 400, 0)
-    ext_score = model.predict_proba(design(ext, vectors("q4_last_extval400"), rules))[:, 1]
+    ext_score = model.predict_proba(features_of(ext, vectors("q4_last_extval400")))[:, 1]
     judged = {r["id"]: r["score"] for r in journal.read(ROOT / "data/interim/judge" / f"{JUDGE_EXT}.jsonl")}
     result["ext_val"] = {
         "rows": len(ext),

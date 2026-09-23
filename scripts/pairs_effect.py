@@ -11,7 +11,9 @@ duplicate a context), and so are turns written as correct that the blind checker
 - pairs A only and pairs B only;
 - full pairs only: an error turn is kept only with its written correct twin. Dropping copies leaves
   their error twins behind, so written turns lean to label 1, and the vector can tell a written turn
-  from a natural one (scripts/authorship_probe.py): a head may then learn "written, so an error".
+  from a natural one (scripts/authorship_probe.py): a head may then learn "written, so an error";
+- all pairs with the written turns weighted to 25% or 50% of the natural rows' total weight;
+- all pairs with a "written" indicator feature, which is 0 for every row the head is measured on.
 
 The head with all Opus pairs is compared with the head without pairs on the validation contexts by a
 bootstrap over dialogues.
@@ -97,8 +99,16 @@ def main() -> None:
     base["group"] = base.task
     columns = ["id", "prompt", "response", "label", "group"]
 
-    def head(extra: pd.DataFrame | None, scores: dict | None = None) -> dict:
-        train = base if extra is None else pd.concat([base, extra[columns]], ignore_index=True)
+    def head(
+        extra: pd.DataFrame | None, scores: dict | None = None, share: float | None = None, indicator: bool = False
+    ) -> dict:
+        if extra is None:
+            return summary(measure(base, vecs, contexts, False, scores))
+        train = pd.concat([base.assign(written=0.0), extra[columns].assign(written=1.0)], ignore_index=True)
+        # written turns together weigh `share` of the natural rows, natural rows weigh 1 each
+        train["weight"] = np.where(train.written == 1, share * len(base) / len(extra), 1.0) if share else 1.0
+        if not indicator:
+            train = train.drop(columns="written")
         return summary(measure(train, vecs, contexts, False, scores))
 
     opus_pairs = written(V3 + V4, contexts)
@@ -113,6 +123,10 @@ def main() -> None:
     out["sets"]["pairs_B"] = head(opus_pairs[opus_pairs.pair == "B"])
     out["sets"]["full_pairs"] = head(full_pairs(opus_pairs))
     out["sets"]["full_pairs_B"] = head(full_pairs(opus_pairs[opus_pairs.pair == "B"]))
+    out["sets"]["weight_25"] = head(opus_pairs, share=0.25)
+    out["sets"]["weight_50"] = head(opus_pairs, share=0.5)
+    out["sets"]["indicator"] = head(opus_pairs, indicator=True)
+    out["sets"]["indicator_weight_50"] = head(opus_pairs, share=0.5, indicator=True)
 
     rng = np.random.default_rng(args.seed)
     kept_contexts = np.array(sorted(opus_pairs.context_id.unique()))
