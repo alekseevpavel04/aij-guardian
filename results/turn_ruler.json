@@ -302,63 +302,63 @@
       }
     },
     "uncertainty_with_parts": {
-      "auroc": 0.7992,
+      "auroc": 0.8153,
       "ci95": [
-        0.674,
-        0.868
+        0.703,
+        0.878
       ],
       "minus_head_b0": {
-        "difference": -0.0989,
+        "difference": -0.0828,
         "ci95": [
-          -0.244,
-          0.001
+          -0.215,
+          0.017
         ],
-        "share_above_zero": 0.026
+        "share_above_zero": 0.045
       }
     },
     "mean_rank_last_and_uncertainty_with_parts_w0.25": {
-      "auroc": 0.9095,
+      "auroc": 0.9139,
       "ci95": [
-        0.829,
-        0.967
+        0.838,
+        0.969
       ],
       "minus_head_b0": {
-        "difference": 0.0114,
+        "difference": 0.0158,
         "ci95": [
-          -0.005,
-          0.028
+          -0.001,
+          0.035
         ],
-        "share_above_zero": 0.91
+        "share_above_zero": 0.962
       }
     },
     "mean_rank_last_and_uncertainty_with_parts_w0.5": {
-      "auroc": 0.9079,
+      "auroc": 0.9156,
       "ci95": [
-        0.839,
-        0.96
+        0.851,
+        0.965
       ],
       "minus_head_b0": {
-        "difference": 0.0098,
+        "difference": 0.0175,
         "ci95": [
-          -0.026,
-          0.039
+          -0.015,
+          0.052
         ],
-        "share_above_zero": 0.682
+        "share_above_zero": 0.824
       }
     },
     "mean_rank_last_and_uncertainty_with_parts_w1": {
-      "auroc": 0.8967,
+      "auroc": 0.9055,
       "ci95": [
-        0.825,
-        0.951
+        0.839,
+        0.957
       ],
       "minus_head_b0": {
-        "difference": -0.0014,
+        "difference": 0.0074,
         "ci95": [
-          -0.065,
-          0.046
+          -0.05,
+          0.058
         ],
-        "share_above_zero": 0.468
+        "share_above_zero": 0.594
       }
     }
   },
@@ -371,33 +371,33 @@
   },
   "system_variants": {
     "system_rules_b0_plus_uncertainty_with_parts_w0.25": {
-      "auroc": 0.9703,
+      "auroc": 0.9721,
       "ci95": [
-        0.952,
-        0.985
-      ],
-      "minus_system": {
-        "difference": 0.0099,
-        "ci95": [
-          0.002,
-          0.022
-        ],
-        "share_above_zero": 0.995
-      }
-    },
-    "system_rules_b0_plus_uncertainty_with_parts_w0.5": {
-      "auroc": 0.9722,
-      "ci95": [
-        0.955,
+        0.953,
         0.987
       ],
       "minus_system": {
-        "difference": 0.0118,
+        "difference": 0.0117,
         "ci95": [
-          -0.001,
-          0.028
+          0.004,
+          0.024
         ],
-        "share_above_zero": 0.969
+        "share_above_zero": 1.0
+      }
+    },
+    "system_rules_b0_plus_uncertainty_with_parts_w0.5": {
+      "auroc": 0.9755,
+      "ci95": [
+        0.96,
+        0.988
+      ],
+      "minus_system": {
+        "difference": 0.0151,
+        "ci95": [
+          0.003,
+          0.032
+        ],
+        "share_above_zero": 0.996
       }
     }
   }

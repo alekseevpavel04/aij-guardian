@@ -70,12 +70,15 @@ def summary(r: dict) -> np.ndarray:
 
 
 def part_summary(r: dict, parts: list[str]) -> np.ndarray:
-    """Count, lowest and mean log-probability and share below 0.01, for argument values, tool names, text."""
-    lp, kinds = np.asarray(r["logp"], dtype=float), np.asarray(parts)
+    """For argument values, tool names and text: count, lowest and mean log-probability, share below
+    0.01, mean and highest entropy."""
+    lp, h, kinds = np.asarray(r["logp"], dtype=float), np.asarray(r["entropy"], dtype=float), np.asarray(parts)
     out = []
     for part in ("value", "name", "text"):
-        x = lp[kinds == part]
-        out += [np.log1p(len(x)), x.min(), x.mean(), (x < np.log(0.01)).mean()] if len(x) else [0.0, 0.0, 0.0, 0.0]
+        x, e = lp[kinds == part], h[kinds == part]
+        out += (
+            [np.log1p(len(x)), x.min(), x.mean(), (x < np.log(0.01)).mean(), e.mean(), e.max()] if len(x) else [0.0] * 6
+        )
     return np.array(out)
 
 
