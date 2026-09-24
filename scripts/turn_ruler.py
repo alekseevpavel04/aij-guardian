@@ -5,7 +5,8 @@ the reference is B0 (the last-token vector, v1s labels, no pairs), level with he
 Uncertainty is summarised from the per-token records: log-probability of the turn's tokens (mean, min,
 spread, low quantiles, share below 0.1 and 0.01), entropy (mean, max, mean of the ten highest), margin
 and the turn's length; a logistic head on these alone, and in a mean of ranks with B0 at weights fixed
-beforehand (all reported).
+beforehand (all reported). When scripts/turn_tokens.py has marked each token as part of a call's
+argument value, of a tool name or of free text, the same log-probability summaries per part are added.
 
     python scripts/turn_ruler.py --prefix q4_tok
 """
@@ -53,6 +54,16 @@ def summary(r: dict) -> np.ndarray:
     )
 
 
+def part_summary(r: dict, parts: list[str]) -> np.ndarray:
+    """Count, lowest and mean log-probability and share below 0.01, for argument values, tool names, text."""
+    lp, kinds = np.asarray(r["logp"], dtype=float), np.asarray(parts)
+    out = []
+    for part in ("value", "name", "text"):
+        x = lp[kinds == part]
+        out += [np.log1p(len(x)), x.min(), x.mean(), (x < np.log(0.01)).mean()] if len(x) else [0.0, 0.0, 0.0, 0.0]
+    return np.array(out)
+
+
 def main() -> None:
     setup()
     ap = argparse.ArgumentParser()
@@ -84,6 +95,21 @@ def main() -> None:
     scores["uncertainty"] = unc.scores(y, 0.0, make=lambda: LogisticRegression(C=1.0, max_iter=5000))
     for w in WEIGHTS:
         scores[f"mean_rank_last_and_uncertainty_w{w:g}"] = ranks(base) + w * ranks(scores["uncertainty"])
+    parts_log = ROOT / "data/interim/embeddings" / f"{args.prefix}_parts_org.jsonl"
+    if parts_log.exists():
+        stats = {
+            r["id"]: r for r in journal.read(ROOT / "data/interim/embeddings" / f"{args.prefix}_uncertainty_org.jsonl")
+        }
+        both = {
+            r["id"]: np.concatenate([records[r["id"]], part_summary(stats[r["id"]], r["parts"])])
+            for r in journal.read(parts_log)
+        }
+        parted = Ruler(contexts, both, no_pairs, None)
+        scores["uncertainty_with_parts"] = parted.scores(y, 0.0, make=lambda: LogisticRegression(C=1.0, max_iter=5000))
+        for w in WEIGHTS:
+            scores[f"mean_rank_last_and_uncertainty_with_parts_w{w:g}"] = ranks(base) + w * ranks(
+                scores["uncertainty_with_parts"]
+            )
     single = {
         "turn_logp_mean": -unc.x[:, 0],
         "turn_logp_min": -unc.x[:, 1],
