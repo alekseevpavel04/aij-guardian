@@ -22,7 +22,6 @@ import numpy as np
 import pandas as pd
 import torch
 from sklearn.model_selection import GroupKFold
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 from guardian import journal
 from guardian.env import setup
@@ -51,6 +50,8 @@ def encode(tok, prompt: str, response: str, max_len: int) -> list[int]:
 
 
 def train_and_score(train_ids, train_y, test_ids, seed: int, args) -> np.ndarray:
+    from transformers import AutoModelForSequenceClassification
+
     torch.manual_seed(seed)
     rng = np.random.default_rng(seed)
     model = AutoModelForSequenceClassification.from_pretrained(MODEL, num_labels=1).cuda()
@@ -88,6 +89,9 @@ def train_and_score(train_ids, train_y, test_ids, seed: int, args) -> np.ndarray
 
 def main() -> None:
     setup()
+    # after setup: huggingface_hub reads HF_HOME (on D) when it is imported
+    from transformers import AutoTokenizer
+
     ap = argparse.ArgumentParser()
     ap.add_argument("--contexts", type=Path, default=ROOT / "data/synthetic/organizer_contexts.parquet")
     ap.add_argument("--max-len", type=int, default=4096)
