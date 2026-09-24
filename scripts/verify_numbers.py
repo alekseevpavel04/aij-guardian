@@ -97,6 +97,8 @@ GENERATED = {
             str(tmp / "x.json"),
         ],
     ),
+    # training on the card is not deterministic: the run is not repeated, its journal is rescored
+    "encoder_ruler_user2_probe.json": ("encoder_ruler.py", lambda tmp: ["--seeds", "0", "--name", "user2_probe"]),
     "label_disagreement.json": ("label_disagreement.py", lambda tmp: ["--out", str(tmp / "x.json")]),
     "layer_ruler.json": ("layer_ruler.py", lambda tmp: ["--layers", "20", "30", "--out", str(tmp / "x.json")]),
     "head_models.json": ("head_models.py", lambda tmp: ["--out", str(tmp / "x.json")]),

@@ -1,0 +1,65 @@
+{
+  "model": "deepvk/USER2-base",
+  "max_len": 4096,
+  "epochs": 3,
+  "lr": 3e-05,
+  "seeds": [
+    0
+  ],
+  "agreed_rows": 343,
+  "agreed_positives": 53,
+  "head_b": {
+    "auroc": 0.8989,
+    "ci95": [
+      0.799,
+      0.97
+    ]
+  },
+  "variants": {
+    "encoder_two_seeds": {
+      "auroc": 0.5987,
+      "ci95": [
+        0.506,
+        0.734
+      ],
+      "minus_head_b": {
+        "difference": -0.3002,
+        "ci95": [
+          -0.409,
+          -0.178
+        ],
+        "share_above_zero": 0.0
+      }
+    },
+    "encoder_seed_0": {
+      "auroc": 0.5986,
+      "ci95": [
+        0.506,
+        0.733
+      ],
+      "minus_head_b": {
+        "difference": -0.3003,
+        "ci95": [
+          -0.409,
+          -0.178
+        ],
+        "share_above_zero": 0.0
+      }
+    },
+    "mean_rank_head_b_and_encoder": {
+      "auroc": 0.8086,
+      "ci95": [
+        0.721,
+        0.909
+      ],
+      "minus_head_b": {
+        "difference": -0.0903,
+        "ci95": [
+          -0.125,
+          -0.036
+        ],
+        "share_above_zero": 0.002
+      }
+    }
+  }
+}
