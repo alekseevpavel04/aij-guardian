@@ -4,6 +4,7 @@ The settings live in configs/ so that every judge result can name the exact serv
 The server runs in the foreground; stop it with Ctrl+C.
 
     python scripts/serve_judge.py --set n-cpu-moe=30 reasoning=on
+    python scripts/serve_judge.py --model <cut GGUF from truncate_gguf.py> --set embeddings= pooling=last
 """
 
 import argparse
@@ -17,6 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--config", type=Path, default=ROOT / "configs/llama_server_qwen36.json")
+    ap.add_argument("--model", type=Path, default=None, help="another GGUF than the config's")
     ap.add_argument("--set", nargs="*", default=[], help="overrides as flag=value, without the leading dashes")
     args = ap.parse_args()
 
@@ -25,7 +27,7 @@ def main() -> None:
     for override in args.set:
         flag, value = override.split("=", 1)
         options[f"--{flag}"] = value
-    command = [config["binary"], "--model", config["model"]]
+    command = [config["binary"], "--model", str(args.model or config["model"])]
     for flag, value in options.items():
         # an empty value is a switch without an argument, e.g. --set embeddings=
         command += [flag] if value == "" else [flag, str(value)]
