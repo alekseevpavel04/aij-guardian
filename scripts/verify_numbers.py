@@ -98,7 +98,7 @@ GENERATED = {
         ],
     ),
     "label_disagreement.json": ("label_disagreement.py", lambda tmp: ["--out", str(tmp / "x.json")]),
-    "layer_ruler.json": ("layer_ruler.py", lambda tmp: ["--layers", "20", "--out", str(tmp / "x.json")]),
+    "layer_ruler.json": ("layer_ruler.py", lambda tmp: ["--layers", "20", "30", "--out", str(tmp / "x.json")]),
     "head_models.json": ("head_models.py", lambda tmp: ["--out", str(tmp / "x.json")]),
     "head_combos.json": ("head_combos.py", lambda tmp: ["--out", str(tmp / "x.json")]),
     # the exported heads: the summary is recomputed into tmp/results/<name>.json (see the run loop)

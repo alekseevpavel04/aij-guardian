@@ -99,6 +99,111 @@
         ],
         "share_above_zero": 0.891
       }
+    },
+    "layer_30": {
+      "auroc": 0.8879,
+      "ci95": [
+        0.783,
+        0.97
+      ],
+      "minus_head_b0": {
+        "difference": -0.0102,
+        "ci95": [
+          -0.035,
+          0.01
+        ],
+        "share_above_zero": 0.188
+      }
+    },
+    "layer_40_joined_with_30": {
+      "auroc": 0.8937,
+      "ci95": [
+        0.798,
+        0.967
+      ],
+      "minus_head_b0": {
+        "difference": -0.0044,
+        "ci95": [
+          -0.018,
+          0.008
+        ],
+        "share_above_zero": 0.235
+      }
+    },
+    "mean_rank_layer_40_and_30": {
+      "auroc": 0.8979,
+      "ci95": [
+        0.799,
+        0.971
+      ],
+      "minus_head_b0": {
+        "difference": -0.0002,
+        "ci95": [
+          -0.011,
+          0.01
+        ],
+        "share_above_zero": 0.527
+      }
+    },
+    "layer_40_joined_with_30_and_product": {
+      "auroc": 0.8893,
+      "ci95": [
+        0.79,
+        0.965
+      ],
+      "minus_head_b0": {
+        "difference": -0.0088,
+        "ci95": [
+          -0.031,
+          0.008
+        ],
+        "share_above_zero": 0.138
+      }
+    },
+    "layer_40_minus_30": {
+      "auroc": 0.8917,
+      "ci95": [
+        0.788,
+        0.967
+      ],
+      "minus_head_b0": {
+        "difference": -0.0064,
+        "ci95": [
+          -0.019,
+          0.008
+        ],
+        "share_above_zero": 0.201
+      }
+    },
+    "lightgbm_on_layer_40_joined_with_30": {
+      "auroc": 0.9158,
+      "ci95": [
+        0.831,
+        0.978
+      ],
+      "minus_head_b0": {
+        "difference": 0.0177,
+        "ci95": [
+          0.006,
+          0.03
+        ],
+        "share_above_zero": 0.997
+      }
+    },
+    "layer_40_joined_with_all": {
+      "auroc": 0.8838,
+      "ci95": [
+        0.778,
+        0.961
+      ],
+      "minus_head_b0": {
+        "difference": -0.0143,
+        "ci95": [
+          -0.037,
+          0.003
+        ],
+        "share_above_zero": 0.052
+      }
     }
   }
 }
