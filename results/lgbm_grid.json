@@ -1,0 +1,212 @@
+{
+  "settings": {
+    "leaves7_trees300_lr0.03_col0.2": {
+      "ext_800": {
+        "alone": 0.9146,
+        "system_minus_logistic_system": {
+          "difference": 0.0015,
+          "ci95": [
+            -0.004,
+            0.007
+          ],
+          "share_above_zero": 0.707
+        }
+      },
+      "ext_all": {
+        "alone": 0.9304,
+        "system_minus_logistic_system": {
+          "difference": 0.0045,
+          "ci95": [
+            0.0,
+            0.009
+          ],
+          "share_above_zero": 0.977
+        }
+      }
+    },
+    "leaves7_trees600_lr0.03_col0.2": {
+      "ext_800": {
+        "alone": 0.915,
+        "system_minus_logistic_system": {
+          "difference": 0.0007,
+          "ci95": [
+            -0.005,
+            0.006
+          ],
+          "share_above_zero": 0.607
+        }
+      },
+      "ext_all": {
+        "alone": 0.9295,
+        "system_minus_logistic_system": {
+          "difference": 0.0046,
+          "ci95": [
+            0.0,
+            0.01
+          ],
+          "share_above_zero": 0.974
+        }
+      }
+    },
+    "leaves15_trees300_lr0.03_col0.2": {
+      "ext_800": {
+        "alone": 0.9145,
+        "system_minus_logistic_system": {
+          "difference": 0.0029,
+          "ci95": [
+            -0.002,
+            0.009
+          ],
+          "share_above_zero": 0.846
+        }
+      },
+      "ext_all": {
+        "alone": 0.9271,
+        "system_minus_logistic_system": {
+          "difference": 0.0047,
+          "ci95": [
+            -0.0,
+            0.011
+          ],
+          "share_above_zero": 0.972
+        }
+      }
+    },
+    "leaves31_trees300_lr0.03_col0.2_minchild20": {
+      "ext_800": {
+        "alone": 0.916,
+        "system_minus_logistic_system": {
+          "difference": 0.0024,
+          "ci95": [
+            -0.003,
+            0.008
+          ],
+          "share_above_zero": 0.822
+        }
+      },
+      "ext_all": {
+        "alone": 0.9312,
+        "system_minus_logistic_system": {
+          "difference": 0.0057,
+          "ci95": [
+            0.0,
+            0.013
+          ],
+          "share_above_zero": 0.973
+        }
+      }
+    },
+    "leaves15_trees1000_lr0.01_col0.2": {
+      "ext_800": {
+        "alone": 0.919,
+        "system_minus_logistic_system": {
+          "difference": 0.0026,
+          "ci95": [
+            -0.002,
+            0.008
+          ],
+          "share_above_zero": 0.822
+        }
+      },
+      "ext_all": {
+        "alone": 0.9312,
+        "system_minus_logistic_system": {
+          "difference": 0.0055,
+          "ci95": [
+            0.001,
+            0.011
+          ],
+          "share_above_zero": 0.994
+        }
+      }
+    },
+    "leaves7_trees300_lr0.03_col0.5": {
+      "ext_800": {
+        "alone": 0.9166,
+        "system_minus_logistic_system": {
+          "difference": 0.0028,
+          "ci95": [
+            -0.002,
+            0.008
+          ],
+          "share_above_zero": 0.885
+        }
+      },
+      "ext_all": {
+        "alone": 0.9312,
+        "system_minus_logistic_system": {
+          "difference": 0.0038,
+          "ci95": [
+            -0.0,
+            0.008
+          ],
+          "share_above_zero": 0.969
+        }
+      }
+    },
+    "leaves3_trees600_lr0.05_col0.2": {
+      "ext_800": {
+        "alone": 0.9143,
+        "system_minus_logistic_system": {
+          "difference": -0.0001,
+          "ci95": [
+            -0.006,
+            0.005
+          ],
+          "share_above_zero": 0.514
+        }
+      },
+      "ext_all": {
+        "alone": 0.9304,
+        "system_minus_logistic_system": {
+          "difference": 0.0037,
+          "ci95": [
+            -0.0,
+            0.008
+          ],
+          "share_above_zero": 0.968
+        }
+      }
+    },
+    "leaves15_trees600_lr0.03_col0.1_l2_10": {
+      "ext_800": {
+        "alone": 0.9172,
+        "system_minus_logistic_system": {
+          "difference": 0.0023,
+          "ci95": [
+            -0.002,
+            0.008
+          ],
+          "share_above_zero": 0.799
+        }
+      },
+      "ext_all": {
+        "alone": 0.9312,
+        "system_minus_logistic_system": {
+          "difference": 0.0055,
+          "ci95": [
+            0.0,
+            0.013
+          ],
+          "share_above_zero": 0.982
+        }
+      }
+    }
+  },
+  "logistic_ext_all": {
+    "alone": {
+      "auroc": 0.9215,
+      "ci95": [
+        0.848,
+        0.979
+      ]
+    },
+    "system": {
+      "auroc": 0.9777,
+      "ci95": [
+        0.959,
+        0.991
+      ]
+    }
+  }
+}
