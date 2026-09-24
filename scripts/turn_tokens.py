@@ -3,8 +3,9 @@
 embed_llama.py keeps the log-probability of every token of the turn but not the token itself. The
 same llama.dll, loaded with the vocabulary only (no weights, no card), tokenizes each row again the
 same way and gives the text of every token; a token is then marked as part of a tool call's argument
-value (a JSON string or number inside `→ TOOL_CALL name: {...}`), of the call's name, or of the free
-text. Summaries per part go to results through turn_ruler.py.
+value (a JSON string or number inside `→ TOOL_CALL name: {...}`), an argument name, the call's tool
+name, the layout (turn header, call markers, JSON punctuation) or the free text. Summaries per part go
+to results through turn_ruler.py.
 
     python scripts/turn_tokens.py --prefix q4_tok
 """
@@ -29,6 +30,7 @@ from embed_rows import BASELINE_PROMPT  # noqa: E402
 CALL_RE = re.compile(r"→ TOOL_CALL (\w+): (\{.*\})")
 # a JSON value: a quoted string (escapes allowed) or a number, right after a colon
 VALUE_RE = re.compile(r':\s*("(?:[^"\\]|\\.)*"|-?\d+(?:\.\d+)?)')
+KEY_RE = re.compile(r'"((?:[^"\\]|\\.)*)"\s*:')
 
 
 class Vocab:
@@ -65,15 +67,26 @@ class Vocab:
 
 
 def part_of_each_char(turn: str) -> list[str]:
-    """For every character of the turn: 'value', 'name' (tool name) or 'text'."""
+    """For every character of the turn: 'value' (argument value), 'key' (argument name), 'name' (tool
+    name), 'layout' (the turn header, the call markers, JSON punctuation) or 'text'.
+
+    Layout surprises the model in correct turns as much as in wrong ones, so it is kept apart."""
     parts = ["text"] * len(turn)
+    header = re.match(r"\s*⟦[^⟧]*⟧\s*", turn)
+    if header:
+        parts[: header.end()] = ["layout"] * header.end()
     for m in CALL_RE.finditer(turn):
-        for i in range(m.start(1), m.end(1)):
-            parts[i] = "name"
-        for v in VALUE_RE.finditer(m.group(2)):
+        parts[m.start() : m.start(1)] = ["layout"] * (m.start(1) - m.start())
+        parts[m.end(1) : m.start(2)] = ["layout"] * (m.start(2) - m.end(1))
+        parts[m.start(1) : m.end(1)] = ["name"] * (m.end(1) - m.start(1))
+        body = m.group(2)
+        parts[m.start(2) : m.end(2)] = ["layout"] * len(body)
+        for k in KEY_RE.finditer(body):
+            start = m.start(2) + k.start(1)
+            parts[start : start + len(k.group(1))] = ["key"] * len(k.group(1))
+        for v in VALUE_RE.finditer(body):
             start = m.start(2) + v.start(1)
-            for i in range(start, start + len(v.group(1))):
-                parts[i] = "value"
+            parts[start : start + len(v.group(1))] = ["value"] * len(v.group(1))
     return parts
 
 
@@ -109,7 +122,7 @@ def main() -> None:
             byte_part += [part] * len(ch.encode())
         for p in pieces:
             span = byte_part[offset : offset + len(p)] or ["text"]
-            parts.append("value" if "value" in span else "name" if "name" in span else "text")
+            parts.append(next((k for k in ("value", "key", "name", "text") if k in span), "layout"))
             offset += len(p)
         if offset != len(turn_bytes) or len(parts) != len(r["logp"]):
             mismatched += 1

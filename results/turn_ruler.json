@@ -302,61 +302,61 @@
       }
     },
     "uncertainty_with_parts": {
-      "auroc": 0.8153,
+      "auroc": 0.8113,
       "ci95": [
-        0.703,
-        0.878
+        0.705,
+        0.887
       ],
       "minus_head_b0": {
-        "difference": -0.0828,
+        "difference": -0.0868,
         "ci95": [
-          -0.215,
-          0.017
+          -0.225,
+          0.018
         ],
-        "share_above_zero": 0.045
+        "share_above_zero": 0.047
       }
     },
     "mean_rank_last_and_uncertainty_with_parts_w0.25": {
-      "auroc": 0.9139,
+      "auroc": 0.9136,
       "ci95": [
-        0.838,
-        0.969
+        0.837,
+        0.97
       ],
       "minus_head_b0": {
-        "difference": 0.0158,
+        "difference": 0.0155,
         "ci95": [
           -0.001,
           0.035
         ],
-        "share_above_zero": 0.962
+        "share_above_zero": 0.971
       }
     },
     "mean_rank_last_and_uncertainty_with_parts_w0.5": {
-      "auroc": 0.9156,
+      "auroc": 0.9153,
       "ci95": [
         0.851,
-        0.965
+        0.966
       ],
       "minus_head_b0": {
-        "difference": 0.0175,
+        "difference": 0.0172,
         "ci95": [
           -0.015,
           0.052
         ],
-        "share_above_zero": 0.824
+        "share_above_zero": 0.839
       }
     },
     "mean_rank_last_and_uncertainty_with_parts_w1": {
-      "auroc": 0.9055,
+      "auroc": 0.906,
       "ci95": [
-        0.839,
-        0.957
+        0.844,
+        0.956
       ],
       "minus_head_b0": {
-        "difference": 0.0074,
+        "difference": 0.0079,
         "ci95": [
-          -0.05,
-          0.058
+          -0.053,
+          0.063
         ],
         "share_above_zero": 0.594
       }
@@ -373,7 +373,7 @@
     "system_rules_b0_plus_uncertainty_with_parts_w0.25": {
       "auroc": 0.9721,
       "ci95": [
-        0.953,
+        0.954,
         0.987
       ],
       "minus_system": {
@@ -382,22 +382,22 @@
           0.004,
           0.024
         ],
-        "share_above_zero": 1.0
+        "share_above_zero": 0.999
       }
     },
     "system_rules_b0_plus_uncertainty_with_parts_w0.5": {
-      "auroc": 0.9755,
+      "auroc": 0.9757,
       "ci95": [
         0.96,
         0.988
       ],
       "minus_system": {
-        "difference": 0.0151,
+        "difference": 0.0153,
         "ci95": [
-          0.003,
+          0.005,
           0.032
         ],
-        "share_above_zero": 0.996
+        "share_above_zero": 1.0
       }
     }
   }

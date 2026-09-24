@@ -6,7 +6,8 @@ Uncertainty is summarised from the per-token records: log-probability of the tur
 spread, low quantiles, share below 0.1 and 0.01), entropy (mean, max, mean of the ten highest), margin
 and the turn's length; a logistic head on these alone, and in a mean of ranks with B0 at weights fixed
 beforehand (all reported). When scripts/turn_tokens.py has marked each token as part of a call's
-argument value, of a tool name or of free text, the same log-probability summaries per part are added,
+argument value, an argument name, a tool name, layout or free text, the same summaries per part (layout
+left out) are added,
 and the system as it is submitted (the rules first, then the head) is compared with and without the
 uncertainty head in the mean of ranks.
 
@@ -70,11 +71,11 @@ def summary(r: dict) -> np.ndarray:
 
 
 def part_summary(r: dict, parts: list[str]) -> np.ndarray:
-    """For argument values, tool names and text: count, lowest and mean log-probability, share below
-    0.01, mean and highest entropy."""
+    """For argument values, argument names, tool names and text (layout left out): count, lowest and
+    mean log-probability, share below 0.01, mean and highest entropy."""
     lp, h, kinds = np.asarray(r["logp"], dtype=float), np.asarray(r["entropy"], dtype=float), np.asarray(parts)
     out = []
-    for part in ("value", "name", "text"):
+    for part in ("value", "key", "name", "text"):
         x, e = lp[kinds == part], h[kinds == part]
         out += (
             [np.log1p(len(x)), x.min(), x.mean(), (x < np.log(0.01)).mean(), e.mean(), e.max()] if len(x) else [0.0] * 6
