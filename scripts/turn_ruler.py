@@ -6,7 +6,9 @@ Uncertainty is summarised from the per-token records: log-probability of the tur
 spread, low quantiles, share below 0.1 and 0.01), entropy (mean, max, mean of the ten highest), margin
 and the turn's length; a logistic head on these alone, and in a mean of ranks with B0 at weights fixed
 beforehand (all reported). When scripts/turn_tokens.py has marked each token as part of a call's
-argument value, of a tool name or of free text, the same log-probability summaries per part are added.
+argument value, of a tool name or of free text, the same log-probability summaries per part are added,
+and the system as it is submitted (the rules first, then the head) is compared with and without the
+uncertainty head in the mean of ranks.
 
     python scripts/turn_ruler.py --prefix q4_tok
 """
@@ -22,6 +24,7 @@ from sklearn.linear_model import LogisticRegression
 
 from guardian import journal
 from guardian.env import setup
+from guardian.rules import Context, evidence
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
@@ -30,6 +33,18 @@ from head_combos import ranks  # noqa: E402
 from train_head_ru import vectors  # noqa: E402
 
 KINDS = ("turn_mean", "turn_last", "history_end")
+# the checks in the submitted predictor: every call-level check (guardian.predictor.DEFAULT_CHECKS)
+# except repeated_call, left out since submission 1
+RULES = (
+    "unknown_tool",
+    "locked_tool",
+    "unknown_argument",
+    "missing_required_argument",
+    "enum_violation",
+    "repeated_failed_call",
+    "unsupported_argument_value",
+    "no_op_replacement",
+)
 WEIGHTS = (0.25, 0.5, 1.0)
 
 
@@ -110,6 +125,18 @@ def main() -> None:
             scores[f"mean_rank_last_and_uncertainty_with_parts_w{w:g}"] = ranks(base) + w * ranks(
                 scores["uncertainty_with_parts"]
             )
+    if parts_log.exists():
+        fired = np.array(
+            [
+                any(evidence(r.prompt, r.response, Context.from_prompt(r.prompt))[k] for k in RULES)
+                for r in ruler.ctx.itertuples()
+            ]
+        )
+        submitted = ranks(base) + 10 * fired
+        for w in WEIGHTS[:2]:
+            scores[f"system_rules_b0_plus_uncertainty_with_parts_w{w:g}"] = submitted + w * ranks(
+                scores["uncertainty_with_parts"]
+            )
     single = {
         "turn_logp_mean": -unc.x[:, 0],
         "turn_logp_min": -unc.x[:, 1],
@@ -122,7 +149,17 @@ def main() -> None:
         "agreed_positives": int(ruler.truth[ruler.agree].sum()),
         "head_b0": ruler.auroc_ci(base),
         "single_uncertainty_features": {k: ruler.auroc_ci(s)["auroc"] for k, s in single.items()},
-        "variants": {k: {**ruler.auroc_ci(s), "minus_head_b0": ruler.paired(s, base)} for k, s in scores.items()},
+        "variants": {
+            k: {**ruler.auroc_ci(s), "minus_head_b0": ruler.paired(s, base)}
+            for k, s in scores.items()
+            if not k.startswith("system_")
+        },
+        "system_rules_then_b0": ruler.auroc_ci(submitted) if parts_log.exists() else None,
+        "system_variants": {
+            k: {**ruler.auroc_ci(s), "minus_system": ruler.paired(s, submitted)}
+            for k, s in scores.items()
+            if k.startswith("system_")
+        },
     }
     args.out.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(result, ensure_ascii=False, indent=2))
