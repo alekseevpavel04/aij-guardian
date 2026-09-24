@@ -98,6 +98,7 @@ def main() -> None:
     ap.add_argument("--pair-share", type=float, default=0.25)
     ap.add_argument("--folds", type=int, nargs="*", default=None, help="probe: only these folds")
     ap.add_argument("--name", default="user2_base")
+    ap.add_argument("--out", type=Path, default=None)
     args = ap.parse_args()
 
     contexts = pd.read_parquet(args.contexts)
@@ -166,7 +167,7 @@ def main() -> None:
         "head_b": ruler.auroc_ci(base),
         "variants": {k: {**ruler.auroc_ci(s), "minus_head_b": ruler.paired(s, base)} for k, s in mixes.items()},
     }
-    out = ROOT / "results" / f"encoder_ruler_{args.name}.json"
+    out = args.out or ROOT / "results" / f"encoder_ruler_{args.name}.json"
     out.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(result, ensure_ascii=False, indent=2))
 
