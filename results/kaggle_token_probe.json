@@ -1,0 +1,15 @@
+{
+  "run_by": "the author, Kaggle notebook, 1x T4, vLLM 0.19.1, 24.09.2026",
+  "script": "scripts/kaggle_token_probe.py at f524b63",
+  "model": "Qwen/Qwen3.5-0.8B",
+  "lengths_in_tokens": [500, 4000, 16000, 30000],
+  "stage_last_exit": 0,
+  "stage_all_exit": 0,
+  "stage_generate_exit": 0,
+  "all": {"rows_per_prompt": [500, 4000, 16000, 30000], "dim": 1024, "seconds": 60.85},
+  "all_last_row_vs_last_cosine": [1.0, 1.0, 1.0, 1.0],
+  "token_logprob_ours_vs_vllm": [
+    {"max_abs_diff": 0.0154, "corr": 1.0},
+    {"max_abs_diff": 0.0178, "corr": 1.0}
+  ]
+}
