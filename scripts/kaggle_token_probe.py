@@ -19,12 +19,14 @@ No competition data is used. Run in a notebook cell after `pip install vllm==0.1
 
 import json
 import time
+from pathlib import Path
 
 import numpy as np
 import torch
 
 MODEL = "Qwen/Qwen3.5-0.8B"
 LENGTHS = (500, 4000, 16000, 30000)
+REFERENCE_TOKENS = 1500
 ENGINE = {
     "model": MODEL,
     "dtype": "float16",
@@ -88,9 +90,14 @@ def stage(name: str) -> None:
         for k, o in enumerate(res):
             out[f"states_{k}"] = torch.as_tensor(o.outputs.data).float().numpy()
     else:
-        llm = LLM(runner="generate", **ENGINE)
-        gen = llm.generate(prompts[:2], SamplingParams(max_tokens=1, prompt_logprobs=0))
-        for k, (o, x) in enumerate(zip(gen, ids[:2], strict=True)):
+        # prompt_logprobs holds a log-softmax over the whole vocabulary for every prompt token,
+        # 3.7 GiB at 4000 tokens: the reference takes the first REFERENCE_TOKENS of the two short prompts
+        ids = [x[:REFERENCE_TOKENS] for x in ids[:2]]
+        llm = LLM(runner="generate", **(ENGINE | {"gpu_memory_utilization": 0.5}))
+        gen = llm.generate(
+            [TokensPrompt(prompt_token_ids=x) for x in ids], SamplingParams(max_tokens=1, prompt_logprobs=0)
+        )
+        for k, (o, x) in enumerate(zip(gen, ids, strict=True)):
             out[f"logprob_{k}"] = np.array([d[t].logprob for d, t in zip(o.prompt_logprobs[1:], x[1:], strict=True)])
     np.savez(f"stage_{name}.npz", **out)
 
@@ -104,7 +111,8 @@ def main() -> None:
         return
     result: dict = {"model": MODEL, "lengths_in_tokens": list(LENGTHS)}
     for name in ("last", "all", "generate"):
-        code = subprocess.call([sys.executable, __file__, name])
+        # a stage whose results are on disk from an earlier run is not repeated
+        code = 0 if Path(f"stage_{name}.npz").exists() else subprocess.call([sys.executable, __file__, name])
         result[f"stage_{name}_exit"] = code
         if code:
             print(json.dumps(result, ensure_ascii=False, indent=2))
@@ -125,8 +133,9 @@ def main() -> None:
     w = output_matrix()
     ids = token_ids()
     comparison = []
-    for k in range(2):  # the two shorter prompts
-        s, x = torch.as_tensor(states[k]).cuda(), ids[k]
+    for k in range(2):  # the two shorter prompts, as far as the reference goes
+        x = ids[k][:REFERENCE_TOKENS]
+        s = torch.as_tensor(states[k][: len(x)]).cuda()
         ours = []
         for a in range(0, len(x) - 1, 512):  # logits over the whole vocabulary, in slices
             logp = torch.log_softmax(s[a : a + 512] @ w.T, dim=-1)
