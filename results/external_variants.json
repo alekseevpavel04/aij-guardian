@@ -1,0 +1,429 @@
+{
+  "external_rows": 3626,
+  "external_positives": 925,
+  "inherited_apb_positives": 606,
+  "head_b": {
+    "auroc": 0.8989,
+    "ci95": [
+      0.799,
+      0.97
+    ]
+  },
+  "all_rows_weight_0_5": {
+    "auroc": 0.9215,
+    "ci95": [
+      0.848,
+      0.979
+    ],
+    "minus_head_b": {
+      "difference": 0.0226,
+      "ci95": [
+        0.002,
+        0.048
+      ],
+      "share_above_zero": 0.996
+    }
+  },
+  "variants": {
+    "all_rows_weight_1": {
+      "auroc": 0.9239,
+      "ci95": [
+        0.854,
+        0.979
+      ],
+      "minus_head_b": 0.025,
+      "minus_all_rows": {
+        "difference": 0.0024,
+        "ci95": [
+          -0.003,
+          0.01
+        ],
+        "share_above_zero": 0.756
+      }
+    },
+    "agentprocessbench_only": {
+      "auroc": 0.9161,
+      "ci95": [
+        0.844,
+        0.974
+      ],
+      "minus_head_b": 0.0172,
+      "minus_all_rows": {
+        "difference": -0.0054,
+        "ci95": [
+          -0.02,
+          0.005
+        ],
+        "share_above_zero": 0.153
+      }
+    },
+    "trajerrbench_only": {
+      "auroc": 0.9079,
+      "ci95": [
+        0.812,
+        0.972
+      ],
+      "minus_head_b": 0.009,
+      "minus_all_rows": {
+        "difference": -0.0136,
+        "ci95": [
+          -0.037,
+          0.006
+        ],
+        "share_above_zero": 0.12
+      }
+    },
+    "only_airline": {
+      "auroc": 0.9128,
+      "ci95": [
+        0.818,
+        0.978
+      ],
+      "minus_head_b": 0.0139,
+      "minus_all_rows": {
+        "difference": -0.0087,
+        "ci95": [
+          -0.033,
+          0.01
+        ],
+        "share_above_zero": 0.279
+      }
+    },
+    "without_airline": {
+      "auroc": 0.9208,
+      "ci95": [
+        0.852,
+        0.974
+      ],
+      "minus_head_b": 0.0219,
+      "minus_all_rows": {
+        "difference": -0.0007,
+        "ci95": [
+          -0.012,
+          0.01
+        ],
+        "share_above_zero": 0.396
+      }
+    },
+    "only_retail": {
+      "auroc": 0.907,
+      "ci95": [
+        0.819,
+        0.97
+      ],
+      "minus_head_b": 0.0081,
+      "minus_all_rows": {
+        "difference": -0.0145,
+        "ci95": [
+          -0.03,
+          0.002
+        ],
+        "share_above_zero": 0.037
+      }
+    },
+    "without_retail": {
+      "auroc": 0.9219,
+      "ci95": [
+        0.849,
+        0.977
+      ],
+      "minus_head_b": 0.023,
+      "minus_all_rows": {
+        "difference": 0.0004,
+        "ci95": [
+          -0.003,
+          0.003
+        ],
+        "share_above_zero": 0.576
+      }
+    },
+    "only_telecom": {
+      "auroc": 0.9172,
+      "ci95": [
+        0.849,
+        0.971
+      ],
+      "minus_head_b": 0.0183,
+      "minus_all_rows": {
+        "difference": -0.0043,
+        "ci95": [
+          -0.023,
+          0.011
+        ],
+        "share_above_zero": 0.262
+      }
+    },
+    "without_telecom": {
+      "auroc": 0.9126,
+      "ci95": [
+        0.819,
+        0.977
+      ],
+      "minus_head_b": 0.0137,
+      "minus_all_rows": {
+        "difference": -0.0089,
+        "ci95": [
+          -0.03,
+          0.009
+        ],
+        "share_above_zero": 0.208
+      }
+    },
+    "without_inherited_apb_positives": {
+      "auroc": 0.9028,
+      "ci95": [
+        0.81,
+        0.97
+      ],
+      "minus_head_b": 0.0039,
+      "minus_all_rows": {
+        "difference": -0.0187,
+        "ci95": [
+          -0.042,
+          0.001
+        ],
+        "share_above_zero": 0.036
+      }
+    },
+    "without_weak_trajerr_zeros": {
+      "auroc": 0.9154,
+      "ci95": [
+        0.844,
+        0.972
+      ],
+      "minus_head_b": 0.0165,
+      "minus_all_rows": {
+        "difference": -0.0061,
+        "ci95": [
+          -0.018,
+          0.004
+        ],
+        "share_above_zero": 0.093
+      }
+    },
+    "trajerr_positives_without_reason": {
+      "auroc": 0.9205,
+      "ci95": [
+        0.847,
+        0.978
+      ],
+      "minus_head_b": 0.0216,
+      "minus_all_rows": {
+        "difference": -0.001,
+        "ci95": [
+          -0.005,
+          0.002
+        ],
+        "share_above_zero": 0.274
+      }
+    },
+    "trajerr_positives_without_obs": {
+      "auroc": 0.9223,
+      "ci95": [
+        0.849,
+        0.979
+      ],
+      "minus_head_b": 0.0234,
+      "minus_all_rows": {
+        "difference": 0.0008,
+        "ci95": [
+          -0.0,
+          0.002
+        ],
+        "share_above_zero": 0.893
+      }
+    },
+    "trajerr_positives_without_plan": {
+      "auroc": 0.9214,
+      "ci95": [
+        0.847,
+        0.979
+      ],
+      "minus_head_b": 0.0225,
+      "minus_all_rows": {
+        "difference": -0.0001,
+        "ci95": [
+          -0.002,
+          0.001
+        ],
+        "share_above_zero": 0.289
+      }
+    },
+    "trajerr_positives_without_act": {
+      "auroc": 0.9211,
+      "ci95": [
+        0.847,
+        0.978
+      ],
+      "minus_head_b": 0.0222,
+      "minus_all_rows": {
+        "difference": -0.0004,
+        "ci95": [
+          -0.002,
+          0.001
+        ],
+        "share_above_zero": 0.195
+      }
+    },
+    "trajerr_positives_without_verify": {
+      "auroc": 0.9219,
+      "ci95": [
+        0.848,
+        0.979
+      ],
+      "minus_head_b": 0.023,
+      "minus_all_rows": {
+        "difference": 0.0004,
+        "ci95": [
+          -0.001,
+          0.001
+        ],
+        "share_above_zero": 0.743
+      }
+    },
+    "trajerr_positives_grounding_only": {
+      "auroc": 0.9197,
+      "ci95": [
+        0.844,
+        0.978
+      ],
+      "minus_head_b": 0.0208,
+      "minus_all_rows": {
+        "difference": -0.0018,
+        "ci95": [
+          -0.006,
+          0.001
+        ],
+        "share_above_zero": 0.141
+      }
+    },
+    "trajerr_agent_deepseek-reasoner_only": {
+      "auroc": 0.9211,
+      "ci95": [
+        0.85,
+        0.977
+      ],
+      "minus_head_b": 0.0222,
+      "minus_all_rows": {
+        "difference": -0.0004,
+        "ci95": [
+          -0.007,
+          0.006
+        ],
+        "share_above_zero": 0.427
+      }
+    },
+    "trajerr_agent_gpt-5_only": {
+      "auroc": 0.9191,
+      "ci95": [
+        0.846,
+        0.977
+      ],
+      "minus_head_b": 0.0202,
+      "minus_all_rows": {
+        "difference": -0.0024,
+        "ci95": [
+          -0.009,
+          0.002
+        ],
+        "share_above_zero": 0.149
+      }
+    },
+    "trajerr_agent_qwen3-max_only": {
+      "auroc": 0.9187,
+      "ci95": [
+        0.846,
+        0.975
+      ],
+      "minus_head_b": 0.0198,
+      "minus_all_rows": {
+        "difference": -0.0028,
+        "ci95": [
+          -0.011,
+          0.004
+        ],
+        "share_above_zero": 0.193
+      }
+    },
+    "apb_telecom_positives_half_weight": {
+      "auroc": 0.918,
+      "ci95": [
+        0.838,
+        0.978
+      ],
+      "minus_head_b": 0.0191,
+      "minus_all_rows": {
+        "difference": -0.0035,
+        "ci95": [
+          -0.009,
+          0.001
+        ],
+        "share_above_zero": 0.099
+      }
+    },
+    "equal_weight_per_trajectory": {
+      "auroc": 0.9182,
+      "ci95": [
+        0.841,
+        0.978
+      ],
+      "minus_head_b": 0.0193,
+      "minus_all_rows": {
+        "difference": -0.0033,
+        "ci95": [
+          -0.007,
+          0.001
+        ],
+        "share_above_zero": 0.069
+      }
+    },
+    "early_turns_only": {
+      "auroc": 0.9152,
+      "ci95": [
+        0.829,
+        0.977
+      ],
+      "minus_head_b": 0.0163,
+      "minus_all_rows": {
+        "difference": -0.0063,
+        "ci95": [
+          -0.02,
+          0.008
+        ],
+        "share_above_zero": 0.252
+      }
+    },
+    "late_turns_only": {
+      "auroc": 0.9165,
+      "ci95": [
+        0.839,
+        0.976
+      ],
+      "minus_head_b": 0.0176,
+      "minus_all_rows": {
+        "difference": -0.005,
+        "ci95": [
+          -0.012,
+          -0.001
+        ],
+        "share_above_zero": 0.007
+      }
+    },
+    "balanced_classes": {
+      "auroc": 0.9231,
+      "ci95": [
+        0.852,
+        0.977
+      ],
+      "minus_head_b": 0.0242,
+      "minus_all_rows": {
+        "difference": 0.0016,
+        "ci95": [
+          -0.004,
+          0.008
+        ],
+        "share_above_zero": 0.692
+      }
+    }
+  }
+}
