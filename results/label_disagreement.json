@@ -1,0 +1,207 @@
+{
+  "rows": 384,
+  "disagreements": 41,
+  "v1s_1_opus_0": 14,
+  "v1s_0_opus_1": 27,
+  "disagreements_with_a_tool_call": 9,
+  "agreed_rows": 343,
+  "agreed_positives": 53,
+  "head_b": {
+    "auroc": 0.8989,
+    "ci95": [
+      0.799,
+      0.97
+    ],
+    "v1s_all_rows": 0.867,
+    "opus_all_rows": 0.8424
+  },
+  "variants": {
+    "opus": {
+      "auroc": 0.8882,
+      "ci95": [
+        0.779,
+        0.965
+      ],
+      "minus_head_b": {
+        "difference": -0.0107,
+        "ci95": [
+          -0.029,
+          0.018
+        ],
+        "share_above_zero": 0.247
+      },
+      "v1s_all_rows": 0.8531,
+      "opus_all_rows": 0.8616
+    },
+    "agreed_only": {
+      "auroc": 0.904,
+      "ci95": [
+        0.815,
+        0.971
+      ],
+      "minus_head_b": {
+        "difference": 0.0051,
+        "ci95": [
+          -0.003,
+          0.017
+        ],
+        "share_above_zero": 0.856
+      },
+      "v1s_all_rows": 0.8705,
+      "opus_all_rows": 0.8558
+    },
+    "union": {
+      "auroc": 0.9029,
+      "ci95": [
+        0.807,
+        0.968
+      ],
+      "minus_head_b": {
+        "difference": 0.004,
+        "ci95": [
+          -0.009,
+          0.023
+        ],
+        "share_above_zero": 0.691
+      },
+      "v1s_all_rows": 0.8636,
+      "opus_all_rows": 0.869
+    },
+    "intersection": {
+      "auroc": 0.8805,
+      "ci95": [
+        0.767,
+        0.964
+      ],
+      "minus_head_b": {
+        "difference": -0.0184,
+        "ci95": [
+          -0.034,
+          0.001
+        ],
+        "share_above_zero": 0.028
+      },
+      "v1s_all_rows": 0.8544,
+      "opus_all_rows": 0.8298
+    },
+    "soft_on_disagreement": {
+      "auroc": 0.8965,
+      "ci95": [
+        0.788,
+        0.97
+      ],
+      "minus_head_b": {
+        "difference": -0.0024,
+        "ci95": [
+          -0.014,
+          0.014
+        ],
+        "share_above_zero": 0.406
+      },
+      "v1s_all_rows": 0.8638,
+      "opus_all_rows": 0.8585
+    },
+    "v1s_disagreement_weight_0.5": {
+      "auroc": 0.9008,
+      "ci95": [
+        0.804,
+        0.97
+      ],
+      "minus_head_b": {
+        "difference": 0.0019,
+        "ci95": [
+          -0.002,
+          0.006
+        ],
+        "share_above_zero": 0.83
+      },
+      "v1s_all_rows": 0.8682,
+      "opus_all_rows": 0.8473
+    },
+    "opus_disagreement_weight_0.5": {
+      "auroc": 0.8945,
+      "ci95": [
+        0.79,
+        0.968
+      ],
+      "minus_head_b": {
+        "difference": -0.0044,
+        "ci95": [
+          -0.016,
+          0.016
+        ],
+        "share_above_zero": 0.34
+      },
+      "v1s_all_rows": 0.8604,
+      "opus_all_rows": 0.8609
+    },
+    "v1s_disagreement_weight_2": {
+      "auroc": 0.8949,
+      "ci95": [
+        0.794,
+        0.967
+      ],
+      "minus_head_b": {
+        "difference": -0.004,
+        "ci95": [
+          -0.008,
+          -0.001
+        ],
+        "share_above_zero": 0.007
+      },
+      "v1s_all_rows": 0.8638,
+      "opus_all_rows": 0.8342
+    },
+    "opus_disagreement_weight_2": {
+      "auroc": 0.8785,
+      "ci95": [
+        0.764,
+        0.96
+      ],
+      "minus_head_b": {
+        "difference": -0.0204,
+        "ci95": [
+          -0.046,
+          0.017
+        ],
+        "share_above_zero": 0.159
+      },
+      "v1s_all_rows": 0.8429,
+      "opus_all_rows": 0.8584
+    },
+    "v1s_disagreement_weight_3": {
+      "auroc": 0.8906,
+      "ci95": [
+        0.786,
+        0.964
+      ],
+      "minus_head_b": {
+        "difference": -0.0083,
+        "ci95": [
+          -0.017,
+          -0.003
+        ],
+        "share_above_zero": 0.003
+      },
+      "v1s_all_rows": 0.8597,
+      "opus_all_rows": 0.8263
+    },
+    "opus_disagreement_weight_3": {
+      "auroc": 0.8724,
+      "ci95": [
+        0.754,
+        0.959
+      ],
+      "minus_head_b": {
+        "difference": -0.0265,
+        "ci95": [
+          -0.056,
+          0.017
+        ],
+        "share_above_zero": 0.126
+      },
+      "v1s_all_rows": 0.8357,
+      "opus_all_rows": 0.8561
+    }
+  }
+}

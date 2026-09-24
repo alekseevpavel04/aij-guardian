@@ -82,14 +82,21 @@ class Ruler:
         pair_filter=None,
         external_weight: float | None = None,
         make=None,
+        row_weight: np.ndarray | None = None,
     ) -> np.ndarray:
-        """Out-of-fold scores; `make` builds another model than the logistic head (scripts/head_models.py)."""
+        """Out-of-fold scores; `make` builds another model than the logistic head (scripts/head_models.py),
+        `row_weight` weighs the natural contexts (0 drops one) and a label of 0.5 is soft."""
         out = np.zeros(len(self.ctx))
         for fit, held in GroupKFold(FOLDS).split(self.x, y, self.tasks):
             held_tasks = set(self.tasks[held])
             total = np.zeros(len(held))
             for seed in range(DRAWS if pair_share else 1):
-                xs, ys = [self.x[fit]], [y[fit]]
+                w = np.ones(len(fit)) if row_weight is None else row_weight[fit]
+                soft = y[fit] == 0.5
+                # a soft label enters twice, as 0 and as 1, at half the weight each
+                xs = [self.x[fit], self.x[fit][soft]]
+                ys = [np.where(soft, 1, y[fit]).astype(int), np.zeros(soft.sum(), int)]
+                ws = [np.where(soft, w / 2, w), w[soft] / 2]
                 if pair_share:
                     p = self.pairs[~self.pairs.task.isin(held_tasks)]
                     if pair_filter is not None:
@@ -100,8 +107,9 @@ class Ruler:
                     if len(p):
                         xs.append(np.stack([self.vecs[i] for i in p.id]))
                         ys.append(p.label.to_numpy())
+                        ws.append(np.ones(len(p)))
                 n_russian = sum(map(len, ys))
-                weights = [np.ones(n_russian)]
+                weights = ws
                 if external_weight is not None:
                     x_ext, y_ext = self.external
                     xs.append(x_ext)
