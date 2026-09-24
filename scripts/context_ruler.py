@@ -185,6 +185,12 @@ def main() -> None:
         "v1s_25pct_pairs_plus_ext_dev_weight_0_5": ruler.scores(v1s, 0.25, external_weight=0.5),
         "judge_no_thinking": ruler.x @ judge_direction(),
     }
+    if (ROOT / "data/interim/embeddings/q4_last_extdev2000.jsonl").exists():
+        dev2 = load("ext_dev", 2000, 0)
+        vecs2 = vecs | vectors("q4_last_extdev2000")
+        ruler.external = (np.stack([vecs2[i] for i in dev2.id]), dev2.label.to_numpy().astype(int))
+        variants["v1s_25pct_pairs_plus_ext_dev2000_weight_0_5"] = ruler.scores(v1s, 0.25, external_weight=0.5)
+        ruler.external = external
     if args.extra_pairs:
         extra = written(args.extra_pairs, contexts, ("train", "check"))
         ruler_extra = Ruler(contexts, vecs, pd.concat([ruler.pairs, extra]), external)

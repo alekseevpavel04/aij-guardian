@@ -131,6 +131,21 @@
         "share_above_zero": 0.002
       }
     },
+    "v1s_25pct_pairs_plus_ext_dev2000_weight_0_5": {
+      "auroc": 0.923,
+      "ci95": [
+        0.849,
+        0.98
+      ],
+      "minus_head_b": {
+        "difference": 0.0241,
+        "ci95": [
+          0.005,
+          0.049
+        ],
+        "share_above_zero": 0.998
+      }
+    },
     "v1s_25pct_pairs_plus_extra_pairs": {
       "auroc": 0.8995,
       "ci95": [
