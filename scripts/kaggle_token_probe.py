@@ -17,7 +17,6 @@ No competition data is used. Run in a notebook cell after `pip install vllm==0.1
     !python kaggle_token_probe.py
 """
 
-import gc
 import json
 import time
 
@@ -48,12 +47,6 @@ def token_ids() -> list[list[int]]:
     return [ids[:n] for n in LENGTHS]
 
 
-def free(llm) -> None:
-    del llm
-    gc.collect()
-    torch.cuda.empty_cache()
-
-
 def output_matrix() -> torch.Tensor:
     """lm_head, or the tied input embeddings, straight from the safetensors of the checkpoint."""
     from huggingface_hub import snapshot_download
@@ -71,61 +64,82 @@ def output_matrix() -> torch.Tensor:
     raise KeyError("no output matrix found")
 
 
-def main() -> None:
+def stage(name: str) -> None:
+    """One engine per process: in vLLM 0.19 deleting an LLM does not stop its engine process, so a
+    second engine in the same process finds the card taken. Results go to stage_<name>.npz."""
     from vllm import LLM, SamplingParams
     from vllm.inputs import TokensPrompt
 
     ids = token_ids()
     prompts = [TokensPrompt(prompt_token_ids=x) for x in ids]
-    result: dict = {"model": MODEL, "lengths_in_tokens": list(LENGTHS)}
-    try:
+    out: dict = {}
+    if name == "last":
         llm = LLM(
             runner="pooling", convert="embed", pooler_config={"pooling_type": "LAST", "use_activation": False}, **ENGINE
         )
-        last = np.stack([np.asarray(o.outputs.embedding, dtype=np.float32) for o in llm.embed(prompts)])
-        free(llm)
-
+        out["last"] = np.stack([np.asarray(o.outputs.embedding, dtype=np.float32) for o in llm.embed(prompts)])
+    elif name == "all":
         llm = LLM(
             runner="pooling", convert="embed", pooler_config={"pooling_type": "ALL", "use_activation": False}, **ENGINE
         )
         start = time.monotonic()
-        out = llm.encode(prompts, pooling_task="token_embed")
-        seconds = time.monotonic() - start
-        states = [torch.as_tensor(o.outputs.data).float() for o in out]
-        result["all"] = {
-            "rows_per_prompt": [int(s.shape[0]) for s in states],
-            "dim": int(states[0].shape[1]),
-            "seconds": round(seconds, 2),
-            "peak_gpu_gb": round(torch.cuda.max_memory_allocated() / 2**30, 2),
-        }
-        cos = [
-            float(np.dot(s[-1].numpy(), v) / np.linalg.norm(s[-1].numpy()) / np.linalg.norm(v))
-            for s, v in zip(states, last, strict=True)
-        ]
-        result["all_last_row_vs_last_cosine"] = [round(c, 5) for c in cos]
-        print(json.dumps(result, ensure_ascii=False), flush=True)
-        free(llm)
-
-        w = output_matrix()
-        ours = []
-        for s, x in zip(
-            states[:2], ids[:2], strict=True
-        ):  # the two shorter prompts: logits of every token fit the card
-            logp = torch.log_softmax(s.cuda() @ w.T, dim=-1)
-            ours.append(logp[torch.arange(len(x) - 1), torch.tensor(x[1:])].cpu().numpy())
-
+        res = llm.encode(prompts, pooling_task="token_embed")
+        out["seconds"] = np.array(time.monotonic() - start)
+        for k, o in enumerate(res):
+            out[f"states_{k}"] = torch.as_tensor(o.outputs.data).float().numpy()
+    else:
         llm = LLM(runner="generate", **ENGINE)
         gen = llm.generate(prompts[:2], SamplingParams(max_tokens=1, prompt_logprobs=0))
-        theirs = []
-        for o, x in zip(gen, ids[:2], strict=True):
-            theirs.append(np.array([d[t].logprob for d, t in zip(o.prompt_logprobs[1:], x[1:], strict=True)]))
-        free(llm)
-        result["token_logprob_ours_vs_vllm"] = [
-            {"max_abs_diff": round(float(np.abs(a - b).max()), 4), "corr": round(float(np.corrcoef(a, b)[0, 1]), 5)}
-            for a, b in zip(ours, theirs, strict=True)
-        ]
-    except Exception as error:  # the point of the probe is to see how it fails
-        result["error"] = f"{type(error).__name__}: {error}"[:2000]
+        for k, (o, x) in enumerate(zip(gen, ids[:2], strict=True)):
+            out[f"logprob_{k}"] = np.array([d[t].logprob for d, t in zip(o.prompt_logprobs[1:], x[1:], strict=True)])
+    np.savez(f"stage_{name}.npz", **out)
+
+
+def main() -> None:
+    import subprocess
+    import sys
+
+    if len(sys.argv) > 1:
+        stage(sys.argv[1])
+        return
+    result: dict = {"model": MODEL, "lengths_in_tokens": list(LENGTHS)}
+    for name in ("last", "all", "generate"):
+        code = subprocess.call([sys.executable, __file__, name])
+        result[f"stage_{name}_exit"] = code
+        if code:
+            print(json.dumps(result, ensure_ascii=False, indent=2))
+            return
+    last = np.load("stage_last.npz")["last"]
+    all_ = np.load("stage_all.npz")
+    states = [all_[f"states_{k}"] for k in range(len(LENGTHS))]
+    result["all"] = {
+        "rows_per_prompt": [int(s.shape[0]) for s in states],
+        "dim": int(states[0].shape[1]),
+        "seconds": round(float(all_["seconds"]), 2),
+    }
+    result["all_last_row_vs_last_cosine"] = [
+        round(float(np.dot(s[-1], v) / np.linalg.norm(s[-1]) / np.linalg.norm(v)), 5)
+        for s, v in zip(states, last, strict=True)
+    ]
+    gen = np.load("stage_generate.npz")
+    w = output_matrix()
+    ids = token_ids()
+    comparison = []
+    for k in range(2):  # the two shorter prompts
+        s, x = torch.as_tensor(states[k]).cuda(), ids[k]
+        ours = []
+        for a in range(0, len(x) - 1, 512):  # logits over the whole vocabulary, in slices
+            logp = torch.log_softmax(s[a : a + 512] @ w.T, dim=-1)
+            ours.append(logp[torch.arange(logp.shape[0]), torch.tensor(x[a + 1 : a + 1 + logp.shape[0]])].cpu())
+        ours = torch.cat(ours).numpy()[: len(x) - 1]
+        theirs = gen[f"logprob_{k}"]
+        comparison.append(
+            {
+                "max_abs_diff": round(float(np.abs(ours - theirs).max()), 4),
+                "corr": round(float(np.corrcoef(ours, theirs)[0, 1]), 5),
+            }
+        )
+    result["token_logprob_ours_vs_vllm"] = comparison
     print(json.dumps(result, ensure_ascii=False, indent=2))
 
 
