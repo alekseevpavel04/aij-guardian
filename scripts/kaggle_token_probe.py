@@ -135,7 +135,7 @@ def main() -> None:
     comparison = []
     for k in range(2):  # the two shorter prompts, as far as the reference goes
         x = ids[k][:REFERENCE_TOKENS]
-        s = torch.as_tensor(states[k][: len(x)]).cuda()
+        s = torch.as_tensor(states[k][: len(x) - 1]).cuda()  # the state at i predicts token i + 1
         ours = []
         for a in range(0, len(x) - 1, 512):  # logits over the whole vocabulary, in slices
             logp = torch.log_softmax(s[a : a + 512] @ w.T, dim=-1)
