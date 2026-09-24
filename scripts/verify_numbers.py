@@ -97,6 +97,7 @@ GENERATED = {
             str(tmp / "x.json"),
         ],
     ),
+    "layer_ruler.json": ("layer_ruler.py", lambda tmp: ["--layers", "20", "--out", str(tmp / "x.json")]),
     "head_models.json": ("head_models.py", lambda tmp: ["--out", str(tmp / "x.json")]),
     "head_combos.json": ("head_combos.py", lambda tmp: ["--out", str(tmp / "x.json")]),
     # the exported heads: the summary is recomputed into tmp/results/<name>.json (see the run loop)
@@ -166,6 +167,7 @@ REQUIRES = {
     "context_ruler.json": [ROOT / "data/interim/embeddings", ROOT / "data/interim/labels", *EXTERNAL],
     "head_models.json": [ROOT / "data/interim/embeddings", ROOT / "data/interim/labels", *EXTERNAL],
     "head_combos.json": [ROOT / "data/interim/head_models_scores.npz"],
+    "layer_ruler.json": [ROOT / "data/interim/embeddings", ROOT / "data/interim/labels"],
     **{
         f"{n}.json": [DATA, ROOT / "data/interim/embeddings", ROOT / "data/interim/labels"]
         for n in ("head_a", "head_a_bag10", "head_b_bag10", "head_b0")
