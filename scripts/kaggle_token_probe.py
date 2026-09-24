@@ -66,7 +66,7 @@ def output_matrix() -> torch.Tensor:
     for path in glob.glob(f"{folder}/*.safetensors"):
         with safe_open(path, "pt") as f:
             for name in names:
-                if name in f.keys():
+                if name in f.keys():  # noqa: SIM118 (safe_open has no __contains__)
                     return f.get_tensor(name).float().cuda()
     raise KeyError("no output matrix found")
 
