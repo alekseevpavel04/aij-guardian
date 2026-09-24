@@ -102,6 +102,10 @@ GENERATED = {
         "encoder_ruler.py",
         lambda tmp: ["--seeds", "0", "--name", "user2_probe", "--out", str(tmp / "x.json")],
     ),
+    "encoder_vectors.json": (
+        "vector_ruler.py",
+        lambda tmp: ["--vectors", "user2_window", "--out", str(tmp / "x.json")],
+    ),
     "turn_ruler.json": ("turn_ruler.py", lambda tmp: ["--out", str(tmp / "x.json")]),
     "multiclass_ruler.json": ("multiclass_ruler.py", lambda tmp: ["--out", str(tmp / "x.json")]),
     "label_disagreement.json": ("label_disagreement.py", lambda tmp: ["--out", str(tmp / "x.json")]),
@@ -178,6 +182,7 @@ REQUIRES = {
     "layer_ruler.json": [ROOT / "data/interim/embeddings", ROOT / "data/interim/labels"],
     "label_disagreement.json": [ROOT / "data/interim/embeddings", ROOT / "data/interim/labels"],
     "turn_ruler.json": [ROOT / "data/interim/embeddings", ROOT / "data/interim/labels"],
+    "encoder_vectors.json": [ROOT / "data/interim/embeddings", ROOT / "data/interim/labels"],
     "multiclass_ruler.json": [ROOT / "data/interim/embeddings", ROOT / "data/interim/labels"],
     **{
         f"{n}.json": [DATA, ROOT / "data/interim/embeddings", ROOT / "data/interim/labels"]
