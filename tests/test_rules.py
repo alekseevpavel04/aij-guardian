@@ -105,7 +105,7 @@ def test_numbers_are_not_matched_across_line_breaks(prompt):
 
 
 def test_features_are_counts(prompt):
-    body = '\t→ TOOL_CALL check_network_status: {}\n\t→ TOOL_CALL check_sim_status: {}'
+    body = "\t→ TOOL_CALL check_network_status: {}\n\t→ TOOL_CALL check_sim_status: {}"
     assert features(prompt, response(body))["unknown_tool"] == 2
 
 
@@ -124,3 +124,21 @@ def test_a_real_replacement_does_not_fire(prompt):
         '"item_ids": ["A1", "B2"], "new_item_ids": ["D4", "C3"]}'
     )
     assert "no_op_replacement" not in check(prompt, body)
+
+
+def test_discoverable_tool_called_before_it_was_unlocked(prompt):
+    """banking_knowledge__task_080::t17: call_discoverable_agent_tool on a tool never unlocked."""
+    body = (
+        '\t→ TOOL_CALL call_discoverable_agent_tool: {"agent_tool_name": "get_all_user_accounts_by_user_id_3847", '
+        '"arguments": "{\\"user_id\\": \\"tm92c4d7e8\\"}"}'
+    )
+    assert check(prompt, body)["locked_tool"] == ["get_all_user_accounts_by_user_id_3847"]
+    unlocked = (
+        prompt
+        + "\n\t← TOOL_RESPONSE unlock_discoverable_agent_tool: Tool unlocked: get_all_user_accounts_by_user_id_3847"
+    )
+    assert "locked_tool" not in check(unlocked, body)
+    same_turn = (
+        '\t→ TOOL_CALL unlock_discoverable_agent_tool: {"agent_tool_name": "get_all_user_accounts_by_user_id_3847"}\n'
+    )
+    assert "locked_tool" not in check(prompt, same_turn + body)

@@ -135,6 +135,30 @@ def calls_unknown_tool(calls: list[ToolCall], ctx: Context) -> list[str]:
     return [c.name for c in calls if c.name not in ctx.tools]
 
 
+def calls_locked_tool(calls: list[ToolCall], ctx: Context) -> list[str]:
+    """A discoverable tool called through call_discoverable_agent_tool before it was unlocked.
+
+    The banking domain's policy requires unlock_discoverable_agent_tool first, and the environment
+    answers an unlock with "Tool unlocked: <name>"; a call of a name the context never saw unlocked
+    fails ("has not been unlocked", banking_knowledge__task_080::t17). An unlock earlier in the same
+    turn counts as unlocked.
+    """
+    out, unlocked_here = [], set()
+    for call in calls:
+        name = (call.args or {}).get("agent_tool_name")
+        if not isinstance(name, str):
+            continue
+        if call.name == "unlock_discoverable_agent_tool":
+            unlocked_here.add(name)
+        elif (
+            call.name == "call_discoverable_agent_tool"
+            and name not in unlocked_here
+            and f"Tool unlocked: {name}" not in ctx.prompt
+        ):
+            out.append(name)
+    return out
+
+
 def unknown_arguments(calls: list[ToolCall], ctx: Context) -> list[str]:
     """Top-level argument name absent from the tool schema.
 
@@ -260,6 +284,7 @@ def unsupported_numbers(text: str, ctx: Context, known: set[str] | None = None) 
 
 CHECKS = {
     "unknown_tool": calls_unknown_tool,
+    "locked_tool": calls_locked_tool,
     "unknown_argument": unknown_arguments,
     "missing_required_argument": missing_required_arguments,
     "enum_violation": enum_violations,
