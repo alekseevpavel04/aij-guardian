@@ -109,6 +109,9 @@ def main() -> None:
     ap.add_argument("--answers", default="opus.jsonl", help="file the subagent writes into the batch folder")
     ap.add_argument("--labels", default=None, help="label journal whose label and reason the writer is shown")
     ap.add_argument("--correct-by", nargs="+", default=None, help="keep contexts all these journals score 0")
+    ap.add_argument(
+        "--reuse", action="store_true", help="also take contexts earlier batches used (a new recipe, a new example)"
+    )
     args = ap.parse_args()
 
     frame = pd.read_parquet(args.contexts)
@@ -117,7 +120,8 @@ def main() -> None:
         journals = [ROOT / "data/interim/labels" / f"{name}.jsonl" for name in args.correct_by]
         scored = [{r["id"]: r["score"] for r in journal.read(path)} for path in journals]
         frame = frame[[all(s.get(i, 1) < 0.5 for s in scored) for i in frame.id]]
-    picks = pick(frame, args.count, used_contexts(args.out), random.Random(args.seed))
+    skip = set() if args.reuse else used_contexts(args.out)
+    picks = pick(frame, args.count, skip, random.Random(args.seed))
     known = (
         {r["id"]: r for r in journal.read(ROOT / "data/interim/labels" / f"{args.labels}.jsonl")} if args.labels else {}
     )
