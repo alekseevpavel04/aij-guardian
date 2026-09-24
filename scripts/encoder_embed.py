@@ -33,12 +33,14 @@ HEAD_TOKENS = 1024
 INSTRUCTION = "Instruct: Does the agent's last turn contain a context hallucination?\nQuery: "
 
 
-def ids_for(tok, text: str, max_len: int, prefix: list[int], suffix: list[int]) -> list[int]:
+def ids_for(tok, text: str, max_len: int, prefix: list[int], suffix: list[int]) -> tuple[list[int], bool]:
+    """The input ids and whether the middle of the text had to be cut."""
     body = tok(text, add_special_tokens=False)["input_ids"]
     room = max_len - len(prefix) - len(suffix)
-    if len(body) > room:
+    cut = len(body) > room
+    if cut:
         body = body[:HEAD_TOKENS] + body[-(room - HEAD_TOKENS) :]
-    return prefix + body + suffix
+    return prefix + body + suffix, cut
 
 
 def main() -> None:
@@ -70,11 +72,13 @@ def main() -> None:
     started = time.monotonic()
     with torch.no_grad():
         for i, row in enumerate(todo.itertuples(), 1):
-            ids = ids_for(tok, user_text(row.prompt, row.response), args.max_len, prefix, suffix)
+            ids, cut = ids_for(tok, user_text(row.prompt, row.response), args.max_len, prefix, suffix)
             hidden = model(input_ids=torch.tensor([ids], device="cuda")).last_hidden_state[0].float()
             vector = hidden.mean(0) if args.pooling == "mean" else hidden[-1]
             vector = vector.cpu().numpy().astype(np.float32)
-            journal.append(log, {"id": row.id, "vector": encode(vector), "dim": int(vector.size), "tokens": len(ids)})
+            journal.append(
+                log, {"id": row.id, "vector": encode(vector), "dim": int(vector.size), "tokens": len(ids), "cut": cut}
+            )
             if i % 25 == 0:
                 rate = (time.monotonic() - started) / i
                 print(f"{len(done) + i}/{len(frame)}, eta {rate * (len(todo) - i) / 60:.0f} min", flush=True)

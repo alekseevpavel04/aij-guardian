@@ -3,7 +3,8 @@
 For vectors that exist only for the contexts (a small encoder's, scripts/encoder_embed.py), so every
 head trains without pairs and the reference is head B0 (the last-token vector, v1s labels, no pairs),
 level with head B on the ruler. Each vector is measured alone, joined with the B0 vector under one
-logistic head, and as a head of its own in a mean of ranks with B0 at weights fixed beforehand.
+logistic head, and as a head of its own in a mean of ranks with B0 at weights fixed beforehand. With
+--whole-only the measure is also taken on the contexts the encoder read whole (no middle cut).
 
     python scripts/vector_ruler.py --vectors user2_window qwen3emb_full --out results/encoder_vectors.json
 """
@@ -16,6 +17,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from guardian import journal
 from guardian.env import setup
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -32,6 +34,7 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--contexts", type=Path, default=ROOT / "data/synthetic/organizer_contexts.parquet")
     ap.add_argument("--vectors", nargs="+", required=True, help="names of <name>_org.jsonl in data/interim/embeddings")
+    ap.add_argument("--whole-only", default=None, help="a vector name whose journal marks cut contexts")
     ap.add_argument("--out", type=Path, required=True)
     args = ap.parse_args()
 
@@ -56,6 +59,18 @@ def main() -> None:
         "head_b0": ruler.auroc_ci(base),
         "variants": {k: {**ruler.auroc_ci(s), "minus_head_b0": ruler.paired(s, base)} for k, s in scores.items()},
     }
+    if args.whole_only:
+        records = journal.read(ROOT / "data/interim/embeddings" / f"{args.whole_only}_org.jsonl")
+        cut = {r["id"] for r in records if r.get("cut")}
+        whole = ~ruler.ctx.id.isin(cut).to_numpy()
+        ruler.agree = ruler.agree & whole
+        result["whole_only"] = {
+            "cut_contexts": len(cut),
+            "agreed_rows": int(ruler.agree.sum()),
+            "agreed_positives": int(ruler.truth[ruler.agree].sum()),
+            "head_b0": ruler.auroc_ci(base),
+            "variants": {k: {**ruler.auroc_ci(s), "minus_head_b0": ruler.paired(s, base)} for k, s in scores.items()},
+        }
     args.out.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(result, ensure_ascii=False, indent=2))
 
