@@ -117,8 +117,8 @@ def main() -> None:
         rows.append(row)
     frame = pd.DataFrame(rows)
 
-    def compare(a: str, b: str, lower_is_surprise: bool) -> dict:
-        both = frame.dropna(subset=[a, b])
+    def compare(a: str, b: str, lower_is_surprise: bool, part: pd.DataFrame | None = None) -> dict:
+        both = (frame if part is None else part).dropna(subset=[a, b])
         diff = (both[b] - both[a]) if lower_is_surprise else (both[a] - both[b])
         return {
             "pairs": len(both),
@@ -131,8 +131,9 @@ def main() -> None:
         "edit_span_logprob": compare("edit_error", "edit_original", True),
         "lowest_argument_value_logprob": compare("value_min_error", "value_min_original", True),
         "uncertainty_head_score": compare("head_error", "head_original", False),
-        "by_error_type": {
-            t: compare("head_error", "head_original", False) for t in sorted(frame.error_type.dropna().unique())
+        "edit_span_by_error_type": {
+            t: compare("edit_error", "edit_original", True, frame[frame.error_type == t])
+            for t in sorted(frame.error_type.dropna().unique())
         },
     }
     args.out.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

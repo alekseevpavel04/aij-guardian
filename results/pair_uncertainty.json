@@ -1,0 +1,65 @@
+{
+  "pairs_with_a_call_error": 70,
+  "edit_span_logprob": {
+    "pairs": 57,
+    "error_more_surprising": "49 of 57",
+    "median_difference": 6.199
+  },
+  "lowest_argument_value_logprob": {
+    "pairs": 68,
+    "error_more_surprising": "49 of 68",
+    "median_difference": 2.641
+  },
+  "uncertainty_head_score": {
+    "pairs": 70,
+    "error_more_surprising": "45 of 70",
+    "median_difference": 0.009
+  },
+  "edit_span_by_error_type": {
+    "arg_schema_violation": {
+      "pairs": 9,
+      "error_more_surprising": "6 of 9",
+      "median_difference": 1.573
+    },
+    "contradicts_tool_result": {
+      "pairs": 8,
+      "error_more_surprising": "7 of 8",
+      "median_difference": 6.369
+    },
+    "fabricated_value": {
+      "pairs": 16,
+      "error_more_surprising": "15 of 16",
+      "median_difference": 8.362
+    },
+    "invalid_modification": {
+      "pairs": 2,
+      "error_more_surprising": "1 of 2",
+      "median_difference": 3.18
+    },
+    "policy_violation": {
+      "pairs": 6,
+      "error_more_surprising": "5 of 6",
+      "median_difference": 4.021
+    },
+    "premature_escalation": {
+      "pairs": 1,
+      "error_more_surprising": "1 of 1",
+      "median_difference": 5.187
+    },
+    "repeated_failed_call": {
+      "pairs": 2,
+      "error_more_surprising": "2 of 2",
+      "median_difference": 4.802
+    },
+    "stale_request": {
+      "pairs": 3,
+      "error_more_surprising": "3 of 3",
+      "median_difference": 6.485
+    },
+    "unavailable_tool": {
+      "pairs": 10,
+      "error_more_surprising": "9 of 10",
+      "median_difference": 8.697
+    }
+  }
+}

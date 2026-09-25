@@ -1,7 +1,8 @@
 """The uncertainty head trained with each new source, in every combination and all together, on the context ruler.
 
 The head of turn_ruler.py learns from the organiser's contexts only. Here written error turns (pairs
-v6, v7; their correct side is the original context, already in the base) and external rows (τ² steps
+v5 with a tool call, v6, v7; their correct side is the original context, already in the base) and
+external rows (τ² steps
 of ext_dev, invented worlds) that went through the token pass are added, fold by fold: a held-out
 dialogue's written turns never train its fold, external rows weigh half of the Russian rows. Each
 combination is measured alone and in the system (rules first, then the mean of ranks of head B0 and the
@@ -70,7 +71,11 @@ def main() -> None:
     x = np.stack([own[i] for i in ruler.ctx.id])
 
     sources: dict[str, tuple[str, np.ndarray, np.ndarray, np.ndarray | None]] = {}
-    for name, prefix, batches in (("pairs_v6", "q4_tok_v6", "*_06*"), ("pairs_v7", "q4_tok_v7", "*_07*")):
+    for name, prefix, batches in (
+        ("pairs_v5_calls", "q4_tok_v5", "*_05*"),
+        ("pairs_v6", "q4_tok_v6", "*_06*"),
+        ("pairs_v7", "q4_tok_v7", "*_07*"),
+    ):
         if not (EMB / f"{prefix}_parts_org.jsonl").exists():
             continue
         f = features(prefix)
