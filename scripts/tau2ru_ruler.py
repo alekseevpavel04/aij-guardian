@@ -47,7 +47,11 @@ EMB = ROOT / "data/interim/embeddings"
 
 
 def simulation_labels(mode: str, rows: pd.DataFrame) -> pd.Series:
-    opus = {r["id"]: int(r["label"]) for f in (ROOT / "data/synthetic/opus_labels_tau2ru").glob("*/opus.jsonl") for r in journal.read(f)}
+    opus = {
+        r["id"]: int(r["label"])
+        for f in (ROOT / "data/synthetic/opus_labels_tau2ru").glob("*/opus.jsonl")
+        for r in journal.read(f)
+    }
     path = ROOT / "data/interim/labels/labeler_v1s_tau2ru.jsonl"
     v1s = {r["id"]: int(r["score"] >= 0.5) for r in journal.read(path)} if path.exists() else {}
     if mode == "opus":
@@ -60,7 +64,8 @@ def simulation_labels(mode: str, rows: pd.DataFrame) -> pd.Series:
 
 
 def mean_logp(prefix: str) -> dict[str, float]:
-    return {r["id"]: float(np.mean(r["logp"])) for r in journal.read(EMB / f"{prefix}_uncertainty_org.jsonl") if len(r["logp"])}
+    stats = journal.read(EMB / f"{prefix}_uncertainty_org.jsonl")
+    return {r["id"]: float(np.mean(r["logp"])) for r in stats if len(r["logp"])}
 
 
 def main() -> None:
@@ -78,7 +83,7 @@ def main() -> None:
     sim["label"] = simulation_labels(args.labels, sim)
     sim = sim[sim.label.notna()].copy()
     sim["label"] = sim.label.astype(int)
-    sim["task"] = [f"{d}__{data_id(t)}"[: len(d) + 2 + CUT] for d, t in zip(sim.domain, sim.task_id)]
+    sim["task"] = [f"{d}__{data_id(t)}"[: len(d) + 2 + CUT] for d, t in zip(sim.domain, sim.task_id, strict=True)]
 
     vecs = vectors("q4_last_org") | vectors("q4_last_extdev_all") | vectors("q4_last_tau2ru")
     for name in ("q4_last_pairs_02", "q4_last_pairs_03"):
