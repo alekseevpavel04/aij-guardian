@@ -1,0 +1,378 @@
+{
+  "sources": {
+    "pairs_v5_calls": {
+      "rows": 70,
+      "positives": 70
+    },
+    "pairs_v6": {
+      "rows": 105,
+      "positives": 105
+    },
+    "pairs_v7": {
+      "rows": 64,
+      "positives": 64
+    },
+    "tau2_external": {
+      "rows": 1003,
+      "positives": 223
+    },
+    "worlds": {
+      "rows": 192,
+      "positives": 96
+    }
+  },
+  "contexts_only": {
+    "alone": 0.8113,
+    "system": {
+      "difference": 0.0153,
+      "ci95": [
+        0.005,
+        0.032
+      ],
+      "share_above_zero": 1.0
+    }
+  },
+  "variants": {
+    "pairs_v5_calls": {
+      "alone": 0.7413,
+      "system_minus_contexts_only_system": {
+        "difference": -0.0159,
+        "ci95": [
+          -0.035,
+          -0.003
+        ],
+        "share_above_zero": 0.003
+      }
+    },
+    "pairs_v6": {
+      "alone": 0.7441,
+      "system_minus_contexts_only_system": {
+        "difference": -0.0071,
+        "ci95": [
+          -0.019,
+          0.0
+        ],
+        "share_above_zero": 0.025
+      }
+    },
+    "pairs_v7": {
+      "alone": 0.7141,
+      "system_minus_contexts_only_system": {
+        "difference": -0.0115,
+        "ci95": [
+          -0.028,
+          -0.001
+        ],
+        "share_above_zero": 0.011
+      }
+    },
+    "tau2_external": {
+      "alone": 0.8097,
+      "system_minus_contexts_only_system": {
+        "difference": -0.0088,
+        "ci95": [
+          -0.019,
+          -0.001
+        ],
+        "share_above_zero": 0.014
+      }
+    },
+    "worlds": {
+      "alone": 0.6286,
+      "system_minus_contexts_only_system": {
+        "difference": -0.0212,
+        "ci95": [
+          -0.045,
+          -0.005
+        ],
+        "share_above_zero": 0.0
+      }
+    },
+    "pairs_v5_calls+pairs_v6": {
+      "alone": 0.7099,
+      "system_minus_contexts_only_system": {
+        "difference": -0.0187,
+        "ci95": [
+          -0.043,
+          -0.004
+        ],
+        "share_above_zero": 0.001
+      }
+    },
+    "pairs_v5_calls+pairs_v7": {
+      "alone": 0.7061,
+      "system_minus_contexts_only_system": {
+        "difference": -0.0185,
+        "ci95": [
+          -0.044,
+          -0.002
+        ],
+        "share_above_zero": 0.006
+      }
+    },
+    "pairs_v5_calls+tau2_external": {
+      "alone": 0.7753,
+      "system_minus_contexts_only_system": {
+        "difference": -0.0196,
+        "ci95": [
+          -0.043,
+          -0.003
+        ],
+        "share_above_zero": 0.006
+      }
+    },
+    "pairs_v5_calls+worlds": {
+      "alone": 0.6068,
+      "system_minus_contexts_only_system": {
+        "difference": -0.0336,
+        "ci95": [
+          -0.071,
+          -0.008
+        ],
+        "share_above_zero": 0.0
+      }
+    },
+    "pairs_v6+pairs_v7": {
+      "alone": 0.6865,
+      "system_minus_contexts_only_system": {
+        "difference": -0.0135,
+        "ci95": [
+          -0.031,
+          -0.002
+        ],
+        "share_above_zero": 0.003
+      }
+    },
+    "pairs_v6+tau2_external": {
+      "alone": 0.7659,
+      "system_minus_contexts_only_system": {
+        "difference": -0.0112,
+        "ci95": [
+          -0.029,
+          -0.0
+        ],
+        "share_above_zero": 0.022
+      }
+    },
+    "pairs_v6+worlds": {
+      "alone": 0.6466,
+      "system_minus_contexts_only_system": {
+        "difference": -0.0153,
+        "ci95": [
+          -0.035,
+          -0.002
+        ],
+        "share_above_zero": 0.004
+      }
+    },
+    "pairs_v7+tau2_external": {
+      "alone": 0.7614,
+      "system_minus_contexts_only_system": {
+        "difference": -0.0134,
+        "ci95": [
+          -0.032,
+          -0.001
+        ],
+        "share_above_zero": 0.01
+      }
+    },
+    "pairs_v7+worlds": {
+      "alone": 0.6254,
+      "system_minus_contexts_only_system": {
+        "difference": -0.0206,
+        "ci95": [
+          -0.045,
+          -0.004
+        ],
+        "share_above_zero": 0.001
+      }
+    },
+    "tau2_external+worlds": {
+      "alone": 0.7678,
+      "system_minus_contexts_only_system": {
+        "difference": -0.0135,
+        "ci95": [
+          -0.029,
+          -0.001
+        ],
+        "share_above_zero": 0.007
+      }
+    },
+    "pairs_v5_calls+pairs_v6+pairs_v7": {
+      "alone": 0.6794,
+      "system_minus_contexts_only_system": {
+        "difference": -0.0211,
+        "ci95": [
+          -0.045,
+          -0.005
+        ],
+        "share_above_zero": 0.0
+      }
+    },
+    "pairs_v5_calls+pairs_v6+tau2_external": {
+      "alone": 0.7592,
+      "system_minus_contexts_only_system": {
+        "difference": -0.0183,
+        "ci95": [
+          -0.043,
+          -0.003
+        ],
+        "share_above_zero": 0.002
+      }
+    },
+    "pairs_v5_calls+pairs_v6+worlds": {
+      "alone": 0.6334,
+      "system_minus_contexts_only_system": {
+        "difference": -0.0256,
+        "ci95": [
+          -0.056,
+          -0.006
+        ],
+        "share_above_zero": 0.0
+      }
+    },
+    "pairs_v5_calls+pairs_v7+tau2_external": {
+      "alone": 0.7544,
+      "system_minus_contexts_only_system": {
+        "difference": -0.0191,
+        "ci95": [
+          -0.045,
+          -0.002
+        ],
+        "share_above_zero": 0.007
+      }
+    },
+    "pairs_v5_calls+pairs_v7+worlds": {
+      "alone": 0.6055,
+      "system_minus_contexts_only_system": {
+        "difference": -0.0317,
+        "ci95": [
+          -0.067,
+          -0.009
+        ],
+        "share_above_zero": 0.0
+      }
+    },
+    "pairs_v5_calls+tau2_external+worlds": {
+      "alone": 0.7502,
+      "system_minus_contexts_only_system": {
+        "difference": -0.0207,
+        "ci95": [
+          -0.046,
+          -0.003
+        ],
+        "share_above_zero": 0.004
+      }
+    },
+    "pairs_v6+pairs_v7+tau2_external": {
+      "alone": 0.7453,
+      "system_minus_contexts_only_system": {
+        "difference": -0.0132,
+        "ci95": [
+          -0.032,
+          -0.001
+        ],
+        "share_above_zero": 0.01
+      }
+    },
+    "pairs_v6+pairs_v7+worlds": {
+      "alone": 0.6401,
+      "system_minus_contexts_only_system": {
+        "difference": -0.0177,
+        "ci95": [
+          -0.041,
+          -0.003
+        ],
+        "share_above_zero": 0.001
+      }
+    },
+    "pairs_v6+tau2_external+worlds": {
+      "alone": 0.7478,
+      "system_minus_contexts_only_system": {
+        "difference": -0.0121,
+        "ci95": [
+          -0.031,
+          -0.0
+        ],
+        "share_above_zero": 0.019
+      }
+    },
+    "pairs_v7+tau2_external+worlds": {
+      "alone": 0.7437,
+      "system_minus_contexts_only_system": {
+        "difference": -0.0151,
+        "ci95": [
+          -0.035,
+          -0.002
+        ],
+        "share_above_zero": 0.006
+      }
+    },
+    "pairs_v5_calls+pairs_v6+pairs_v7+tau2_external": {
+      "alone": 0.7444,
+      "system_minus_contexts_only_system": {
+        "difference": -0.02,
+        "ci95": [
+          -0.046,
+          -0.004
+        ],
+        "share_above_zero": 0.002
+      }
+    },
+    "pairs_v5_calls+pairs_v6+pairs_v7+worlds": {
+      "alone": 0.6321,
+      "system_minus_contexts_only_system": {
+        "difference": -0.0253,
+        "ci95": [
+          -0.056,
+          -0.006
+        ],
+        "share_above_zero": 0.0
+      }
+    },
+    "pairs_v5_calls+pairs_v6+tau2_external+worlds": {
+      "alone": 0.7402,
+      "system_minus_contexts_only_system": {
+        "difference": -0.0196,
+        "ci95": [
+          -0.045,
+          -0.003
+        ],
+        "share_above_zero": 0.004
+      }
+    },
+    "pairs_v5_calls+pairs_v7+tau2_external+worlds": {
+      "alone": 0.7307,
+      "system_minus_contexts_only_system": {
+        "difference": -0.0217,
+        "ci95": [
+          -0.049,
+          -0.003
+        ],
+        "share_above_zero": 0.002
+      }
+    },
+    "pairs_v6+pairs_v7+tau2_external+worlds": {
+      "alone": 0.7347,
+      "system_minus_contexts_only_system": {
+        "difference": -0.0141,
+        "ci95": [
+          -0.035,
+          -0.001
+        ],
+        "share_above_zero": 0.012
+      }
+    },
+    "pairs_v5_calls+pairs_v6+pairs_v7+tau2_external+worlds": {
+      "alone": 0.7289,
+      "system_minus_contexts_only_system": {
+        "difference": -0.0212,
+        "ci95": [
+          -0.048,
+          -0.004
+        ],
+        "share_above_zero": 0.002
+      }
+    }
+  }
+}
