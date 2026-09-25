@@ -23,6 +23,7 @@ import base64
 import json
 import sys
 import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -73,6 +74,9 @@ def main() -> None:
     ap.add_argument("--system-prompt", type=Path, default=BASELINE_PROMPT)
     ap.add_argument("--server", default="http://127.0.0.1:8080/v1")
     ap.add_argument("--max-rows", type=int, default=None)
+    ap.add_argument(
+        "--skip-too-long", action="store_true", help="skip rows the server rejects as longer than its context"
+    )
     ap.add_argument("--longest-first", action="store_true", help="probe: start with the longest rows")
     args = ap.parse_args()
 
@@ -91,7 +95,13 @@ def main() -> None:
     started = time.monotonic()
     for i, row in enumerate(todo.itertuples(), 1):
         t0 = time.monotonic()
-        vector, tokens = embed(args.server, render(system_prompt, row.prompt, row.response, thinking=False))
+        try:
+            vector, tokens = embed(args.server, render(system_prompt, row.prompt, row.response, thinking=False))
+        except urllib.error.HTTPError as error:
+            if not (args.skip_too_long and error.code == 400):
+                raise
+            print(f"skip {row.id[:60]}: {error.read()[:200]!r}", flush=True)
+            continue
         journal.append(
             log,
             {
