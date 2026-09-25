@@ -1,0 +1,186 @@
+{
+  "rows": {
+    "ext_dev_800": [
+      806,
+      175
+    ],
+    "ext_dev_2000": [
+      2005,
+      457
+    ],
+    "ext_dev_all": [
+      3626,
+      925
+    ],
+    "ext_dev_plus_ext_val": [
+      6317,
+      1509
+    ]
+  },
+  "models": {
+    "logistic": {
+      "ext_dev_800": {
+        "alone": 0.9136,
+        "system": 0.9766,
+        "alone_minus_ext_dev_all": {
+          "difference": -0.0079,
+          "ci95": [
+            -0.013,
+            -0.002
+          ],
+          "share_above_zero": 0.005
+        },
+        "system_minus_ext_dev_all": {
+          "difference": -0.0011,
+          "ci95": [
+            -0.005,
+            0.002
+          ],
+          "share_above_zero": 0.296
+        }
+      },
+      "ext_dev_2000": {
+        "alone": 0.923,
+        "system": 0.9789,
+        "alone_minus_ext_dev_all": {
+          "difference": 0.0015,
+          "ci95": [
+            -0.003,
+            0.006
+          ],
+          "share_above_zero": 0.768
+        },
+        "system_minus_ext_dev_all": {
+          "difference": 0.0012,
+          "ci95": [
+            -0.001,
+            0.004
+          ],
+          "share_above_zero": 0.827
+        }
+      },
+      "ext_dev_all": {
+        "alone": 0.9215,
+        "system": 0.9777,
+        "alone_minus_ext_dev_all": {
+          "difference": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "share_above_zero": 0.0
+        },
+        "system_minus_ext_dev_all": {
+          "difference": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "share_above_zero": 0.0
+        }
+      },
+      "ext_dev_plus_ext_val": {
+        "alone": 0.9224,
+        "system": 0.9778,
+        "alone_minus_ext_dev_all": {
+          "difference": 0.0009,
+          "ci95": [
+            -0.003,
+            0.005
+          ],
+          "share_above_zero": 0.677
+        },
+        "system_minus_ext_dev_all": {
+          "difference": 0.0001,
+          "ci95": [
+            -0.001,
+            0.001
+          ],
+          "share_above_zero": 0.569
+        }
+      }
+    },
+    "lightgbm": {
+      "ext_dev_800": {
+        "alone": 0.9132,
+        "system": 0.9792,
+        "alone_minus_ext_dev_all": {
+          "difference": -0.0163,
+          "ci95": [
+            -0.029,
+            -0.001
+          ],
+          "share_above_zero": 0.015
+        },
+        "system_minus_ext_dev_all": {
+          "difference": -0.0028,
+          "ci95": [
+            -0.006,
+            0.001
+          ],
+          "share_above_zero": 0.057
+        }
+      },
+      "ext_dev_2000": {
+        "alone": 0.9245,
+        "system": 0.9821,
+        "alone_minus_ext_dev_all": {
+          "difference": -0.005,
+          "ci95": [
+            -0.013,
+            0.004
+          ],
+          "share_above_zero": 0.132
+        },
+        "system_minus_ext_dev_all": {
+          "difference": 0.0001,
+          "ci95": [
+            -0.003,
+            0.004
+          ],
+          "share_above_zero": 0.59
+        }
+      },
+      "ext_dev_all": {
+        "alone": 0.9295,
+        "system": 0.982,
+        "alone_minus_ext_dev_all": {
+          "difference": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "share_above_zero": 0.0
+        },
+        "system_minus_ext_dev_all": {
+          "difference": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "share_above_zero": 0.0
+        }
+      },
+      "ext_dev_plus_ext_val": {
+        "alone": 0.9326,
+        "system": 0.9828,
+        "alone_minus_ext_dev_all": {
+          "difference": 0.0031,
+          "ci95": [
+            -0.001,
+            0.01
+          ],
+          "share_above_zero": 0.928
+        },
+        "system_minus_ext_dev_all": {
+          "difference": 0.0008,
+          "ci95": [
+            -0.002,
+            0.006
+          ],
+          "share_above_zero": 0.701
+        }
+      }
+    }
+  }
+}
