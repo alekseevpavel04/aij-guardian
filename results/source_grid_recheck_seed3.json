@@ -1,0 +1,70 @@
+{
+  "sources": {
+    "pairs_v5": {
+      "rows": 111,
+      "positives": 111
+    },
+    "pairs_v6": {
+      "rows": 105,
+      "positives": 105
+    },
+    "pairs_v7": {
+      "rows": 64,
+      "positives": 64
+    },
+    "worlds": {
+      "rows": 192,
+      "positives": 96
+    },
+    "trajdebug": {
+      "rows": 472,
+      "positives": 135
+    }
+  },
+  "runs": {
+    "lightgbm_tau": {
+      "reference": {
+        "alone": 0.9215,
+        "system": 0.9817
+      },
+      "variants": {
+        "pairs_v5+trajdebug": {
+          "alone": 0.9249,
+          "alone_minus_reference": 0.0034,
+          "system_minus_reference_system": {
+            "difference": 0.0017,
+            "ci95": [
+              -0.003,
+              0.005
+            ],
+            "share_above_zero": 0.809
+          }
+        },
+        "pairs_v5": {
+          "alone": 0.9234,
+          "alone_minus_reference": 0.0019,
+          "system_minus_reference_system": {
+            "difference": 0.0002,
+            "ci95": [
+              -0.005,
+              0.004
+            ],
+            "share_above_zero": 0.562
+          }
+        },
+        "trajdebug": {
+          "alone": 0.9257,
+          "alone_minus_reference": 0.0042,
+          "system_minus_reference_system": {
+            "difference": 0.0008,
+            "ci95": [
+              -0.001,
+              0.003
+            ],
+            "share_above_zero": 0.843
+          }
+        }
+      }
+    }
+  }
+}

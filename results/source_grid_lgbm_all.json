@@ -1,0 +1,786 @@
+{
+  "sources": {
+    "pairs_v5": {
+      "rows": 111,
+      "positives": 111
+    },
+    "pairs_v6": {
+      "rows": 105,
+      "positives": 105
+    },
+    "pairs_v7": {
+      "rows": 64,
+      "positives": 64
+    },
+    "worlds": {
+      "rows": 192,
+      "positives": 96
+    },
+    "trajdebug": {
+      "rows": 472,
+      "positives": 135
+    }
+  },
+  "runs": {
+    "lightgbm_tau": {
+      "reference": {
+        "alone": 0.9295,
+        "system": 0.982
+      },
+      "variants": {
+        "pairs_v5": {
+          "alone": 0.9296,
+          "alone_minus_reference": 0.0001,
+          "system_minus_reference_system": {
+            "difference": 0.0014,
+            "ci95": [
+              -0.001,
+              0.005
+            ],
+            "share_above_zero": 0.875
+          }
+        },
+        "pairs_v6": {
+          "alone": 0.9261,
+          "alone_minus_reference": -0.0034,
+          "system_minus_reference_system": {
+            "difference": 0.0005,
+            "ci95": [
+              -0.002,
+              0.005
+            ],
+            "share_above_zero": 0.62
+          }
+        },
+        "pairs_v7": {
+          "alone": 0.9235,
+          "alone_minus_reference": -0.006,
+          "system_minus_reference_system": {
+            "difference": 0.0019,
+            "ci95": [
+              -0.001,
+              0.005
+            ],
+            "share_above_zero": 0.934
+          }
+        },
+        "trajdebug": {
+          "alone": 0.9282,
+          "alone_minus_reference": -0.0013,
+          "system_minus_reference_system": {
+            "difference": 0.0005,
+            "ci95": [
+              -0.001,
+              0.002
+            ],
+            "share_above_zero": 0.75
+          }
+        },
+        "worlds": {
+          "alone": 0.9265,
+          "alone_minus_reference": -0.003,
+          "system_minus_reference_system": {
+            "difference": -0.0001,
+            "ci95": [
+              -0.002,
+              0.002
+            ],
+            "share_above_zero": 0.486
+          }
+        },
+        "pairs_v5+pairs_v6": {
+          "alone": 0.9239,
+          "alone_minus_reference": -0.0056,
+          "system_minus_reference_system": {
+            "difference": -0.0001,
+            "ci95": [
+              -0.004,
+              0.004
+            ],
+            "share_above_zero": 0.505
+          }
+        },
+        "pairs_v5+pairs_v7": {
+          "alone": 0.9258,
+          "alone_minus_reference": -0.0037,
+          "system_minus_reference_system": {
+            "difference": 0.0011,
+            "ci95": [
+              -0.003,
+              0.005
+            ],
+            "share_above_zero": 0.763
+          }
+        },
+        "pairs_v5+trajdebug": {
+          "alone": 0.9255,
+          "alone_minus_reference": -0.004,
+          "system_minus_reference_system": {
+            "difference": 0.0027,
+            "ci95": [
+              0.001,
+              0.007
+            ],
+            "share_above_zero": 0.996
+          }
+        },
+        "pairs_v5+worlds": {
+          "alone": 0.9303,
+          "alone_minus_reference": 0.0008,
+          "system_minus_reference_system": {
+            "difference": 0.002,
+            "ci95": [
+              -0.001,
+              0.007
+            ],
+            "share_above_zero": 0.916
+          }
+        },
+        "pairs_v6+pairs_v7": {
+          "alone": 0.9211,
+          "alone_minus_reference": -0.0084,
+          "system_minus_reference_system": {
+            "difference": 0.0002,
+            "ci95": [
+              -0.003,
+              0.006
+            ],
+            "share_above_zero": 0.608
+          }
+        },
+        "pairs_v6+trajdebug": {
+          "alone": 0.925,
+          "alone_minus_reference": -0.0045,
+          "system_minus_reference_system": {
+            "difference": 0.0,
+            "ci95": [
+              -0.003,
+              0.004
+            ],
+            "share_above_zero": 0.515
+          }
+        },
+        "pairs_v6+worlds": {
+          "alone": 0.9273,
+          "alone_minus_reference": -0.0022,
+          "system_minus_reference_system": {
+            "difference": -0.0001,
+            "ci95": [
+              -0.002,
+              0.004
+            ],
+            "share_above_zero": 0.545
+          }
+        },
+        "pairs_v7+trajdebug": {
+          "alone": 0.9204,
+          "alone_minus_reference": -0.0091,
+          "system_minus_reference_system": {
+            "difference": 0.0005,
+            "ci95": [
+              -0.002,
+              0.004
+            ],
+            "share_above_zero": 0.662
+          }
+        },
+        "pairs_v7+worlds": {
+          "alone": 0.9225,
+          "alone_minus_reference": -0.007,
+          "system_minus_reference_system": {
+            "difference": 0.0008,
+            "ci95": [
+              -0.002,
+              0.004
+            ],
+            "share_above_zero": 0.748
+          }
+        },
+        "trajdebug+worlds": {
+          "alone": 0.9262,
+          "alone_minus_reference": -0.0033,
+          "system_minus_reference_system": {
+            "difference": -0.0002,
+            "ci95": [
+              -0.002,
+              0.003
+            ],
+            "share_above_zero": 0.445
+          }
+        },
+        "pairs_v5+pairs_v6+pairs_v7": {
+          "alone": 0.9211,
+          "alone_minus_reference": -0.0084,
+          "system_minus_reference_system": {
+            "difference": 0.0002,
+            "ci95": [
+              -0.004,
+              0.004
+            ],
+            "share_above_zero": 0.58
+          }
+        },
+        "pairs_v5+pairs_v6+trajdebug": {
+          "alone": 0.9224,
+          "alone_minus_reference": -0.0071,
+          "system_minus_reference_system": {
+            "difference": 0.0,
+            "ci95": [
+              -0.003,
+              0.004
+            ],
+            "share_above_zero": 0.537
+          }
+        },
+        "pairs_v5+pairs_v6+worlds": {
+          "alone": 0.9249,
+          "alone_minus_reference": -0.0046,
+          "system_minus_reference_system": {
+            "difference": -0.0012,
+            "ci95": [
+              -0.005,
+              0.003
+            ],
+            "share_above_zero": 0.296
+          }
+        },
+        "pairs_v5+pairs_v7+trajdebug": {
+          "alone": 0.9192,
+          "alone_minus_reference": -0.0103,
+          "system_minus_reference_system": {
+            "difference": -0.0002,
+            "ci95": [
+              -0.004,
+              0.004
+            ],
+            "share_above_zero": 0.516
+          }
+        },
+        "pairs_v5+pairs_v7+worlds": {
+          "alone": 0.9266,
+          "alone_minus_reference": -0.0029,
+          "system_minus_reference_system": {
+            "difference": 0.0012,
+            "ci95": [
+              -0.002,
+              0.006
+            ],
+            "share_above_zero": 0.77
+          }
+        },
+        "pairs_v5+trajdebug+worlds": {
+          "alone": 0.9269,
+          "alone_minus_reference": -0.0026,
+          "system_minus_reference_system": {
+            "difference": 0.0023,
+            "ci95": [
+              -0.0,
+              0.006
+            ],
+            "share_above_zero": 0.953
+          }
+        },
+        "pairs_v6+pairs_v7+trajdebug": {
+          "alone": 0.9169,
+          "alone_minus_reference": -0.0126,
+          "system_minus_reference_system": {
+            "difference": -0.0017,
+            "ci95": [
+              -0.005,
+              0.002
+            ],
+            "share_above_zero": 0.213
+          }
+        },
+        "pairs_v6+pairs_v7+worlds": {
+          "alone": 0.92,
+          "alone_minus_reference": -0.0095,
+          "system_minus_reference_system": {
+            "difference": -0.0005,
+            "ci95": [
+              -0.004,
+              0.004
+            ],
+            "share_above_zero": 0.449
+          }
+        },
+        "pairs_v6+trajdebug+worlds": {
+          "alone": 0.9251,
+          "alone_minus_reference": -0.0044,
+          "system_minus_reference_system": {
+            "difference": -0.0002,
+            "ci95": [
+              -0.003,
+              0.004
+            ],
+            "share_above_zero": 0.491
+          }
+        },
+        "pairs_v7+trajdebug+worlds": {
+          "alone": 0.9223,
+          "alone_minus_reference": -0.0072,
+          "system_minus_reference_system": {
+            "difference": 0.0008,
+            "ci95": [
+              -0.001,
+              0.004
+            ],
+            "share_above_zero": 0.777
+          }
+        },
+        "pairs_v5+pairs_v6+pairs_v7+trajdebug": {
+          "alone": 0.9185,
+          "alone_minus_reference": -0.011,
+          "system_minus_reference_system": {
+            "difference": -0.0002,
+            "ci95": [
+              -0.004,
+              0.004
+            ],
+            "share_above_zero": 0.518
+          }
+        },
+        "pairs_v5+pairs_v6+pairs_v7+worlds": {
+          "alone": 0.9242,
+          "alone_minus_reference": -0.0053,
+          "system_minus_reference_system": {
+            "difference": 0.0003,
+            "ci95": [
+              -0.004,
+              0.005
+            ],
+            "share_above_zero": 0.628
+          }
+        },
+        "pairs_v5+pairs_v6+trajdebug+worlds": {
+          "alone": 0.9189,
+          "alone_minus_reference": -0.0106,
+          "system_minus_reference_system": {
+            "difference": -0.0002,
+            "ci95": [
+              -0.004,
+              0.004
+            ],
+            "share_above_zero": 0.486
+          }
+        },
+        "pairs_v5+pairs_v7+trajdebug+worlds": {
+          "alone": 0.9202,
+          "alone_minus_reference": -0.0093,
+          "system_minus_reference_system": {
+            "difference": 0.0017,
+            "ci95": [
+              -0.001,
+              0.005
+            ],
+            "share_above_zero": 0.894
+          }
+        },
+        "pairs_v6+pairs_v7+trajdebug+worlds": {
+          "alone": 0.9173,
+          "alone_minus_reference": -0.0122,
+          "system_minus_reference_system": {
+            "difference": -0.0018,
+            "ci95": [
+              -0.005,
+              0.002
+            ],
+            "share_above_zero": 0.171
+          }
+        },
+        "pairs_v5+pairs_v6+pairs_v7+trajdebug+worlds": {
+          "alone": 0.921,
+          "alone_minus_reference": -0.0085,
+          "system_minus_reference_system": {
+            "difference": 0.0008,
+            "ci95": [
+              -0.003,
+              0.005
+            ],
+            "share_above_zero": 0.681
+          }
+        }
+      }
+    },
+    "lightgbm_no_tau": {
+      "reference": {
+        "alone": 0.8975,
+        "system": 0.9777
+      },
+      "variants": {
+        "pairs_v5": {
+          "alone": 0.9055,
+          "alone_minus_reference": 0.008,
+          "system_minus_reference_system": {
+            "difference": 0.0012,
+            "ci95": [
+              -0.001,
+              0.003
+            ],
+            "share_above_zero": 0.828
+          }
+        },
+        "pairs_v6": {
+          "alone": 0.8867,
+          "alone_minus_reference": -0.0108,
+          "system_minus_reference_system": {
+            "difference": -0.0032,
+            "ci95": [
+              -0.007,
+              0.0
+            ],
+            "share_above_zero": 0.043
+          }
+        },
+        "pairs_v7": {
+          "alone": 0.8941,
+          "alone_minus_reference": -0.0034,
+          "system_minus_reference_system": {
+            "difference": 0.0002,
+            "ci95": [
+              -0.004,
+              0.005
+            ],
+            "share_above_zero": 0.511
+          }
+        },
+        "trajdebug": {
+          "alone": 0.8968,
+          "alone_minus_reference": -0.0007,
+          "system_minus_reference_system": {
+            "difference": 0.0014,
+            "ci95": [
+              -0.002,
+              0.006
+            ],
+            "share_above_zero": 0.707
+          }
+        },
+        "worlds": {
+          "alone": 0.8918,
+          "alone_minus_reference": -0.0057,
+          "system_minus_reference_system": {
+            "difference": -0.0019,
+            "ci95": [
+              -0.006,
+              0.001
+            ],
+            "share_above_zero": 0.134
+          }
+        },
+        "pairs_v5+pairs_v6": {
+          "alone": 0.8953,
+          "alone_minus_reference": -0.0022,
+          "system_minus_reference_system": {
+            "difference": -0.002,
+            "ci95": [
+              -0.007,
+              0.002
+            ],
+            "share_above_zero": 0.141
+          }
+        },
+        "pairs_v5+pairs_v7": {
+          "alone": 0.9018,
+          "alone_minus_reference": 0.0043,
+          "system_minus_reference_system": {
+            "difference": 0.0003,
+            "ci95": [
+              -0.004,
+              0.004
+            ],
+            "share_above_zero": 0.536
+          }
+        },
+        "pairs_v5+trajdebug": {
+          "alone": 0.9,
+          "alone_minus_reference": 0.0025,
+          "system_minus_reference_system": {
+            "difference": 0.0016,
+            "ci95": [
+              -0.004,
+              0.005
+            ],
+            "share_above_zero": 0.722
+          }
+        },
+        "pairs_v5+worlds": {
+          "alone": 0.9092,
+          "alone_minus_reference": 0.0117,
+          "system_minus_reference_system": {
+            "difference": 0.0014,
+            "ci95": [
+              -0.003,
+              0.005
+            ],
+            "share_above_zero": 0.738
+          }
+        },
+        "pairs_v6+pairs_v7": {
+          "alone": 0.8869,
+          "alone_minus_reference": -0.0106,
+          "system_minus_reference_system": {
+            "difference": -0.0027,
+            "ci95": [
+              -0.007,
+              0.002
+            ],
+            "share_above_zero": 0.136
+          }
+        },
+        "pairs_v6+trajdebug": {
+          "alone": 0.8823,
+          "alone_minus_reference": -0.0152,
+          "system_minus_reference_system": {
+            "difference": -0.0001,
+            "ci95": [
+              -0.004,
+              0.004
+            ],
+            "share_above_zero": 0.411
+          }
+        },
+        "pairs_v6+worlds": {
+          "alone": 0.8851,
+          "alone_minus_reference": -0.0124,
+          "system_minus_reference_system": {
+            "difference": -0.0011,
+            "ci95": [
+              -0.005,
+              0.002
+            ],
+            "share_above_zero": 0.259
+          }
+        },
+        "pairs_v7+trajdebug": {
+          "alone": 0.8906,
+          "alone_minus_reference": -0.0069,
+          "system_minus_reference_system": {
+            "difference": 0.0042,
+            "ci95": [
+              -0.001,
+              0.01
+            ],
+            "share_above_zero": 0.948
+          }
+        },
+        "pairs_v7+worlds": {
+          "alone": 0.8968,
+          "alone_minus_reference": -0.0007,
+          "system_minus_reference_system": {
+            "difference": -0.0025,
+            "ci95": [
+              -0.009,
+              0.003
+            ],
+            "share_above_zero": 0.169
+          }
+        },
+        "trajdebug+worlds": {
+          "alone": 0.8908,
+          "alone_minus_reference": -0.0067,
+          "system_minus_reference_system": {
+            "difference": 0.0003,
+            "ci95": [
+              -0.004,
+              0.004
+            ],
+            "share_above_zero": 0.548
+          }
+        },
+        "pairs_v5+pairs_v6+pairs_v7": {
+          "alone": 0.8933,
+          "alone_minus_reference": -0.0042,
+          "system_minus_reference_system": {
+            "difference": -0.0009,
+            "ci95": [
+              -0.005,
+              0.003
+            ],
+            "share_above_zero": 0.313
+          }
+        },
+        "pairs_v5+pairs_v6+trajdebug": {
+          "alone": 0.8964,
+          "alone_minus_reference": -0.0011,
+          "system_minus_reference_system": {
+            "difference": 0.0001,
+            "ci95": [
+              -0.005,
+              0.003
+            ],
+            "share_above_zero": 0.485
+          }
+        },
+        "pairs_v5+pairs_v6+worlds": {
+          "alone": 0.9072,
+          "alone_minus_reference": 0.0097,
+          "system_minus_reference_system": {
+            "difference": 0.0016,
+            "ci95": [
+              -0.002,
+              0.005
+            ],
+            "share_above_zero": 0.82
+          }
+        },
+        "pairs_v5+pairs_v7+trajdebug": {
+          "alone": 0.8995,
+          "alone_minus_reference": 0.002,
+          "system_minus_reference_system": {
+            "difference": 0.0026,
+            "ci95": [
+              -0.002,
+              0.006
+            ],
+            "share_above_zero": 0.84
+          }
+        },
+        "pairs_v5+pairs_v7+worlds": {
+          "alone": 0.8998,
+          "alone_minus_reference": 0.0023,
+          "system_minus_reference_system": {
+            "difference": 0.0013,
+            "ci95": [
+              -0.004,
+              0.007
+            ],
+            "share_above_zero": 0.633
+          }
+        },
+        "pairs_v5+trajdebug+worlds": {
+          "alone": 0.9066,
+          "alone_minus_reference": 0.0091,
+          "system_minus_reference_system": {
+            "difference": 0.004,
+            "ci95": [
+              -0.001,
+              0.007
+            ],
+            "share_above_zero": 0.951
+          }
+        },
+        "pairs_v6+pairs_v7+trajdebug": {
+          "alone": 0.8767,
+          "alone_minus_reference": -0.0208,
+          "system_minus_reference_system": {
+            "difference": -0.0025,
+            "ci95": [
+              -0.008,
+              0.001
+            ],
+            "share_above_zero": 0.099
+          }
+        },
+        "pairs_v6+pairs_v7+worlds": {
+          "alone": 0.8897,
+          "alone_minus_reference": -0.0078,
+          "system_minus_reference_system": {
+            "difference": -0.0009,
+            "ci95": [
+              -0.005,
+              0.003
+            ],
+            "share_above_zero": 0.369
+          }
+        },
+        "pairs_v6+trajdebug+worlds": {
+          "alone": 0.8872,
+          "alone_minus_reference": -0.0103,
+          "system_minus_reference_system": {
+            "difference": 0.0004,
+            "ci95": [
+              -0.003,
+              0.003
+            ],
+            "share_above_zero": 0.538
+          }
+        },
+        "pairs_v7+trajdebug+worlds": {
+          "alone": 0.8872,
+          "alone_minus_reference": -0.0103,
+          "system_minus_reference_system": {
+            "difference": 0.0004,
+            "ci95": [
+              -0.004,
+              0.005
+            ],
+            "share_above_zero": 0.548
+          }
+        },
+        "pairs_v5+pairs_v6+pairs_v7+trajdebug": {
+          "alone": 0.8867,
+          "alone_minus_reference": -0.0108,
+          "system_minus_reference_system": {
+            "difference": -0.0007,
+            "ci95": [
+              -0.007,
+              0.003
+            ],
+            "share_above_zero": 0.329
+          }
+        },
+        "pairs_v5+pairs_v6+pairs_v7+worlds": {
+          "alone": 0.9031,
+          "alone_minus_reference": 0.0056,
+          "system_minus_reference_system": {
+            "difference": 0.0009,
+            "ci95": [
+              -0.004,
+              0.005
+            ],
+            "share_above_zero": 0.609
+          }
+        },
+        "pairs_v5+pairs_v6+trajdebug+worlds": {
+          "alone": 0.8986,
+          "alone_minus_reference": 0.0011,
+          "system_minus_reference_system": {
+            "difference": 0.0009,
+            "ci95": [
+              -0.002,
+              0.004
+            ],
+            "share_above_zero": 0.696
+          }
+        },
+        "pairs_v5+pairs_v7+trajdebug+worlds": {
+          "alone": 0.9007,
+          "alone_minus_reference": 0.0032,
+          "system_minus_reference_system": {
+            "difference": 0.002,
+            "ci95": [
+              -0.003,
+              0.006
+            ],
+            "share_above_zero": 0.781
+          }
+        },
+        "pairs_v6+pairs_v7+trajdebug+worlds": {
+          "alone": 0.8809,
+          "alone_minus_reference": -0.0166,
+          "system_minus_reference_system": {
+            "difference": -0.0017,
+            "ci95": [
+              -0.006,
+              0.002
+            ],
+            "share_above_zero": 0.198
+          }
+        },
+        "pairs_v5+pairs_v6+pairs_v7+trajdebug+worlds": {
+          "alone": 0.8967,
+          "alone_minus_reference": -0.0008,
+          "system_minus_reference_system": {
+            "difference": 0.0003,
+            "ci95": [
+              -0.005,
+              0.004
+            ],
+            "share_above_zero": 0.566
+          }
+        }
+      }
+    }
+  }
+}

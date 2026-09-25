@@ -65,6 +65,9 @@ def main() -> None:
     ap.add_argument("--out", type=Path, default=ROOT / "results/source_grid.json")
     ap.add_argument("--models", nargs="+", default=["logistic", "lightgbm"])
     ap.add_argument("--all-combos", action="store_true", help="every combination for LightGBM too")
+    ap.add_argument("--only", nargs="*", default=None, help="measure only these combinations, e.g. pairs_v5+trajdebug")
+    ap.add_argument("--first-seed", type=int, default=0, help="another draw of the quarter of pairs, to recheck a finding")
+    ap.add_argument("--with-tau", choices=("both", "yes", "no"), default="both")
     args = ap.parse_args()
 
     contexts = pd.read_parquet(args.contexts)
@@ -111,7 +114,7 @@ def main() -> None:
         for fit, held in GroupKFold(FOLDS).split(x, y, tasks):
             held_tasks = set(tasks[held])
             total = np.zeros(len(held))
-            for seed in range(3):
+            for seed in range(args.first_seed, args.first_seed + 3):
                 p = base_pairs[~base_pairs.task.isin(held_tasks)]
                 keep = np.random.default_rng(seed).choice(
                     sorted(p.context_id.unique()), round(0.25 * p.context_id.nunique()), replace=False
@@ -152,7 +155,7 @@ def main() -> None:
     }
     references = {}
     for model in args.models:
-        for with_tau in (True, False):
+        for with_tau in {"both": (True, False), "yes": (True,), "no": (False,)}[args.with_tau]:
             ref = score((), with_tau, model)
             references[(model, with_tau)] = ref
             tag = f"{model}_{'tau' if with_tau else 'no_tau'}"
@@ -163,6 +166,8 @@ def main() -> None:
             combos = [c for r in range(1, len(names) + 1) for c in itertools.combinations(names, r)]
             if model == "lightgbm" and not args.all_combos:  # the slow model: single sources and all of them
                 combos = [c for c in combos if len(c) in (1, len(names))]
+            if args.only is not None:
+                combos = [tuple(c.split("+")) for c in args.only]
             for combo in combos:
                 s = score(combo, with_tau, model)
                 result["runs"][tag]["variants"]["+".join(combo)] = {
