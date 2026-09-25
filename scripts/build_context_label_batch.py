@@ -13,6 +13,11 @@ each shown up to its own latest turn, and a longer dialogue gets a batch of its 
 
     python scripts/build_context_label_batch.py --split check
     python scripts/build_context_label_batch.py --split train
+
+The rows of the Russian τ² simulations (scripts/build_pseudo_rows.py) go the same way into their own
+folder, a few dialogues per domain for a pilot:
+
+    python scripts/build_context_label_batch.py --contexts data/synthetic/tau2_ru_rows.parquet         --out data/synthetic/opus_labels_tau2ru --name pilot --per-domain 5
 """
 
 import argparse
@@ -70,7 +75,9 @@ def main() -> None:
     setup()
     ap = argparse.ArgumentParser()
     ap.add_argument("--contexts", type=Path, default=ROOT / "data/synthetic/organizer_contexts.parquet")
-    ap.add_argument("--split", required=True, choices=("train", "check"))
+    ap.add_argument("--split", choices=("train", "check"), default=None, help="all rows when omitted")
+    ap.add_argument("--name", default=None, help="batch name prefix; the split by default")
+    ap.add_argument("--per-domain", type=int, default=None, help="only the first N dialogues of each domain")
     ap.add_argument("--max-kib", type=int, default=160)
     ap.add_argument("--max-contexts", type=int, default=32)
     ap.add_argument("--labeller", type=Path, default=ROOT / "configs/prompts/labeler_v4.md")
@@ -80,7 +87,14 @@ def main() -> None:
     args = ap.parse_args()
 
     frame = pd.read_parquet(args.contexts)
-    frame = frame[(frame.split == args.split) & ~frame.id.isin(labelled_by_opus(args.pairs))]
+    if "task" not in frame:  # simulation rows: the dialogue is the id before the turn
+        frame["task"] = frame.id.str.split("::").str[0]
+    if args.split:
+        frame = frame[frame.split == args.split]
+    frame = frame[~frame.id.isin(labelled_by_opus(args.pairs))]
+    if args.per_domain:
+        keep = frame.groupby("domain").task.apply(lambda t: sorted(t.unique())[: args.per_domain]).explode()
+        frame = frame[frame.task.isin(set(keep))]
     total = 0
     for domain, rows in frame.groupby("domain"):
         system = without_one_call_rule(rows.prompt.iloc[0][: rows.prompt.iloc[0].find(MARKER)].rstrip())
@@ -102,7 +116,7 @@ def main() -> None:
             batches[-1].append(d)
             size += kib
         for n, group in enumerate(batches, 1):
-            name = f"{args.split}_{domain}_{n}"
+            name = f"{args.name or args.split}_{domain}_{n}"
             count = write_batch(args.out / name, system, group, args)
             kib = sum((args.out / name / f).stat().st_size for f in ("batch.md", "system.md", "labeller.md")) / 1024
             print(f"{name}: {count} contexts from {len(group)} dialogues, {kib:.0f} KiB")
