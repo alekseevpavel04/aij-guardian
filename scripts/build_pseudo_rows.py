@@ -26,6 +26,7 @@ def main() -> None:
     ap.add_argument("--simulations", type=Path, default=ROOT / "data/synthetic/tau2_ru")
     ap.add_argument("--valid", type=Path, default=ROOT / "data/raw/valid.parquet")
     ap.add_argument("--out", type=Path, default=ROOT / "data/synthetic/pseudo_rows.parquet")
+    ap.add_argument("--tag", default="sim", help="id prefix, one per agent model, so two agents never share an id")
     args = ap.parse_args()
 
     systems = organiser_systems(args.valid)
@@ -38,7 +39,8 @@ def main() -> None:
         for step in steps(record, systems):
             rows.append(
                 {
-                    "id": f"sim__{domain}__{path.stem}::t{step.turn}",
+                    "id": f"{args.tag}__{domain}__{path.stem}::t{step.turn}",
+                    "agent_model": record["model"],
                     "prompt": step.prompt,
                     "response": step.response,
                     "domain": domain,

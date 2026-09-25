@@ -23,6 +23,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 import tau2.agent.llm_agent as llm_agent  # noqa: E402
+import tau2.evaluator.evaluator_nl_assertions as nl_assertions  # noqa: E402
 import tau2.user.user_simulator as user_simulator  # noqa: E402
 from tau2.data_model.simulation import TextRunConfig  # noqa: E402
 from tau2.runner.batch import run_single_task  # noqa: E402
@@ -72,6 +73,10 @@ def main() -> None:
         "temperature": 0.0,
         "extra_body": {"chat_template_kwargs": {"enable_thinking": False}},
     }
+    # tasks graded by natural-language assertions call τ²'s default judge (an OpenAI model); the
+    # reward is only a side signal here, so the same local model grades them
+    nl_assertions.DEFAULT_LLM_NL_ASSERTIONS = args.model
+    nl_assertions.DEFAULT_LLM_NL_ASSERTIONS_ARGS = llm_args
     task_ids = args.tasks.split(",") if args.tasks else None
     config = TextRunConfig(
         domain=args.domain,
@@ -99,6 +104,7 @@ def main() -> None:
                 "domain": args.domain,
                 "trial": trial,
                 "model": args.model,
+                "nl_assertions_judge": args.model,
                 "seconds": round(time.monotonic() - started, 1),
                 "simulation": json.loads(simulation.model_dump_json()),
             }
