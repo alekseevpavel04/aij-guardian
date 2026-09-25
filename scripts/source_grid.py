@@ -63,6 +63,8 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--contexts", type=Path, default=ROOT / "data/synthetic/organizer_contexts.parquet")
     ap.add_argument("--out", type=Path, default=ROOT / "results/source_grid.json")
+    ap.add_argument("--models", nargs="+", default=["logistic", "lightgbm"])
+    ap.add_argument("--all-combos", action="store_true", help="every combination for LightGBM too")
     args = ap.parse_args()
 
     contexts = pd.read_parquet(args.contexts)
@@ -149,7 +151,7 @@ def main() -> None:
         "runs": {},
     }
     references = {}
-    for model in ("logistic", "lightgbm"):
+    for model in args.models:
         for with_tau in (True, False):
             ref = score((), with_tau, model)
             references[(model, with_tau)] = ref
@@ -159,7 +161,7 @@ def main() -> None:
                 "variants": {},
             }
             combos = [c for r in range(1, len(names) + 1) for c in itertools.combinations(names, r)]
-            if model == "lightgbm":  # the slow model: single sources and all of them
+            if model == "lightgbm" and not args.all_combos:  # the slow model: single sources and all of them
                 combos = [c for c in combos if len(c) in (1, len(names))]
             for combo in combos:
                 s = score(combo, with_tau, model)

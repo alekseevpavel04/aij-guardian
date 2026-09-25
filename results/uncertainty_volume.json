@@ -1,0 +1,61 @@
+{
+  "all_contexts": {
+    "alone": 0.8113,
+    "system": 0.9757
+  },
+  "share_0.25": {
+    "alone": 0.723,
+    "system_minus_all_contexts": {
+      "difference": -0.0019,
+      "ci95": [
+        -0.008,
+        0.004
+      ],
+      "share_above_zero": 0.224
+    }
+  },
+  "share_0.5": {
+    "alone": 0.7736,
+    "system_minus_all_contexts": {
+      "difference": 0.0028,
+      "ci95": [
+        -0.002,
+        0.008
+      ],
+      "share_above_zero": 0.876
+    }
+  },
+  "share_0.75": {
+    "alone": 0.8019,
+    "system_minus_all_contexts": {
+      "difference": 0.0005,
+      "ci95": [
+        -0.001,
+        0.003
+      ],
+      "share_above_zero": 0.624
+    }
+  },
+  "agreed_labels_only": {
+    "alone": 0.815,
+    "system_minus_all_contexts": {
+      "difference": -0.0003,
+      "ci95": [
+        -0.006,
+        0.004
+      ],
+      "share_above_zero": 0.488
+    }
+  },
+  "text_turns_only": {
+    "alone": 0.6669,
+    "system_minus_all_contexts": {
+      "difference": 0.0014,
+      "ci95": [
+        -0.003,
+        0.005
+      ],
+      "share_above_zero": 0.747
+    }
+  }
+}

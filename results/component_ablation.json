@@ -1,0 +1,103 @@
+{
+  "rules_only": 0.717,
+  "uncertainty_alone": 0.8113,
+  "rules_plus_uncertainty": 0.9393,
+  "systems": {
+    "logistic": {
+      "head_alone": 0.8989,
+      "system": 0.9583,
+      "minus_submitted": {
+        "difference": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "share_above_zero": 0.0
+      }
+    },
+    "logistic+uncertainty": {
+      "head_alone": 0.8989,
+      "system": 0.9752,
+      "minus_submitted": {
+        "difference": 0.0169,
+        "ci95": [
+          0.005,
+          0.037
+        ],
+        "share_above_zero": 0.999
+      }
+    },
+    "lightgbm": {
+      "head_alone": 0.8975,
+      "system": 0.9625,
+      "minus_submitted": {
+        "difference": 0.0042,
+        "ci95": [
+          -0.003,
+          0.016
+        ],
+        "share_above_zero": 0.853
+      }
+    },
+    "lightgbm+uncertainty": {
+      "head_alone": 0.8975,
+      "system": 0.9777,
+      "minus_submitted": {
+        "difference": 0.0194,
+        "ci95": [
+          0.006,
+          0.043
+        ],
+        "share_above_zero": 1.0
+      }
+    },
+    "logistic+tau": {
+      "head_alone": 0.9215,
+      "system": 0.9637,
+      "minus_submitted": {
+        "difference": 0.0054,
+        "ci95": [
+          -0.0,
+          0.012
+        ],
+        "share_above_zero": 0.969
+      }
+    },
+    "logistic+tau+uncertainty": {
+      "head_alone": 0.9215,
+      "system": 0.9777,
+      "minus_submitted": {
+        "difference": 0.0194,
+        "ci95": [
+          0.006,
+          0.042
+        ],
+        "share_above_zero": 1.0
+      }
+    },
+    "lightgbm+tau": {
+      "head_alone": 0.9295,
+      "system": 0.9696,
+      "minus_submitted": {
+        "difference": 0.0113,
+        "ci95": [
+          0.003,
+          0.024
+        ],
+        "share_above_zero": 0.998
+      }
+    },
+    "lightgbm+tau+uncertainty": {
+      "head_alone": 0.9295,
+      "system": 0.982,
+      "minus_submitted": {
+        "difference": 0.0237,
+        "ci95": [
+          0.01,
+          0.047
+        ],
+        "share_above_zero": 1.0
+      }
+    }
+  }
+}
