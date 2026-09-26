@@ -74,9 +74,15 @@ def main() -> None:
     ap.add_argument("--contexts", type=Path, default=ROOT / "data/synthetic/organizer_contexts.parquet")
     ap.add_argument("--rows", type=Path, default=ROOT / "data/synthetic/tau2_ru_rows.parquet")
     ap.add_argument("--labels", choices=("agreed", "opus", "v1s"), default="agreed")
+    ap.add_argument(
+        "--dialogue-weight",
+        action="store_true",
+        help="a simulated dialogue weighs as much in all as an organiser's one (8B dialogues loop to ~26 turns)",
+    )
     ap.add_argument("--out", type=Path, default=None)
     args = ap.parse_args()
-    out = args.out or ROOT / f"results/tau2ru_ruler_{args.labels}.json"
+    suffix = "_dialogue_weight" if args.dialogue_weight else ""
+    out = args.out or ROOT / f"results/tau2ru_ruler_{args.labels}{suffix}.json"
 
     contexts = pd.read_parquet(args.contexts)
     sim = pd.read_parquet(args.rows)
@@ -92,6 +98,9 @@ def main() -> None:
     sim = sim[sim.id.isin(vecs) & sim.id.isin(sim_feats)]
     tau = load("ext_dev", None, 0)
     tau = tau[tau.id.isin(vecs)]
+    turns = sim.groupby(sim.id.str.split("::").str[0]).id.transform("size")
+    organiser_turns = contexts.groupby("task").id.size().mean()
+    sim["w"] = organiser_turns / turns if args.dialogue_weight else 1.0
 
     ruler = Ruler(contexts, vecs, written(V3_V4, contexts), None)
     y, x, tasks, pairs = ruler.label["v1s"], ruler.x, ruler.tasks, ruler.pairs
@@ -143,7 +152,7 @@ def main() -> None:
                 if sim_weight and len(s):
                     xs.append(np.stack([vecs[i] for i in s.id]))
                     ys.append(s.label.to_numpy())
-                    ws.append(np.full(len(s), sim_weight))
+                    ws.append(sim_weight * s.w.to_numpy())
                 n = sum(map(len, ws))
                 xs.append(np.stack([vecs[i] for i in tau.id]))
                 ys.append(tau.label.to_numpy())
@@ -162,7 +171,7 @@ def main() -> None:
             s = sim[~sim.task.isin(set(tasks[held]))] if sim_weight else sim.iloc[:0]
             xf = np.vstack([xu[fit], *([np.stack([sim_feats[i] for i in s.id])] if len(s) else [])])
             yf = np.concatenate([y[fit], s.label.to_numpy()]).astype(int)
-            wf = np.concatenate([np.ones(len(fit)), np.full(len(s), sim_weight)])
+            wf = np.concatenate([np.ones(len(fit)), sim_weight * s.w.to_numpy()])
             sc = StandardScaler().fit(xf)
             m = LogisticRegression(C=1.0, max_iter=5000).fit(sc.transform(xf), yf, sample_weight=wf)
             scores[held] = m.predict_proba(sc.transform(xu[held]))[:, 1]
