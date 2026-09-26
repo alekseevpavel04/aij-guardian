@@ -1002,5 +1002,114 @@
         ]
       }
     }
+  },
+  "simulation:qwen36_thinking": {
+    "messages": 129,
+    "mean_abs_d": 0.282,
+    "marked_features": 2,
+    "features": {
+      "chars": {
+        "writer": 290.0,
+        "d": -0.51,
+        "outside_10_90": 0.32,
+        "marked": true
+      },
+      "sentences": {
+        "writer": 4.0,
+        "d": -0.53,
+        "outside_10_90": 0.15,
+        "marked": true
+      },
+      "words_per_sentence": {
+        "writer": 9.8,
+        "d": -0.42,
+        "outside_10_90": 0.34,
+        "marked": false
+      },
+      "commas_per_1k": {
+        "writer": 12.88,
+        "d": 0.15,
+        "outside_10_90": 0.27,
+        "marked": false
+      },
+      "long_dashes_per_1k": {
+        "writer": 0.0,
+        "d": 0.0,
+        "outside_10_90": 0.01,
+        "marked": false
+      },
+      "colons_per_1k": {
+        "writer": 0.0,
+        "d": -0.28,
+        "outside_10_90": 0.09,
+        "marked": false
+      },
+      "long_words_pct": {
+        "writer": 3.03,
+        "d": -0.13,
+        "outside_10_90": 0.11,
+        "marked": false
+      },
+      "anchor_chars_pct": {
+        "writer": 8.51,
+        "d": 0.45,
+        "outside_10_90": 0.33,
+        "marked": false
+      },
+      "digits_pct": {
+        "writer": 0.0,
+        "d": -0.19,
+        "outside_10_90": 0.09,
+        "marked": false
+      },
+      "has_bold": {
+        "writer": 0.31,
+        "d": -0.34,
+        "outside_10_90": 0.0,
+        "marked": false
+      },
+      "has_list": {
+        "writer": 0.26,
+        "d": -0.34,
+        "outside_10_90": 0.0,
+        "marked": false
+      },
+      "has_dollar_sign": {
+        "writer": 0.13,
+        "d": -0.05,
+        "outside_10_90": 0.0,
+        "marked": false
+      }
+    },
+    "pooled": {
+      "introductory": {
+        "ratio_to_organiser": 0.7,
+        "ci95": [
+          0.25,
+          1.27
+        ]
+      },
+      "connectives": {
+        "ratio_to_organiser": 0.88,
+        "ci95": [
+          0.72,
+          1.02
+        ]
+      },
+      "verbal_nouns": {
+        "ratio_to_organiser": 1.03,
+        "ci95": [
+          0.85,
+          1.21
+        ]
+      },
+      "participles": {
+        "ratio_to_organiser": 0.95,
+        "ci95": [
+          0.69,
+          1.23
+        ]
+      }
+    }
   }
 }
