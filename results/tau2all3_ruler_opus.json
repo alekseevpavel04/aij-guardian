@@ -1,0 +1,287 @@
+{
+  "labels": "opus",
+  "balance": "none",
+  "uncertainty_head_skips": [
+    "glm"
+  ],
+  "context_labels": "v1s",
+  "sources": [
+    [
+      "data/synthetic/tau2_ru_q36_rows.parquet",
+      "q4_tok_tau2q36",
+      "data/synthetic/opus_labels_tau2q36"
+    ],
+    [
+      "data/synthetic/tau2_ru_glm_rows.parquet",
+      "q4_tok_tau2glm",
+      "data/synthetic/opus_labels_tau2glm"
+    ],
+    [
+      "data/synthetic/tau2_ru_q36n_rows.parquet",
+      "q4_tok_tau2q36n",
+      "data/synthetic/opus_labels_tau2q36n"
+    ]
+  ],
+  "turns_dropped_for_chinese_words": 5,
+  "rows": 686,
+  "positives": 47,
+  "dialogues": 42,
+  "rows_of_organiser_tasks": 138,
+  "compared_with_contexts": {
+    "share_of_errors": [
+      0.069,
+      0.174
+    ],
+    "share_with_tool_call": [
+      0.36,
+      0.57
+    ],
+    "median_response_chars": [
+      282,
+      228
+    ],
+    "median_prompt_chars": [
+      28289,
+      29004
+    ],
+    "mean_token_logp": [
+      -0.962,
+      -1.196
+    ]
+  },
+  "variants": {
+    "head_b_w1.0": {
+      "head_b_alone": 0.9386,
+      "uncertainty_alone": 0.8113,
+      "system_minus_reference": {
+        "difference": 0.0055,
+        "ci95": [
+          0.0,
+          0.014
+        ],
+        "share_above_zero": 0.988
+      },
+      "new_ruler_all_contexts": {
+        "v1s": {
+          "f1": 0.7342,
+          "f1_minus_reference": 0.038,
+          "ci95": [
+            -0.024,
+            0.089
+          ],
+          "auroc": 0.9451
+        },
+        "opus": {
+          "f1": 0.7719,
+          "f1_minus_reference": 0.0701,
+          "ci95": [
+            -0.015,
+            0.105
+          ],
+          "auroc": 0.9233
+        }
+      }
+    },
+    "uncertainty_w1.0": {
+      "head_b_alone": 0.9295,
+      "uncertainty_alone": 0.7949,
+      "system_minus_reference": {
+        "difference": 0.0023,
+        "ci95": [
+          -0.004,
+          0.006
+        ],
+        "share_above_zero": 0.823
+      },
+      "new_ruler_all_contexts": {
+        "v1s": {
+          "f1": 0.7089,
+          "f1_minus_reference": 0.0127,
+          "ci95": [
+            -0.033,
+            0.054
+          ],
+          "auroc": 0.9436
+        },
+        "opus": {
+          "f1": 0.7251,
+          "f1_minus_reference": 0.0233,
+          "ci95": [
+            -0.026,
+            0.053
+          ],
+          "auroc": 0.9191
+        }
+      }
+    },
+    "both_w1.0": {
+      "head_b_alone": 0.9386,
+      "uncertainty_alone": 0.7949,
+      "system_minus_reference": {
+        "difference": 0.0068,
+        "ci95": [
+          0.002,
+          0.013
+        ],
+        "share_above_zero": 0.997
+      },
+      "new_ruler_all_contexts": {
+        "v1s": {
+          "f1": 0.7215,
+          "f1_minus_reference": 0.0253,
+          "ci95": [
+            -0.014,
+            0.063
+          ],
+          "auroc": 0.9492
+        },
+        "opus": {
+          "f1": 0.7602,
+          "f1_minus_reference": 0.0584,
+          "ci95": [
+            0.0,
+            0.097
+          ],
+          "auroc": 0.9288
+        }
+      }
+    },
+    "head_b_w0.5": {
+      "head_b_alone": 0.9403,
+      "uncertainty_alone": 0.8113,
+      "system_minus_reference": {
+        "difference": 0.0047,
+        "ci95": [
+          0.001,
+          0.012
+        ],
+        "share_above_zero": 0.993
+      },
+      "new_ruler_all_contexts": {
+        "v1s": {
+          "f1": 0.7215,
+          "f1_minus_reference": 0.0253,
+          "ci95": [
+            -0.022,
+            0.067
+          ],
+          "auroc": 0.9437
+        },
+        "opus": {
+          "f1": 0.7602,
+          "f1_minus_reference": 0.0584,
+          "ci95": [
+            -0.015,
+            0.095
+          ],
+          "auroc": 0.9209
+        }
+      }
+    },
+    "uncertainty_w0.5": {
+      "head_b_alone": 0.9295,
+      "uncertainty_alone": 0.8122,
+      "system_minus_reference": {
+        "difference": 0.0026,
+        "ci95": [
+          -0.002,
+          0.005
+        ],
+        "share_above_zero": 0.912
+      },
+      "new_ruler_all_contexts": {
+        "v1s": {
+          "f1": 0.7089,
+          "f1_minus_reference": 0.0127,
+          "ci95": [
+            -0.031,
+            0.045
+          ],
+          "auroc": 0.9428
+        },
+        "opus": {
+          "f1": 0.7135,
+          "f1_minus_reference": 0.0117,
+          "ci95": [
+            -0.024,
+            0.045
+          ],
+          "auroc": 0.9177
+        }
+      }
+    },
+    "both_w0.5": {
+      "head_b_alone": 0.9403,
+      "uncertainty_alone": 0.8122,
+      "system_minus_reference": {
+        "difference": 0.0057,
+        "ci95": [
+          0.001,
+          0.01
+        ],
+        "share_above_zero": 0.995
+      },
+      "new_ruler_all_contexts": {
+        "v1s": {
+          "f1": 0.7089,
+          "f1_minus_reference": 0.0127,
+          "ci95": [
+            -0.027,
+            0.051
+          ],
+          "auroc": 0.9459
+        },
+        "opus": {
+          "f1": 0.7485,
+          "f1_minus_reference": 0.0467,
+          "ci95": [
+            -0.013,
+            0.086
+          ],
+          "auroc": 0.9254
+        }
+      }
+    },
+    "logistic_head_b_w1.0_against_logistic": {
+      "head_b_alone": 0.9299,
+      "uncertainty_alone": 0.8113,
+      "system_minus_reference": {
+        "difference": 0.0064,
+        "ci95": [
+          0.0,
+          0.015
+        ],
+        "share_above_zero": 0.981
+      },
+      "new_ruler_all_contexts": {
+        "v1s": {
+          "f1": 0.7089,
+          "f1_minus_reference": 0.0127,
+          "ci95": [
+            -0.03,
+            0.094
+          ],
+          "auroc": 0.9431
+        },
+        "opus": {
+          "f1": 0.7251,
+          "f1_minus_reference": 0.0233,
+          "ci95": [
+            -0.026,
+            0.078
+          ],
+          "auroc": 0.9184
+        }
+      }
+    }
+  },
+  "candidate": {
+    "head_b_alone": 0.9295,
+    "uncertainty_alone": 0.8113,
+    "system": 0.982,
+    "system_f1_at_test_share_all_contexts": {
+      "v1s": 0.6962,
+      "opus": 0.7018
+    }
+  }
+}
