@@ -78,6 +78,7 @@ def main() -> None:
     ap.add_argument("--fraction", type=float, default=1.0, help="share of the simulated dialogues to use")
     ap.add_argument("--seed", type=int, default=0, help="which random share, with --fraction")
     ap.add_argument("--quick", action="store_true", help="only the main variant (both heads, weight 1)")
+    ap.add_argument("--balance", choices=("none", "match", "negatives", "positives"), default="none")
     ap.add_argument(
         "--source",
         action="append",
@@ -91,7 +92,9 @@ def main() -> None:
     )
     ap.add_argument("--out", type=Path, default=None)
     args = ap.parse_args()
-    suffix = "_dialogue_weight" if args.dialogue_weight else ""
+    suffix = ("_dialogue_weight" if args.dialogue_weight else "") + (
+        "" if args.balance == "none" else f"_{args.balance}"
+    )
     out = args.out or ROOT / f"results/{args.tag}_ruler_{args.labels}{suffix}.json"
 
     contexts = pd.read_parquet(args.contexts)
@@ -141,6 +144,7 @@ def main() -> None:
     org_logp = mean_logp("q4_tok")
     result: dict = {
         "labels": args.labels,
+        "balance": args.balance,
         "sources": [list(x) for x in sources],
         "turns_dropped_for_chinese_words": dropped,
         "rows": len(sim),
@@ -164,6 +168,20 @@ def main() -> None:
     }
     print(json.dumps(result, ensure_ascii=False), flush=True)
 
+    target = float(y.mean())
+
+    def balance(s: pd.DataFrame) -> np.ndarray:
+        """Per-row factor on the simulation rows: as they are, their errors weighted up to the contexts'
+        share of errors (total weight kept), only their correct turns, or only their errors."""
+        lab = s.label.to_numpy()
+        if args.balance == "match" and 0 < lab.mean() < 1:
+            return np.where(lab == 1, target / lab.mean(), (1 - target) / (1 - lab.mean()))
+        if args.balance == "negatives":
+            return (lab == 0).astype(float)
+        if args.balance == "positives":
+            return (lab == 1).astype(float)
+        return np.ones(len(s))
+
     def head_b(model: str, sim_weight: float) -> np.ndarray:
         scores = np.zeros(len(y))
         for fit, held in GroupKFold(FOLDS).split(x, y, tasks):
@@ -181,8 +199,10 @@ def main() -> None:
                 if sim_weight and len(s):
                     xs.append(np.stack([vecs[i] for i in s.id]))
                     ys.append(s.label.to_numpy())
-                    ws.append(sim_weight * s.w.to_numpy())
-                n = sum(map(len, ws))
+                    ws.append(sim_weight * s.w.to_numpy() * balance(s))
+                # τ² weighs half of the Russian rows without the simulations, so adding simulations does not
+                # also raise the weight of τ² (it did before 26.09 evening)
+                n = len(fit) + len(p)
                 xs.append(np.stack([vecs[i] for i in tau.id]))
                 ys.append(tau.label.to_numpy())
                 ws.append(np.full(len(tau), 0.5 * n / len(tau)))
@@ -200,7 +220,7 @@ def main() -> None:
             s = sim[~sim.task.isin(set(tasks[held]))] if sim_weight else sim.iloc[:0]
             xf = np.vstack([xu[fit], *([np.stack([sim_feats[i] for i in s.id])] if len(s) else [])])
             yf = np.concatenate([y[fit], s.label.to_numpy()]).astype(int)
-            wf = np.concatenate([np.ones(len(fit)), sim_weight * s.w.to_numpy()])
+            wf = np.concatenate([np.ones(len(fit)), sim_weight * s.w.to_numpy() * balance(s)])
             sc = StandardScaler().fit(xf)
             m = LogisticRegression(C=1.0, max_iter=5000).fit(sc.transform(xf), yf, sample_weight=wf)
             scores[held] = m.predict_proba(sc.transform(xu[held]))[:, 1]
