@@ -75,6 +75,9 @@ def main() -> None:
     ap.add_argument("--opus-dir", type=Path, default=ROOT / "data/synthetic/opus_labels_tau2ru")
     ap.add_argument("--v1s", default="labeler_v1s_tau2ru")
     ap.add_argument("--tag", default="tau2ru", help="name of the result file")
+    ap.add_argument("--fraction", type=float, default=1.0, help="share of the simulated dialogues to use")
+    ap.add_argument("--seed", type=int, default=0, help="which random share, with --fraction")
+    ap.add_argument("--quick", action="store_true", help="only the main variant (both heads, weight 1)")
     ap.add_argument(
         "--source",
         action="append",
@@ -116,6 +119,10 @@ def main() -> None:
         vecs |= vectors(name)
     own = features("q4_tok")
     sim = sim[sim.id.isin(vecs) & sim.id.isin(sim_feats)]
+    if args.fraction < 1.0:  # a random share of the simulated dialogues, for the scale curve
+        dialogues = sorted(sim.id.str.split("::").str[0].unique())
+        keep = np.random.default_rng(args.seed).choice(dialogues, round(args.fraction * len(dialogues)), replace=False)
+        sim = sim[sim.id.str.split("::").str[0].isin(set(keep))]
     tau = load("ext_dev", None, 0)
     tau = tau[tau.id.isin(vecs)]
     turns = sim.groupby(sim.id.str.split("::").str[0]).id.transform("size")
@@ -210,7 +217,7 @@ def main() -> None:
         "system": ruler.auroc_ci(reference)["auroc"],
         "system_f1_at_test_share_all_contexts": {t: at_share(ruler.label[t], reference)["f1"] for t in ("v1s", "opus")},
     }
-    logistic_ref = system(head_b("logistic", 0.0), u_ref)
+    logistic_ref = None if args.quick else system(head_b("logistic", 0.0), u_ref)
 
     def f1_at_share(truth: np.ndarray, s: np.ndarray) -> float:
         return at_share(truth, s)["f1"]
@@ -244,12 +251,15 @@ def main() -> None:
         }
         print(name, json.dumps(result["variants"][name]), flush=True)
 
-    for w in (1.0, 0.5):
-        b, u = head_b("lightgbm", w), uncertainty(w)
-        report(f"head_b_w{w}", b, u_ref)
-        report(f"uncertainty_w{w}", b_ref, u)
-        report(f"both_w{w}", b, u)
-    report("logistic_head_b_w1.0_against_logistic", head_b("logistic", 1.0), u_ref, logistic_ref)
+    if args.quick:  # the scale curve needs only the main variant
+        report("both_w1.0", head_b("lightgbm", 1.0), uncertainty(1.0))
+    else:
+        for w in (1.0, 0.5):
+            b, u = head_b("lightgbm", w), uncertainty(w)
+            report(f"head_b_w{w}", b, u_ref)
+            report(f"uncertainty_w{w}", b_ref, u)
+            report(f"both_w{w}", b, u)
+        report("logistic_head_b_w1.0_against_logistic", head_b("logistic", 1.0), u_ref, logistic_ref)
     out.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
