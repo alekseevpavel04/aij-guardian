@@ -97,6 +97,8 @@ def main() -> None:
         "extra_body": {"chat_template_kwargs": {"enable_thinking": False}},
     }
     agent_args = {**llm_args, "extra_body": {"chat_template_kwargs": {"enable_thinking": args.thinking}}}
+    if args.thinking:  # a runaway reasoning must not hold a turn forever; the server also caps the thinking
+        agent_args["max_tokens"] = 4096
     # tasks graded by natural-language assertions call τ²'s default judge (an OpenAI model); the
     # reward is only a side signal here, so the same local model grades them
     nl_assertions.DEFAULT_LLM_NL_ASSERTIONS = args.model
