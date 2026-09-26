@@ -24,12 +24,15 @@ sys.path.insert(0, str(ROOT / "src"))
 
 import tau2.agent.llm_agent as llm_agent  # noqa: E402
 import tau2.evaluator.evaluator_nl_assertions as nl_assertions  # noqa: E402
+import tau2.orchestrator.orchestrator as orchestrator  # noqa: E402
 import tau2.user.user_simulator as user_simulator  # noqa: E402
+from tau2.data_model.message import AssistantMessage  # noqa: E402
 from tau2.data_model.simulation import TextRunConfig  # noqa: E402
 from tau2.runner.batch import run_single_task  # noqa: E402
 from tau2.runner.helpers import get_tasks  # noqa: E402
 
 from guardian.journal import write_atomic  # noqa: E402
+from guardian.tau2_sim import GREETING  # noqa: E402
 
 RUSSIAN_USER = (
     "\n\n## Language\n"
@@ -39,14 +42,21 @@ RUSSIAN_USER = (
 
 
 def patch_language(instruction_file: Path) -> None:
-    """The organiser's agent instructions, and a Russian-speaking user; both read at call time by τ²."""
+    """The organiser's agent instructions, the Russian greeting of the data, and a Russian-speaking user;
+    all read at call time by τ².
+
+    τ² opens every dialogue with a fixed English greeting; a strong user model answers in the language it
+    is addressed in, and the agent follows the user (Qwen3.6 did, 26.09), so the greeting is the one the
+    organiser's data shows, and the language rule is repeated after the user's scenario as well."""
     llm_agent.AGENT_INSTRUCTION = instruction_file.read_text(encoding="utf-8").strip()
+    orchestrator.DEFAULT_FIRST_AGENT_MESSAGE = AssistantMessage(role="assistant", content=GREETING, cost=0.0)
     original = user_simulator.get_global_user_sim_guidelines
 
     def russian_guidelines(use_tools: bool = False) -> str:
         return original(use_tools) + RUSSIAN_USER
 
     user_simulator.get_global_user_sim_guidelines = russian_guidelines
+    user_simulator.SYSTEM_PROMPT = user_simulator.SYSTEM_PROMPT + RUSSIAN_USER
 
 
 def file_name(task_id: str, trial: int) -> str:
@@ -123,6 +133,7 @@ def main() -> None:
                 "temperature": args.temperature,
                 "agent_thinking": args.thinking,
                 "organiser_system": bool(args.organiser_system),
+                "greeting": GREETING,
                 "seconds": round(time.monotonic() - started, 1),
                 "simulation": json.loads(simulation.model_dump_json()),
             }
