@@ -31,6 +31,7 @@ WORK = Path("/kaggle/working")
 TMP = Path("/tmp/kaggle_sim")  # models and builds; /kaggle/working keeps only the results (20 GB limit)
 TAU2_COMMIT = "b7ea907"
 LLAMA_TAG = "b11052"
+LLAMA_BIN = f"llama_bin_{LLAMA_TAG}_sm75.tar.gz"
 MODELS = {
     "q36n": ("ggml-org/Qwen3.6-35B-A3B-GGUF", "Qwen3.6-35B-A3B-Q4_K_M.gguf", ["--reasoning", "off"], False),
     "q36": (
@@ -92,7 +93,14 @@ def cuda_driver_library() -> Path:
 
 
 def setup_llama() -> Path:
+    """The build takes about 45 minutes of a session, so each session leaves build/bin in its output and a later
+    session with that output attached unpacks it instead. It goes back to the same path: the build-tree rpath
+    of llama-server points at the shared libraries there."""
     server = TMP / "llama.cpp/build/bin/llama-server"
+    cached = sorted(Path("/kaggle/input").glob(f"**/{LLAMA_BIN}"))
+    if not server.exists() and cached:
+        log(f"unpacking {cached[0]}")
+        sh(f"tar -xzf {cached[0]} -C /")
     if not server.exists():
         sh(
             f"git -c advice.detachedHead=false clone -q --depth 1 --branch {LLAMA_TAG} "
@@ -107,6 +115,8 @@ def setup_llama() -> Path:
             cwd=TMP / "llama.cpp",
         )
         sh(f"cmake --build build --target llama-server -j {os.cpu_count()}", cwd=TMP / "llama.cpp")
+    if not (WORK / LLAMA_BIN).exists():
+        sh(f"tar -czf {WORK / LLAMA_BIN} -C / {str(server.parent).lstrip('/')}")
     return server
 
 

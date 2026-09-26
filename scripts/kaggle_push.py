@@ -2,6 +2,7 @@
 
     python scripts/kaggle_push.py kit                                  # new version of the private kit dataset
     python scripts/kaggle_push.py push --name aij-sim-run1 --agent q36n --tasks tasks_run1.json
+    python scripts/kaggle_push.py push --name aij-sim-run4 --binary-from aij-sim-run1  # reuse its build
     python scripts/kaggle_push.py push --name aij-sim-test --mode test
     python scripts/kaggle_push.py status --name aij-sim-run1
     python scripts/kaggle_push.py fetch --name aij-sim-run1             # output into data/kaggle/out/<name>
@@ -66,7 +67,8 @@ def push(args: argparse.Namespace) -> None:
         "enable_internet": True,
         "dataset_sources": [KIT_DATASET],
         "competition_sources": [],
-        "kernel_sources": [],
+        # an earlier session's output carries the built llama-server (kaggle_sim.py unpacks it)
+        "kernel_sources": [f"{OWNER}/{args.binary_from}"] if args.binary_from else [],
     }
     (folder / "kernel-metadata.json").write_text(json.dumps(meta, indent=1), encoding="utf-8")
     written = json.loads((folder / "kernel-metadata.json").read_text(encoding="utf-8"))
@@ -92,6 +94,7 @@ def main() -> None:
     ap.add_argument("--agent", default="q36n")
     ap.add_argument("--tasks", default="tasks_run1.json")
     ap.add_argument("--stop-after", type=float, default=7.9)
+    ap.add_argument("--binary-from", default=None, help="a finished session whose output has the llama-server build")
     args = ap.parse_args()
     if args.action == "kit":
         kit(args)
