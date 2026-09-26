@@ -242,6 +242,8 @@ def main() -> None:
             }
         return out
 
+    scores: dict[str, np.ndarray] = {}
+
     def report(name: str, b: np.ndarray, u: np.ndarray, against: np.ndarray = reference) -> None:
         result["variants"][name] = {
             "head_b_alone": ruler.auroc_ci(b)["auroc"],
@@ -250,6 +252,7 @@ def main() -> None:
             "new_ruler_all_contexts": new_ruler(system(b, u), against),
         }
         print(name, json.dumps(result["variants"][name]), flush=True)
+        scores[name] = system(b, u)
 
     if args.quick:  # the scale curve needs only the main variant
         report("both_w1.0", head_b("lightgbm", 1.0), uncertainty(1.0))
@@ -261,6 +264,8 @@ def main() -> None:
             report(f"both_w{w}", b, u)
         report("logistic_head_b_w1.0_against_logistic", head_b("logistic", 1.0), u_ref, logistic_ref)
     out.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    # out-of-fold system scores per context, for comparing against the submissions (ruler_vs_test.py)
+    np.savez(out.with_suffix(".scores.npz"), ids=ruler.ctx.id.to_numpy().astype(str), reference=reference, **scores)
 
 
 if __name__ == "__main__":

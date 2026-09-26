@@ -1,0 +1,127 @@
+{
+  "share": 0.3,
+  "systems": {
+    "rules_only": {
+      "test_f1": 0.17333,
+      "flagged_share": 0.065,
+      "v1s_all": 0.5,
+      "opus_all": 0.4762,
+      "agreed_v1s": 0.6053
+    },
+    "judge_no_thinking": {
+      "test_f1": 0.46865,
+      "flagged_share": 0.328,
+      "v1s_all": 0.6218,
+      "opus_all": 0.6602,
+      "agreed_v1s": 0.6623,
+      "auroc_v1s_all": 0.9142
+    },
+    "head_a": {
+      "test_f1": 0.410774,
+      "flagged_share": 0.312,
+      "v1s_all": 0.5561,
+      "opus_all": 0.53,
+      "agreed_v1s": 0.5584,
+      "auroc_v1s_all": 0.8582
+    },
+    "head_b": {
+      "test_f1": 0.51333,
+      "flagged_share": 0.312,
+      "v1s_all": 0.5989,
+      "opus_all": 0.6,
+      "agreed_v1s": 0.6225,
+      "auroc_v1s_all": 0.9137
+    },
+    "head_b_no_pairs": {
+      "test_f1": 0.5,
+      "flagged_share": 0.315,
+      "v1s_all": 0.617,
+      "opus_all": 0.6468,
+      "agreed_v1s": 0.6577,
+      "auroc_v1s_all": 0.9187
+    },
+    "candidate": {
+      "test_f1": null,
+      "flagged_share": 0.323,
+      "v1s_all": 0.6492,
+      "opus_all": 0.6765,
+      "agreed_v1s": 0.6974,
+      "auroc_v1s_all": 0.9383
+    },
+    "candidate_plus_tau2q36_both_w1.0": {
+      "test_f1": null,
+      "flagged_share": 0.32,
+      "v1s_all": 0.6737,
+      "opus_all": 0.67,
+      "agreed_v1s": 0.7067,
+      "auroc_v1s_all": 0.9428
+    }
+  },
+  "bridges": {
+    "v1s_all": {
+      "pearson": 0.934,
+      "slope": 2.555,
+      "intercept": -1.066,
+      "leave_one_out_abs_error_mean": 0.086,
+      "predicted_test_f1": {
+        "candidate": 0.593,
+        "candidate_plus_tau2q36_both_w1.0": 0.656
+      }
+    },
+    "opus_all": {
+      "pearson": 0.851,
+      "slope": 1.519,
+      "intercept": -0.472,
+      "leave_one_out_abs_error_mean": 0.113,
+      "predicted_test_f1": {
+        "candidate": 0.556,
+        "candidate_plus_tau2q36_both_w1.0": 0.546
+      }
+    },
+    "agreed_v1s": {
+      "pearson": 0.402,
+      "slope": 1.322,
+      "intercept": -0.408,
+      "leave_one_out_abs_error_mean": 0.159,
+      "predicted_test_f1": {
+        "candidate": 0.514,
+        "candidate_plus_tau2q36_both_w1.0": 0.526
+      }
+    },
+    "scored_submissions_only:v1s_all": {
+      "pearson": 0.746,
+      "slope": 1.138,
+      "predicted_test_f1": {
+        "candidate": 0.531,
+        "candidate_plus_tau2q36_both_w1.0": 0.559
+      }
+    },
+    "scored_submissions_only:opus_all": {
+      "pearson": 0.665,
+      "slope": 0.516,
+      "predicted_test_f1": {
+        "candidate": 0.508,
+        "candidate_plus_tau2q36_both_w1.0": 0.505
+      }
+    },
+    "scored_submissions_only:agreed_v1s": {
+      "pearson": 0.726,
+      "slope": 0.69,
+      "predicted_test_f1": {
+        "candidate": 0.523,
+        "candidate_plus_tau2q36_both_w1.0": 0.529
+      }
+    },
+    "scored_submissions_only:auroc_v1s_all": {
+      "pearson": 0.914,
+      "slope": 1.45,
+      "predicted_test_f1": {
+        "candidate": 0.527,
+        "candidate_plus_tau2q36_both_w1.0": 0.533
+      }
+    }
+  },
+  "not_reproducible": [
+    "cascade think1024 (0.450331)"
+  ]
+}
