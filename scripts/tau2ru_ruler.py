@@ -44,7 +44,7 @@ from turn_ruler import RULES  # noqa: E402
 from uncertainty_source_grid import features  # noqa: E402
 
 EMB = ROOT / "data/interim/embeddings"
-CJK = r"[぀-ヿ㐀-鿿]"
+CJK = "[぀-ヿ㐀-鿿]"  # kana and CJK ideographs
 
 
 def simulation_labels(mode: str, rows: pd.DataFrame, opus_dir: Path, v1s_name: str) -> pd.Series:
