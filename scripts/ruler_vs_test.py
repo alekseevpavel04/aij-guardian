@@ -42,12 +42,18 @@ TEST = {  # strategy prefix in results/submissions.csv -> name here
 }
 
 
-def flags(score: np.ndarray | None, fired: np.ndarray) -> np.ndarray:
+def flags(score: np.ndarray | None, fired: np.ndarray, share: float = SHARE, total: int | None = None) -> np.ndarray:
+    """Rules OR the top `share` of scores; with `total`, the top is grown until the union has that many rows."""
     if score is None:
         return fired.astype(int)
-    count = round(SHARE * len(score))
+    order = np.argsort(-score)
+    count = round(share * len(score))
+    if total is not None:
+        count = 0
+        while count < len(score) and (fired | np.isin(np.arange(len(score)), order[:count])).sum() < total:
+            count += 1
     top = np.zeros(len(score), dtype=bool)
-    top[np.argsort(-score)[:count]] = True
+    top[order[:count]] = True
     return (top | fired).astype(int)
 
 
@@ -145,8 +151,51 @@ def main() -> None:
                 n: round(float(slope * table[n][measure] + intercept), 3) for n in table if table[n]["test_f1"] is None
             },
         }
+    # the test flagged 170 rows for 130 errors (1.31 per error); the ruler has fewer errors, so the same 30 %
+    # is another operating point there. Sweep the share, and match the test's flags-per-error ratio
+    sweep = {}
+    for view, (mask, truth) in views.items():
+        for label, share, total in [(f"top_{x}", x, None) for x in (0.15, 0.2, 0.237, 0.3)] + [
+            ("flags_per_error_as_test", SHARE, round(170 / 130 * truth[mask].sum()))
+        ]:
+            f1 = {}
+            for n in heads:
+                f = flags(systems[n], fired, share, total)
+                f1[n] = round(binary_scores(truth[mask], f[mask]).f1, 4)
+            xs = np.array([f1[n] for n in heads])
+            sweep[f"{view}:{label}"] = {
+                "f1": f1,
+                "pearson_with_test": round(float(np.corrcoef(xs, ys)[0, 1]), 3),
+                "same_order_as_test": [n for n in sorted(heads, key=lambda n: -f1[n])]
+                == [n for n in sorted(heads, key=lambda n: -table[n]["test_f1"])],
+            }
+    # the measure that follows the test (v1s labels, as many flags per error as on the test): its bridge,
+    # and how many flags per error give the best F1 at home, a hint for the final threshold
+    mask, truth = views["v1s_all"]
+    matched = round(170 / 130 * truth.sum())
+    at_test_point = {n: binary_scores(truth, flags(systems[n], fired, SHARE, matched)).f1 for n in systems}
+    xs = np.array([at_test_point[n] for n in heads])
+    slope, intercept = np.polyfit(xs, ys, 1)
+    bridges["v1s_flags_per_error_as_test"] = {
+        "pearson": round(float(np.corrcoef(xs, ys)[0, 1]), 3),
+        "slope": round(float(slope), 3),
+        "ruler_f1": {n: round(v, 4) for n, v in at_test_point.items()},
+        "predicted_test_f1": {
+            n: round(float(slope * at_test_point[n] + intercept), 3) for n in systems if n not in test
+        },
+    }
+    ratio_curve = {}
+    for ratio in (0.8, 1.0, 1.15, 1.31, 1.5, 1.75):
+        total = round(ratio * truth.sum())
+        ratio_curve[str(ratio)] = {
+            n: round(binary_scores(truth, flags(systems[n], fired, SHARE, total)).f1, 4)
+            for n in systems
+            if systems[n] is not None
+        }
     result = {
         "share": SHARE,
+        "flags_per_error_curve_v1s": ratio_curve,
+        "share_sweep": sweep,
         "systems": table,
         "bridges": bridges,
         "not_reproducible": ["cascade think1024 (0.450331)"],
