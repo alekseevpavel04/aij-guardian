@@ -67,12 +67,43 @@ def setup_python() -> Path:
     return env / "bin/python"
 
 
+def cuda_driver_library() -> Path:
+    """The CUDA driver library for linking. Kaggle's image has only libcuda.so.1 (no libcuda.so, no stub where
+    CMake looks), so CMake cannot find CUDA::cuda_driver; a libcuda.so link next to the build fixes that."""
+    for folder in (
+        "/usr/local/cuda/lib64/stubs",
+        "/usr/local/cuda/targets/x86_64-linux/lib/stubs",
+        "/usr/lib/x86_64-linux-gnu",
+        "/usr/local/nvidia/lib64",
+        "/usr/lib64-nvidia",
+        "/usr/local/cuda/compat",
+    ):
+        for name in ("libcuda.so", "libcuda.so.1"):
+            found = Path(folder) / name
+            if found.exists():
+                if name == "libcuda.so":
+                    return found
+                link = TMP / "cudalib/libcuda.so"
+                link.parent.mkdir(parents=True, exist_ok=True)
+                if not link.exists():
+                    link.symlink_to(found)
+                return link
+    raise RuntimeError("no libcuda.so found")
+
+
 def setup_llama() -> Path:
     server = TMP / "llama.cpp/build/bin/llama-server"
     if not server.exists():
-        sh(f"git clone -q --depth 1 --branch {LLAMA_TAG} https://github.com/ggml-org/llama.cpp {TMP / 'llama.cpp'}")
         sh(
-            "cmake -B build -DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=75 -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release",
+            f"git -c advice.detachedHead=false clone -q --depth 1 --branch {LLAMA_TAG} "
+            f"https://github.com/ggml-org/llama.cpp {TMP / 'llama.cpp'}"
+        )
+        driver = cuda_driver_library()
+        log(f"CUDA driver library: {driver}")
+        sh(
+            "cmake -B build -DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=75 -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release "
+            f"-DCUDA_cuda_driver_LIBRARY={driver} -DCMAKE_EXE_LINKER_FLAGS=-L{driver.parent} "
+            f"-DCMAKE_SHARED_LINKER_FLAGS=-L{driver.parent}",
             cwd=TMP / "llama.cpp",
         )
         sh(f"cmake --build build --target llama-server -j {os.cpu_count()}", cwd=TMP / "llama.cpp")
