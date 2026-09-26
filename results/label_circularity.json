@@ -1,0 +1,50 @@
+{
+  "head_b_logistic:trained_v1s:measured_v1s": {
+    "auroc": 0.9137,
+    "f1_at_test_point": 0.6839
+  },
+  "head_b_logistic:trained_v1s:measured_opus": {
+    "auroc": 0.8835,
+    "f1_at_test_point": 0.6378
+  },
+  "head_b_lightgbm_tau2:trained_v1s:measured_v1s": {
+    "auroc": 0.9291,
+    "f1_at_test_point": 0.6968
+  },
+  "head_b_lightgbm_tau2:trained_v1s:measured_opus": {
+    "auroc": 0.8955,
+    "f1_at_test_point": 0.6595
+  },
+  "head_b_logistic:trained_opus:measured_v1s": {
+    "auroc": 0.9123,
+    "f1_at_test_point": 0.671
+  },
+  "head_b_logistic:trained_opus:measured_opus": {
+    "auroc": 0.912,
+    "f1_at_test_point": 0.6811
+  },
+  "head_b_lightgbm_tau2:trained_opus:measured_v1s": {
+    "auroc": 0.9216,
+    "f1_at_test_point": 0.671
+  },
+  "head_b_lightgbm_tau2:trained_opus:measured_opus": {
+    "auroc": 0.9143,
+    "f1_at_test_point": 0.6703
+  },
+  "head_b_logistic:trained_both:measured_v1s": {
+    "auroc": 0.9171,
+    "f1_at_test_point": 0.6839
+  },
+  "head_b_logistic:trained_both:measured_opus": {
+    "auroc": 0.904,
+    "f1_at_test_point": 0.6595
+  },
+  "head_b_lightgbm_tau2:trained_both:measured_v1s": {
+    "auroc": 0.9301,
+    "f1_at_test_point": 0.6839
+  },
+  "head_b_lightgbm_tau2:trained_both:measured_opus": {
+    "auroc": 0.911,
+    "f1_at_test_point": 0.6486
+  }
+}
