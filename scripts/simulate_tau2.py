@@ -27,7 +27,8 @@ import tau2.evaluator.evaluator_nl_assertions as nl_assertions  # noqa: E402
 import tau2.orchestrator.orchestrator as orchestrator  # noqa: E402
 import tau2.user.user_simulator as user_simulator  # noqa: E402
 from tau2.data_model.message import AssistantMessage  # noqa: E402
-from tau2.data_model.simulation import TextRunConfig  # noqa: E402
+from tau2.data_model.simulation import RewardInfo, TextRunConfig  # noqa: E402
+from tau2.data_model.tasks import RewardType  # noqa: E402
 from tau2.runner.batch import run_single_task  # noqa: E402
 from tau2.runner.helpers import get_tasks  # noqa: E402
 
@@ -103,6 +104,22 @@ def main() -> None:
     # reward is only a side signal here, so the same local model grades them
     nl_assertions.DEFAULT_LLM_NL_ASSERTIONS = args.model
     nl_assertions.DEFAULT_LLM_NL_ASSERTIONS_ARGS = llm_args
+    grade = nl_assertions.NLEvaluator.calculate_reward.__func__
+
+    def grade_or_note(cls, task, full_trajectory):
+        # a local model may answer the grader in prose instead of JSON; the dialogue is what we need, so its
+        # reward becomes 0 with a note instead of losing the simulation
+        try:
+            return grade(cls, task=task, full_trajectory=full_trajectory)
+        except (json.JSONDecodeError, KeyError, TypeError, ValueError) as error:
+            return RewardInfo(
+                reward=0.0,
+                nl_assertions=[],
+                info={"note": f"local NL grader answer unusable: {type(error).__name__}"},
+                reward_breakdown={RewardType.NL_ASSERTION: 0.0},
+            )
+
+    nl_assertions.NLEvaluator.calculate_reward = classmethod(grade_or_note)
     task_ids = args.tasks.split(",") if args.tasks else None
     config = TextRunConfig(
         domain=args.domain,
