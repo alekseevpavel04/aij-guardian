@@ -1,0 +1,177 @@
+{
+  "rows": 384,
+  "errors_v1s": 67,
+  "rules_fire": 25,
+  "ranking": {
+    "rank_sum_in_file": {
+      "auroc_v1s": 0.9383,
+      "f1_at_test_flags_per_error": 0.7097
+    },
+    "stacked_probability": {
+      "auroc_v1s": 0.9338,
+      "f1_at_test_flags_per_error": 0.6968
+    }
+  },
+  "threshold_rules": {
+    "half_of_best_f1": {
+      "pooled_f1_held_out": 0.7391,
+      "pooled_flags_per_error": 1.06,
+      "per_fold": [
+        {
+          "threshold": 0.388,
+          "flags_per_error": 0.86
+        },
+        {
+          "threshold": 0.396,
+          "flags_per_error": 1.5
+        },
+        {
+          "threshold": 0.35,
+          "flags_per_error": 1.24
+        },
+        {
+          "threshold": 0.369,
+          "flags_per_error": 1.0
+        },
+        {
+          "threshold": 0.394,
+          "flags_per_error": 0.76
+        }
+      ]
+    },
+    "fixed_0.30": {
+      "pooled_f1_held_out": 0.726,
+      "pooled_flags_per_error": 1.18,
+      "per_fold": [
+        {
+          "threshold": 0.3,
+          "flags_per_error": 1.0
+        },
+        {
+          "threshold": 0.3,
+          "flags_per_error": 1.58
+        },
+        {
+          "threshold": 0.3,
+          "flags_per_error": 1.29
+        },
+        {
+          "threshold": 0.3,
+          "flags_per_error": 1.29
+        },
+        {
+          "threshold": 0.3,
+          "flags_per_error": 0.88
+        }
+      ]
+    },
+    "fixed_0.35": {
+      "pooled_f1_held_out": 0.7338,
+      "pooled_flags_per_error": 1.07,
+      "per_fold": [
+        {
+          "threshold": 0.35,
+          "flags_per_error": 0.93
+        },
+        {
+          "threshold": 0.35,
+          "flags_per_error": 1.5
+        },
+        {
+          "threshold": 0.35,
+          "flags_per_error": 1.24
+        },
+        {
+          "threshold": 0.35,
+          "flags_per_error": 1.0
+        },
+        {
+          "threshold": 0.35,
+          "flags_per_error": 0.76
+        }
+      ]
+    },
+    "fixed_0.40": {
+      "pooled_f1_held_out": 0.75,
+      "pooled_flags_per_error": 1.03,
+      "per_fold": [
+        {
+          "threshold": 0.4,
+          "flags_per_error": 0.86
+        },
+        {
+          "threshold": 0.4,
+          "flags_per_error": 1.5
+        },
+        {
+          "threshold": 0.4,
+          "flags_per_error": 1.12
+        },
+        {
+          "threshold": 0.4,
+          "flags_per_error": 1.0
+        },
+        {
+          "threshold": 0.4,
+          "flags_per_error": 0.76
+        }
+      ]
+    }
+  },
+  "fixed_threshold": {
+    "pooled_f1_held_out": 0.7077,
+    "pooled_flags_per_error": 0.94,
+    "per_fold": [
+      {
+        "fold": 0,
+        "threshold": 0.6079,
+        "rows": 77,
+        "errors": 14,
+        "flagged": 8,
+        "flags_per_error": 0.57,
+        "f1": 0.6364
+      },
+      {
+        "fold": 1,
+        "threshold": 0.3965,
+        "rows": 77,
+        "errors": 12,
+        "flagged": 18,
+        "flags_per_error": 1.5,
+        "f1": 0.6
+      },
+      {
+        "fold": 2,
+        "threshold": 0.3768,
+        "rows": 77,
+        "errors": 17,
+        "flagged": 21,
+        "flags_per_error": 1.24,
+        "f1": 0.8421
+      },
+      {
+        "fold": 3,
+        "threshold": 0.3965,
+        "rows": 77,
+        "errors": 7,
+        "flagged": 7,
+        "flags_per_error": 1.0,
+        "f1": 0.8571
+      },
+      {
+        "fold": 4,
+        "threshold": 0.6079,
+        "rows": 76,
+        "errors": 17,
+        "flagged": 9,
+        "flags_per_error": 0.53,
+        "f1": 0.6154
+      }
+    ],
+    "threshold_on_all_contexts": 0.3965,
+    "calibration_mean_probability_vs_error_share": [
+      0.168,
+      0.174
+    ]
+  }
+}
