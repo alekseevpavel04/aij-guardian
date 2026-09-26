@@ -79,6 +79,7 @@ def main() -> None:
     ap.add_argument("--seed", type=int, default=0, help="which random share, with --fraction")
     ap.add_argument("--quick", action="store_true", help="only the main variant (both heads, weight 1)")
     ap.add_argument("--balance", choices=("none", "match", "negatives", "positives"), default="none")
+    ap.add_argument("--context-labels", choices=("v1s", "agreed", "both"), default="v1s")
     ap.add_argument(
         "--unc-skip", nargs="*", default=[], help="row id tags (e.g. glm) the uncertainty head does not learn from"
     )
@@ -149,6 +150,7 @@ def main() -> None:
         "labels": args.labels,
         "balance": args.balance,
         "uncertainty_head_skips": args.unc_skip,
+        "context_labels": args.context_labels,
         "sources": [list(x) for x in sources],
         "turns_dropped_for_chinese_words": dropped,
         "rows": len(sim),
@@ -186,6 +188,21 @@ def main() -> None:
             return (lab == 1).astype(float)
         return np.ones(len(s))
 
+    agree = ruler.agree
+
+    def context_rows(fit: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """The contexts of a fold as training rows, per --context-labels: the v1s labels; only contexts where
+        v1s and Opus agree; or both labellers (a disagreement enters twice, as 0 and as 1, at half weight)."""
+        if args.context_labels == "agreed":
+            keep = fit[agree[fit]]
+            return keep, y[keep], np.ones(len(keep))
+        if args.context_labels == "both":
+            same, split = fit[agree[fit]], fit[~agree[fit]]
+            rows = np.concatenate([same, split, split])
+            labels = np.concatenate([y[same], np.zeros(len(split), int), np.ones(len(split), int)])
+            return rows, labels, np.concatenate([np.ones(len(same)), np.full(2 * len(split), 0.5)])
+        return fit, y[fit], np.ones(len(fit))
+
     def head_b(model: str, sim_weight: float) -> np.ndarray:
         scores = np.zeros(len(y))
         for fit, held in GroupKFold(FOLDS).split(x, y, tasks):
@@ -197,9 +214,10 @@ def main() -> None:
                     sorted(p.context_id.unique()), round(0.25 * p.context_id.nunique()), replace=False
                 )
                 p = p[p.context_id.isin(keep)]
-                xs = [x[fit], np.stack([vecs[i] for i in p.id])]
-                ys = [y[fit], p.label.to_numpy()]
-                ws = [np.ones(len(fit) + len(p))]
+                rows, labels, weights = context_rows(fit)
+                xs = [x[rows], np.stack([vecs[i] for i in p.id])]
+                ys = [labels, p.label.to_numpy()]
+                ws = [weights, np.ones(len(p))]
                 if sim_weight and len(s):
                     xs.append(np.stack([vecs[i] for i in s.id]))
                     ys.append(s.label.to_numpy())
@@ -224,9 +242,10 @@ def main() -> None:
             s = sim[~sim.task.isin(set(tasks[held]))] if sim_weight else sim.iloc[:0]
             # an agent of another family shifts the token probabilities; its rows can be kept out of this head
             s = s[~s.id.str.split("__").str[0].isin(args.unc_skip)]
-            xf = np.vstack([xu[fit], *([np.stack([sim_feats[i] for i in s.id])] if len(s) else [])])
-            yf = np.concatenate([y[fit], s.label.to_numpy()]).astype(int)
-            wf = np.concatenate([np.ones(len(fit)), sim_weight * s.w.to_numpy() * balance(s)])
+            rows, labels, weights = context_rows(fit)
+            xf = np.vstack([xu[rows], *([np.stack([sim_feats[i] for i in s.id])] if len(s) else [])])
+            yf = np.concatenate([labels, s.label.to_numpy()]).astype(int)
+            wf = np.concatenate([weights, sim_weight * s.w.to_numpy() * balance(s)])
             sc = StandardScaler().fit(xf)
             m = LogisticRegression(C=1.0, max_iter=5000).fit(sc.transform(xf), yf, sample_weight=wf)
             scores[held] = m.predict_proba(sc.transform(xu[held]))[:, 1]
