@@ -71,6 +71,8 @@ def main() -> None:
         "api_base": args.api_base,
         "api_key": "local",
         "temperature": 0.0,
+        # the organiser's agent makes several calls in one turn; the model may, if it wants to
+        "parallel_tool_calls": True,
         "extra_body": {"chat_template_kwargs": {"enable_thinking": False}},
     }
     # tasks graded by natural-language assertions call τ²'s default judge (an OpenAI model); the
@@ -105,6 +107,7 @@ def main() -> None:
                 "trial": trial,
                 "model": args.model,
                 "nl_assertions_judge": args.model,
+                "parallel_tool_calls": True,
                 "seconds": round(time.monotonic() - started, 1),
                 "simulation": json.loads(simulation.model_dump_json()),
             }

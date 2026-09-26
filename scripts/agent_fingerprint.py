@@ -95,6 +95,8 @@ def generate(api_base: str, model: str, chat: list[dict], tools: list[dict]) -> 
         "tools": tools,
         "temperature": 0.0,
         "max_tokens": 1024,
+        # the organiser's agent makes up to 9 calls in one turn, so a candidate may too
+        "parallel_tool_calls": True,
         "chat_template_kwargs": {"enable_thinking": False},
     }
     request = urllib.request.Request(
@@ -168,6 +170,10 @@ def report() -> dict:
             "text_similarity_mean": round(sum(ratios) / len(ratios), 3) if ratios else None,
             "text_pairs": len(ratios),
             "exact": [exact, len(rows)],
+            "turns_with_several_calls": [
+                sum(len(kind_and_calls(r["generated"])[1]) > 1 for r in rows),
+                sum(len(kind_and_calls(body(r["organiser"]))[1]) > 1 for r in rows),
+            ],
         }
         paired = [(fp[f"fp_{path.stem}__{r['id']}"], org[r["id"]]) for r in rows if f"fp_{path.stem}__{r['id']}" in fp]
         if paired:
