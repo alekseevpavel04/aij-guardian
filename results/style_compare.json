@@ -1,0 +1,1006 @@
+{
+  "organiser": {
+    "messages": 134,
+    "medians": {
+      "chars": 470.5,
+      "sentences": 6.0,
+      "words_per_sentence": 11.22,
+      "commas_per_1k": 12.23,
+      "long_dashes_per_1k": 0.0,
+      "colons_per_1k": 1.28,
+      "long_words_pct": 3.42,
+      "anchor_chars_pct": 4.56,
+      "digits_pct": 0.48,
+      "has_bold": 0.0,
+      "has_list": 0.0,
+      "has_dollar_sign": 0.0
+    },
+    "pooled": {
+      "introductory": 2.506265664160401,
+      "connectives": 23.327549643339115,
+      "verbal_nouns": 28.24368613842298,
+      "participles": 10.410641989589358
+    }
+  },
+  "fingerprint:gigachat3_1_10b": {
+    "messages": 7,
+    "mean_abs_d": 0.387,
+    "marked_features": 4,
+    "features": {
+      "chars": {
+        "writer": 630.0,
+        "d": 0.45,
+        "outside_10_90": 0.29,
+        "marked": false
+      },
+      "sentences": {
+        "writer": 8.0,
+        "d": 0.53,
+        "outside_10_90": 0.29,
+        "marked": true
+      },
+      "words_per_sentence": {
+        "writer": 10.89,
+        "d": -0.1,
+        "outside_10_90": 0.0,
+        "marked": false
+      },
+      "commas_per_1k": {
+        "writer": 14.85,
+        "d": 0.61,
+        "outside_10_90": 0.29,
+        "marked": true
+      },
+      "long_dashes_per_1k": {
+        "writer": 0.0,
+        "d": 0.0,
+        "outside_10_90": 0.29,
+        "marked": false
+      },
+      "colons_per_1k": {
+        "writer": 3.17,
+        "d": 0.41,
+        "outside_10_90": 0.14,
+        "marked": false
+      },
+      "long_words_pct": {
+        "writer": 4.08,
+        "d": 0.22,
+        "outside_10_90": 0.14,
+        "marked": false
+      },
+      "anchor_chars_pct": {
+        "writer": 4.21,
+        "d": -0.04,
+        "outside_10_90": 0.29,
+        "marked": false
+      },
+      "digits_pct": {
+        "writer": 2.7,
+        "d": 0.85,
+        "outside_10_90": 0.14,
+        "marked": true
+      },
+      "has_bold": {
+        "writer": 0.86,
+        "d": 0.76,
+        "outside_10_90": 0.0,
+        "marked": true
+      },
+      "has_list": {
+        "writer": 0.57,
+        "d": 0.3,
+        "outside_10_90": 0.0,
+        "marked": false
+      },
+      "has_dollar_sign": {
+        "writer": 0.29,
+        "d": 0.38,
+        "outside_10_90": 0.0,
+        "marked": false
+      }
+    },
+    "pooled": {
+      "introductory": {
+        "ratio_to_organiser": 0.79,
+        "ci95": [
+          0.0,
+          2.64
+        ]
+      },
+      "connectives": {
+        "ratio_to_organiser": 1.2,
+        "ci95": [
+          0.88,
+          1.52
+        ]
+      },
+      "verbal_nouns": {
+        "ratio_to_organiser": 0.78,
+        "ci95": [
+          0.38,
+          1.3
+        ]
+      },
+      "participles": {
+        "ratio_to_organiser": 1.91,
+        "ci95": [
+          0.58,
+          3.49
+        ]
+      }
+    }
+  },
+  "fingerprint:glm4_7_flash": {
+    "messages": 29,
+    "mean_abs_d": 0.146,
+    "marked_features": 3,
+    "features": {
+      "chars": {
+        "writer": 347.0,
+        "d": -0.35,
+        "outside_10_90": 0.28,
+        "marked": false
+      },
+      "sentences": {
+        "writer": 5.0,
+        "d": -0.26,
+        "outside_10_90": 0.28,
+        "marked": false
+      },
+      "words_per_sentence": {
+        "writer": 9.5,
+        "d": -0.51,
+        "outside_10_90": 0.48,
+        "marked": true
+      },
+      "commas_per_1k": {
+        "writer": 12.5,
+        "d": 0.06,
+        "outside_10_90": 0.21,
+        "marked": false
+      },
+      "long_dashes_per_1k": {
+        "writer": 0.0,
+        "d": 0.0,
+        "outside_10_90": 0.41,
+        "marked": true
+      },
+      "colons_per_1k": {
+        "writer": 0.0,
+        "d": -0.28,
+        "outside_10_90": 0.07,
+        "marked": false
+      },
+      "long_words_pct": {
+        "writer": 3.37,
+        "d": -0.02,
+        "outside_10_90": 0.1,
+        "marked": false
+      },
+      "anchor_chars_pct": {
+        "writer": 3.92,
+        "d": -0.07,
+        "outside_10_90": 0.41,
+        "marked": true
+      },
+      "digits_pct": {
+        "writer": 0.46,
+        "d": -0.01,
+        "outside_10_90": 0.07,
+        "marked": false
+      },
+      "has_bold": {
+        "writer": 0.52,
+        "d": 0.08,
+        "outside_10_90": 0.0,
+        "marked": false
+      },
+      "has_list": {
+        "writer": 0.45,
+        "d": 0.05,
+        "outside_10_90": 0.0,
+        "marked": false
+      },
+      "has_dollar_sign": {
+        "writer": 0.17,
+        "d": 0.06,
+        "outside_10_90": 0.0,
+        "marked": false
+      }
+    },
+    "pooled": {
+      "introductory": {
+        "ratio_to_organiser": 0.67,
+        "ci95": [
+          0.0,
+          1.44
+        ]
+      },
+      "connectives": {
+        "ratio_to_organiser": 0.77,
+        "ci95": [
+          0.52,
+          1.13
+        ]
+      },
+      "verbal_nouns": {
+        "ratio_to_organiser": 0.89,
+        "ci95": [
+          0.54,
+          1.31
+        ]
+      },
+      "participles": {
+        "ratio_to_organiser": 1.4,
+        "ci95": [
+          0.92,
+          1.99
+        ]
+      }
+    }
+  },
+  "fingerprint:glm4_7_flash_thinking": {
+    "messages": 23,
+    "mean_abs_d": 0.18,
+    "marked_features": 0,
+    "features": {
+      "chars": {
+        "writer": 447.0,
+        "d": -0.07,
+        "outside_10_90": 0.22,
+        "marked": false
+      },
+      "sentences": {
+        "writer": 6.0,
+        "d": 0.0,
+        "outside_10_90": 0.22,
+        "marked": false
+      },
+      "words_per_sentence": {
+        "writer": 10.0,
+        "d": -0.36,
+        "outside_10_90": 0.26,
+        "marked": false
+      },
+      "commas_per_1k": {
+        "writer": 12.73,
+        "d": 0.11,
+        "outside_10_90": 0.39,
+        "marked": false
+      },
+      "long_dashes_per_1k": {
+        "writer": 0.0,
+        "d": 0.0,
+        "outside_10_90": 0.35,
+        "marked": false
+      },
+      "colons_per_1k": {
+        "writer": 2.36,
+        "d": 0.24,
+        "outside_10_90": 0.17,
+        "marked": false
+      },
+      "long_words_pct": {
+        "writer": 1.97,
+        "d": -0.48,
+        "outside_10_90": 0.04,
+        "marked": false
+      },
+      "anchor_chars_pct": {
+        "writer": 4.09,
+        "d": -0.05,
+        "outside_10_90": 0.3,
+        "marked": false
+      },
+      "digits_pct": {
+        "writer": 0.77,
+        "d": 0.11,
+        "outside_10_90": 0.13,
+        "marked": false
+      },
+      "has_bold": {
+        "writer": 0.52,
+        "d": 0.09,
+        "outside_10_90": 0.0,
+        "marked": false
+      },
+      "has_list": {
+        "writer": 0.65,
+        "d": 0.46,
+        "outside_10_90": 0.0,
+        "marked": false
+      },
+      "has_dollar_sign": {
+        "writer": 0.22,
+        "d": 0.19,
+        "outside_10_90": 0.0,
+        "marked": false
+      }
+    },
+    "pooled": {
+      "introductory": {
+        "ratio_to_organiser": 0.75,
+        "ci95": [
+          0.0,
+          1.45
+        ]
+      },
+      "connectives": {
+        "ratio_to_organiser": 0.91,
+        "ci95": [
+          0.64,
+          1.22
+        ]
+      },
+      "verbal_nouns": {
+        "ratio_to_organiser": 0.95,
+        "ci95": [
+          0.51,
+          1.53
+        ]
+      },
+      "participles": {
+        "ratio_to_organiser": 2.04,
+        "ci95": [
+          1.17,
+          2.76
+        ]
+      }
+    }
+  },
+  "fingerprint:qwen36": {
+    "messages": 27,
+    "mean_abs_d": 0.242,
+    "marked_features": 1,
+    "features": {
+      "chars": {
+        "writer": 327.0,
+        "d": -0.41,
+        "outside_10_90": 0.3,
+        "marked": false
+      },
+      "sentences": {
+        "writer": 5.0,
+        "d": -0.26,
+        "outside_10_90": 0.22,
+        "marked": false
+      },
+      "words_per_sentence": {
+        "writer": 10.0,
+        "d": -0.36,
+        "outside_10_90": 0.37,
+        "marked": false
+      },
+      "commas_per_1k": {
+        "writer": 14.22,
+        "d": 0.46,
+        "outside_10_90": 0.26,
+        "marked": false
+      },
+      "long_dashes_per_1k": {
+        "writer": 0.0,
+        "d": 0.0,
+        "outside_10_90": 0.15,
+        "marked": false
+      },
+      "colons_per_1k": {
+        "writer": 1.06,
+        "d": -0.05,
+        "outside_10_90": 0.07,
+        "marked": false
+      },
+      "long_words_pct": {
+        "writer": 1.82,
+        "d": -0.54,
+        "outside_10_90": 0.15,
+        "marked": true
+      },
+      "anchor_chars_pct": {
+        "writer": 5.9,
+        "d": 0.15,
+        "outside_10_90": 0.26,
+        "marked": false
+      },
+      "digits_pct": {
+        "writer": 0.73,
+        "d": 0.09,
+        "outside_10_90": 0.22,
+        "marked": false
+      },
+      "has_bold": {
+        "writer": 0.33,
+        "d": -0.29,
+        "outside_10_90": 0.0,
+        "marked": false
+      },
+      "has_list": {
+        "writer": 0.33,
+        "d": -0.19,
+        "outside_10_90": 0.0,
+        "marked": false
+      },
+      "has_dollar_sign": {
+        "writer": 0.11,
+        "d": -0.11,
+        "outside_10_90": 0.0,
+        "marked": false
+      }
+    },
+    "pooled": {
+      "introductory": {
+        "ratio_to_organiser": 1.5,
+        "ci95": [
+          0.25,
+          2.72
+        ]
+      },
+      "connectives": {
+        "ratio_to_organiser": 0.89,
+        "ci95": [
+          0.69,
+          1.15
+        ]
+      },
+      "verbal_nouns": {
+        "ratio_to_organiser": 0.8,
+        "ci95": [
+          0.32,
+          1.49
+        ]
+      },
+      "participles": {
+        "ratio_to_organiser": 1.45,
+        "ci95": [
+          0.84,
+          2.11
+        ]
+      }
+    }
+  },
+  "fingerprint:qwen36_temperature_0_7": {
+    "messages": 28,
+    "mean_abs_d": 0.225,
+    "marked_features": 0,
+    "features": {
+      "chars": {
+        "writer": 388.5,
+        "d": -0.23,
+        "outside_10_90": 0.21,
+        "marked": false
+      },
+      "sentences": {
+        "writer": 5.0,
+        "d": -0.26,
+        "outside_10_90": 0.25,
+        "marked": false
+      },
+      "words_per_sentence": {
+        "writer": 10.69,
+        "d": -0.16,
+        "outside_10_90": 0.25,
+        "marked": false
+      },
+      "commas_per_1k": {
+        "writer": 14.24,
+        "d": 0.47,
+        "outside_10_90": 0.32,
+        "marked": false
+      },
+      "long_dashes_per_1k": {
+        "writer": 0.0,
+        "d": 0.0,
+        "outside_10_90": 0.14,
+        "marked": false
+      },
+      "colons_per_1k": {
+        "writer": 1.45,
+        "d": 0.04,
+        "outside_10_90": 0.11,
+        "marked": false
+      },
+      "long_words_pct": {
+        "writer": 2.82,
+        "d": -0.2,
+        "outside_10_90": 0.11,
+        "marked": false
+      },
+      "anchor_chars_pct": {
+        "writer": 8.37,
+        "d": 0.43,
+        "outside_10_90": 0.21,
+        "marked": false
+      },
+      "digits_pct": {
+        "writer": 1.37,
+        "d": 0.34,
+        "outside_10_90": 0.14,
+        "marked": false
+      },
+      "has_bold": {
+        "writer": 0.36,
+        "d": -0.24,
+        "outside_10_90": 0.0,
+        "marked": false
+      },
+      "has_list": {
+        "writer": 0.32,
+        "d": -0.21,
+        "outside_10_90": 0.0,
+        "marked": false
+      },
+      "has_dollar_sign": {
+        "writer": 0.11,
+        "d": -0.12,
+        "outside_10_90": 0.0,
+        "marked": false
+      }
+    },
+    "pooled": {
+      "introductory": {
+        "ratio_to_organiser": 1.72,
+        "ci95": [
+          0.55,
+          3.06
+        ]
+      },
+      "connectives": {
+        "ratio_to_organiser": 0.87,
+        "ci95": [
+          0.67,
+          1.12
+        ]
+      },
+      "verbal_nouns": {
+        "ratio_to_organiser": 0.81,
+        "ci95": [
+          0.4,
+          1.31
+        ]
+      },
+      "participles": {
+        "ratio_to_organiser": 1.0,
+        "ci95": [
+          0.44,
+          1.55
+        ]
+      }
+    }
+  },
+  "fingerprint:qwen36_thinking": {
+    "messages": 19,
+    "mean_abs_d": 0.205,
+    "marked_features": 1,
+    "features": {
+      "chars": {
+        "writer": 418.0,
+        "d": -0.15,
+        "outside_10_90": 0.21,
+        "marked": false
+      },
+      "sentences": {
+        "writer": 5.0,
+        "d": -0.26,
+        "outside_10_90": 0.05,
+        "marked": false
+      },
+      "words_per_sentence": {
+        "writer": 11.5,
+        "d": 0.08,
+        "outside_10_90": 0.26,
+        "marked": false
+      },
+      "commas_per_1k": {
+        "writer": 14.49,
+        "d": 0.53,
+        "outside_10_90": 0.16,
+        "marked": true
+      },
+      "long_dashes_per_1k": {
+        "writer": 0.0,
+        "d": 0.0,
+        "outside_10_90": 0.11,
+        "marked": false
+      },
+      "colons_per_1k": {
+        "writer": 0.0,
+        "d": -0.28,
+        "outside_10_90": 0.05,
+        "marked": false
+      },
+      "long_words_pct": {
+        "writer": 2.82,
+        "d": -0.2,
+        "outside_10_90": 0.21,
+        "marked": false
+      },
+      "anchor_chars_pct": {
+        "writer": 7.69,
+        "d": 0.35,
+        "outside_10_90": 0.16,
+        "marked": false
+      },
+      "digits_pct": {
+        "writer": 0.36,
+        "d": -0.05,
+        "outside_10_90": 0.11,
+        "marked": false
+      },
+      "has_bold": {
+        "writer": 0.42,
+        "d": -0.11,
+        "outside_10_90": 0.0,
+        "marked": false
+      },
+      "has_list": {
+        "writer": 0.26,
+        "d": -0.33,
+        "outside_10_90": 0.0,
+        "marked": false
+      },
+      "has_dollar_sign": {
+        "writer": 0.11,
+        "d": -0.12,
+        "outside_10_90": 0.0,
+        "marked": false
+      }
+    },
+    "pooled": {
+      "introductory": {
+        "ratio_to_organiser": 0.63,
+        "ci95": [
+          0.0,
+          1.72
+        ]
+      },
+      "connectives": {
+        "ratio_to_organiser": 0.61,
+        "ci95": [
+          0.4,
+          0.87
+        ]
+      },
+      "verbal_nouns": {
+        "ratio_to_organiser": 0.95,
+        "ci95": [
+          0.43,
+          1.7
+        ]
+      },
+      "participles": {
+        "ratio_to_organiser": 0.91,
+        "ci95": [
+          0.44,
+          1.5
+        ]
+      }
+    }
+  },
+  "fingerprint:qwen36_tools_in_system": {
+    "messages": 26,
+    "mean_abs_d": 0.344,
+    "marked_features": 3,
+    "features": {
+      "chars": {
+        "writer": 284.5,
+        "d": -0.53,
+        "outside_10_90": 0.27,
+        "marked": true
+      },
+      "sentences": {
+        "writer": 4.0,
+        "d": -0.53,
+        "outside_10_90": 0.19,
+        "marked": true
+      },
+      "words_per_sentence": {
+        "writer": 10.5,
+        "d": -0.21,
+        "outside_10_90": 0.27,
+        "marked": false
+      },
+      "commas_per_1k": {
+        "writer": 15.64,
+        "d": 0.79,
+        "outside_10_90": 0.5,
+        "marked": true
+      },
+      "long_dashes_per_1k": {
+        "writer": 0.0,
+        "d": 0.0,
+        "outside_10_90": 0.08,
+        "marked": false
+      },
+      "colons_per_1k": {
+        "writer": 0.0,
+        "d": -0.28,
+        "outside_10_90": 0.0,
+        "marked": false
+      },
+      "long_words_pct": {
+        "writer": 2.4,
+        "d": -0.34,
+        "outside_10_90": 0.12,
+        "marked": false
+      },
+      "anchor_chars_pct": {
+        "writer": 6.77,
+        "d": 0.25,
+        "outside_10_90": 0.23,
+        "marked": false
+      },
+      "digits_pct": {
+        "writer": 0.51,
+        "d": 0.01,
+        "outside_10_90": 0.04,
+        "marked": false
+      },
+      "has_bold": {
+        "writer": 0.23,
+        "d": -0.49,
+        "outside_10_90": 0.0,
+        "marked": false
+      },
+      "has_list": {
+        "writer": 0.23,
+        "d": -0.39,
+        "outside_10_90": 0.0,
+        "marked": false
+      },
+      "has_dollar_sign": {
+        "writer": 0.04,
+        "d": -0.31,
+        "outside_10_90": 0.0,
+        "marked": false
+      }
+    },
+    "pooled": {
+      "introductory": {
+        "ratio_to_organiser": 2.09,
+        "ci95": [
+          0.0,
+          3.64
+        ]
+      },
+      "connectives": {
+        "ratio_to_organiser": 1.12,
+        "ci95": [
+          0.87,
+          1.39
+        ]
+      },
+      "verbal_nouns": {
+        "ratio_to_organiser": 0.82,
+        "ci95": [
+          0.44,
+          1.39
+        ]
+      },
+      "participles": {
+        "ratio_to_organiser": 1.58,
+        "ci95": [
+          0.87,
+          2.21
+        ]
+      }
+    }
+  },
+  "fingerprint:qwen3_8b": {
+    "messages": 7,
+    "mean_abs_d": 0.302,
+    "marked_features": 4,
+    "features": {
+      "chars": {
+        "writer": 232.0,
+        "d": -0.68,
+        "outside_10_90": 0.43,
+        "marked": true
+      },
+      "sentences": {
+        "writer": 3.0,
+        "d": -0.79,
+        "outside_10_90": 0.43,
+        "marked": true
+      },
+      "words_per_sentence": {
+        "writer": 12.5,
+        "d": 0.38,
+        "outside_10_90": 0.14,
+        "marked": false
+      },
+      "commas_per_1k": {
+        "writer": 12.87,
+        "d": 0.15,
+        "outside_10_90": 0.43,
+        "marked": true
+      },
+      "long_dashes_per_1k": {
+        "writer": 0.0,
+        "d": 0.0,
+        "outside_10_90": 0.0,
+        "marked": false
+      },
+      "colons_per_1k": {
+        "writer": 0.0,
+        "d": -0.28,
+        "outside_10_90": 0.14,
+        "marked": false
+      },
+      "long_words_pct": {
+        "writer": 2.74,
+        "d": -0.23,
+        "outside_10_90": 0.14,
+        "marked": false
+      },
+      "anchor_chars_pct": {
+        "writer": 2.12,
+        "d": -0.28,
+        "outside_10_90": 0.57,
+        "marked": true
+      },
+      "digits_pct": {
+        "writer": 0.3,
+        "d": -0.07,
+        "outside_10_90": 0.14,
+        "marked": false
+      },
+      "has_bold": {
+        "writer": 0.43,
+        "d": -0.1,
+        "outside_10_90": 0.0,
+        "marked": false
+      },
+      "has_list": {
+        "writer": 0.29,
+        "d": -0.28,
+        "outside_10_90": 0.0,
+        "marked": false
+      },
+      "has_dollar_sign": {
+        "writer": 0.29,
+        "d": 0.38,
+        "outside_10_90": 0.0,
+        "marked": false
+      }
+    },
+    "pooled": {
+      "introductory": {
+        "ratio_to_organiser": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      "connectives": {
+        "ratio_to_organiser": 1.1,
+        "ci95": [
+          0.7,
+          1.59
+        ]
+      },
+      "verbal_nouns": {
+        "ratio_to_organiser": 1.0,
+        "ci95": [
+          0.31,
+          1.99
+        ]
+      },
+      "participles": {
+        "ratio_to_organiser": 0.98,
+        "ci95": [
+          0.23,
+          2.11
+        ]
+      }
+    }
+  },
+  "simulation:qwen3_8b": {
+    "messages": 616,
+    "mean_abs_d": 0.467,
+    "marked_features": 5,
+    "features": {
+      "chars": {
+        "writer": 236.0,
+        "d": -0.66,
+        "outside_10_90": 0.4,
+        "marked": true
+      },
+      "sentences": {
+        "writer": 2.0,
+        "d": -1.05,
+        "outside_10_90": 0.55,
+        "marked": true
+      },
+      "words_per_sentence": {
+        "writer": 12.5,
+        "d": 0.38,
+        "outside_10_90": 0.18,
+        "marked": false
+      },
+      "commas_per_1k": {
+        "writer": 15.62,
+        "d": 0.79,
+        "outside_10_90": 0.32,
+        "marked": true
+      },
+      "long_dashes_per_1k": {
+        "writer": 0.0,
+        "d": 0.0,
+        "outside_10_90": 0.02,
+        "marked": false
+      },
+      "colons_per_1k": {
+        "writer": 0.0,
+        "d": -0.28,
+        "outside_10_90": 0.04,
+        "marked": false
+      },
+      "long_words_pct": {
+        "writer": 5.26,
+        "d": 0.62,
+        "outside_10_90": 0.28,
+        "marked": true
+      },
+      "anchor_chars_pct": {
+        "writer": 2.12,
+        "d": -0.28,
+        "outside_10_90": 0.24,
+        "marked": false
+      },
+      "digits_pct": {
+        "writer": 0.4,
+        "d": -0.03,
+        "outside_10_90": 0.05,
+        "marked": false
+      },
+      "has_bold": {
+        "writer": 0.1,
+        "d": -0.76,
+        "outside_10_90": 0.0,
+        "marked": true
+      },
+      "has_list": {
+        "writer": 0.2,
+        "d": -0.45,
+        "outside_10_90": 0.0,
+        "marked": false
+      },
+      "has_dollar_sign": {
+        "writer": 0.04,
+        "d": -0.3,
+        "outside_10_90": 0.0,
+        "marked": false
+      }
+    },
+    "pooled": {
+      "introductory": {
+        "ratio_to_organiser": 0.65,
+        "ci95": [
+          0.44,
+          0.82
+        ]
+      },
+      "connectives": {
+        "ratio_to_organiser": 0.87,
+        "ci95": [
+          0.81,
+          0.94
+        ]
+      },
+      "verbal_nouns": {
+        "ratio_to_organiser": 1.32,
+        "ci95": [
+          1.25,
+          1.4
+        ]
+      },
+      "participles": {
+        "ratio_to_organiser": 0.88,
+        "ci95": [
+          0.74,
+          1.02
+        ]
+      }
+    }
+  }
+}
