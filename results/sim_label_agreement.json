@@ -1,0 +1,26 @@
+{
+  "turns": 114,
+  "agree": 109,
+  "v1s_1_opus_0": 3,
+  "v1s_0_opus_1": 2,
+  "per_agent": {
+    "glm": {
+      "turns": 32,
+      "agree": 31,
+      "v1s_errors": 2,
+      "opus_errors": 1
+    },
+    "q36": {
+      "turns": 42,
+      "agree": 39,
+      "v1s_errors": 2,
+      "opus_errors": 1
+    },
+    "q36n": {
+      "turns": 40,
+      "agree": 39,
+      "v1s_errors": 1,
+      "opus_errors": 2
+    }
+  }
+}
