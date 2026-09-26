@@ -1,0 +1,88 @@
+{
+  "labels": "opus",
+  "balance": "none",
+  "uncertainty_head_skips": [],
+  "context_labels": "v1s_duplicated",
+  "sources": [
+    [
+      "data/synthetic/tau2_ru_q36_rows.parquet",
+      "q4_tok_tau2q36",
+      "data/synthetic/opus_labels_tau2q36"
+    ],
+    [
+      "data/synthetic/tau2_ru_glm_rows.parquet",
+      "q4_tok_tau2glm",
+      "data/synthetic/opus_labels_tau2glm"
+    ]
+  ],
+  "turns_dropped_for_chinese_words": 5,
+  "rows": 432,
+  "positives": 34,
+  "dialogues": 27,
+  "rows_of_organiser_tasks": 93,
+  "compared_with_contexts": {
+    "share_of_errors": [
+      0.079,
+      0.174
+    ],
+    "share_with_tool_call": [
+      0.331,
+      0.57
+    ],
+    "median_response_chars": [
+      346,
+      228
+    ],
+    "median_prompt_chars": [
+      28833,
+      29004
+    ],
+    "mean_token_logp": [
+      -0.943,
+      -1.196
+    ]
+  },
+  "variants": {
+    "both_w1.0": {
+      "head_b_alone": 0.9371,
+      "uncertainty_alone": 0.7745,
+      "system_minus_reference": {
+        "difference": 0.004,
+        "ci95": [
+          -0.003,
+          0.014
+        ],
+        "share_above_zero": 0.872
+      },
+      "new_ruler_all_contexts": {
+        "v1s": {
+          "f1": 0.7215,
+          "f1_minus_reference": 0.0253,
+          "ci95": [
+            -0.039,
+            0.087
+          ],
+          "auroc": 0.9459
+        },
+        "opus": {
+          "f1": 0.7485,
+          "f1_minus_reference": 0.0467,
+          "ci95": [
+            -0.029,
+            0.09
+          ],
+          "auroc": 0.9253
+        }
+      }
+    }
+  },
+  "candidate": {
+    "head_b_alone": 0.9297,
+    "uncertainty_alone": 0.8098,
+    "system": 0.9832,
+    "system_f1_at_test_share_all_contexts": {
+      "v1s": 0.6962,
+      "opus": 0.7018
+    }
+  }
+}
