@@ -79,7 +79,7 @@ def main() -> None:
     ap.add_argument("--seed", type=int, default=0, help="which random share, with --fraction")
     ap.add_argument("--quick", action="store_true", help="only the main variant (both heads, weight 1)")
     ap.add_argument("--balance", choices=("none", "match", "negatives", "positives"), default="none")
-    ap.add_argument("--context-labels", choices=("v1s", "agreed", "both"), default="v1s")
+    ap.add_argument("--context-labels", choices=("v1s", "agreed", "both", "v1s_duplicated"), default="v1s")
     ap.add_argument(
         "--unc-skip", nargs="*", default=[], help="row id tags (e.g. glm) the uncertainty head does not learn from"
     )
@@ -201,6 +201,10 @@ def main() -> None:
             rows = np.concatenate([same, split, split])
             labels = np.concatenate([y[same], np.zeros(len(split), int), np.ones(len(split), int)])
             return rows, labels, np.concatenate([np.ones(len(same)), np.full(2 * len(split), 0.5)])
+        if args.context_labels == "v1s_duplicated":  # the rows of "both", the labels of v1s: a check on duplication
+            same, split = fit[agree[fit]], fit[~agree[fit]]
+            rows = np.concatenate([same, split, split])
+            return rows, y[rows], np.concatenate([np.ones(len(same)), np.full(2 * len(split), 0.5)])
         return fit, y[fit], np.ones(len(fit))
 
     def head_b(model: str, sim_weight: float) -> np.ndarray:
