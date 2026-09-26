@@ -1,6 +1,6 @@
 """Agreement of the local v1s labeller and Opus on the simulation turns both labelled.
 
-    python scripts/sim_label_agreement.py
+python scripts/sim_label_agreement.py
 """
 
 import argparse
@@ -16,7 +16,9 @@ ROOT = Path(__file__).resolve().parents[1]
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--v1s", default="labeler_v1s_strong")
-    ap.add_argument("--opus-dirs", nargs="+", default=["opus_labels_tau2q36", "opus_labels_tau2glm", "opus_labels_tau2q36n"])
+    ap.add_argument(
+        "--opus-dirs", nargs="+", default=["opus_labels_tau2q36", "opus_labels_tau2glm", "opus_labels_tau2q36n"]
+    )
     ap.add_argument("--out", type=Path, default=ROOT / "results/sim_label_agreement.json")
     args = ap.parse_args()
 
