@@ -80,6 +80,9 @@ def main() -> None:
     ap.add_argument("--quick", action="store_true", help="only the main variant (both heads, weight 1)")
     ap.add_argument("--balance", choices=("none", "match", "negatives", "positives"), default="none")
     ap.add_argument(
+        "--unc-skip", nargs="*", default=[], help="row id tags (e.g. glm) the uncertainty head does not learn from"
+    )
+    ap.add_argument(
         "--source",
         action="append",
         default=[],
@@ -145,6 +148,7 @@ def main() -> None:
     result: dict = {
         "labels": args.labels,
         "balance": args.balance,
+        "uncertainty_head_skips": args.unc_skip,
         "sources": [list(x) for x in sources],
         "turns_dropped_for_chinese_words": dropped,
         "rows": len(sim),
@@ -218,6 +222,8 @@ def main() -> None:
         scores = np.zeros(len(y))
         for fit, held in GroupKFold(FOLDS).split(xu, y, tasks):
             s = sim[~sim.task.isin(set(tasks[held]))] if sim_weight else sim.iloc[:0]
+            # an agent of another family shifts the token probabilities; its rows can be kept out of this head
+            s = s[~s.id.str.split("__").str[0].isin(args.unc_skip)]
             xf = np.vstack([xu[fit], *([np.stack([sim_feats[i] for i in s.id])] if len(s) else [])])
             yf = np.concatenate([y[fit], s.label.to_numpy()]).astype(int)
             wf = np.concatenate([np.ones(len(fit)), sim_weight * s.w.to_numpy() * balance(s)])
