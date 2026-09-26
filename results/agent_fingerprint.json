@@ -99,6 +99,56 @@
       40
     ]
   },
+  "glm4_7_flash_thinking": {
+    "answered": 40,
+    "errors": 0,
+    "same_kind": [
+      36,
+      40
+    ],
+    "same_first_call_name": [
+      17,
+      17
+    ],
+    "same_first_call_with_arguments": [
+      12,
+      17
+    ],
+    "text_similarity_mean": 0.144,
+    "text_pairs": 19,
+    "exact": [
+      8,
+      40
+    ],
+    "on_organiser_text_turns": {
+      "organiser_text_turns": 21,
+      "candidate_also_text_only": 19,
+      "similarity_mean_calls_count_as_zero": 0.131,
+      "candidate_style": {
+        "messages": 19,
+        "median_chars": 447,
+        "share_with_bold": 0.53,
+        "share_with_list": 0.68,
+        "share_with_dollar_sign": 0.21
+      },
+      "organiser_style": {
+        "messages": 21,
+        "median_chars": 402,
+        "share_with_bold": 0.43,
+        "share_with_list": 0.38,
+        "share_with_dollar_sign": 0.14
+      }
+    },
+    "turns_with_several_calls": [
+      3,
+      0
+    ],
+    "mean_token_logp_candidate_vs_organiser": [
+      -0.934,
+      -0.943,
+      37
+    ]
+  },
   "qwen36": {
     "answered": 40,
     "errors": 0,
@@ -145,6 +195,156 @@
     ],
     "mean_token_logp_candidate_vs_organiser": [
       -0.808,
+      -0.959,
+      40
+    ]
+  },
+  "qwen36_temperature_0_7": {
+    "answered": 40,
+    "errors": 0,
+    "same_kind": [
+      28,
+      40
+    ],
+    "same_first_call_name": [
+      12,
+      12
+    ],
+    "same_first_call_with_arguments": [
+      11,
+      12
+    ],
+    "text_similarity_mean": 0.219,
+    "text_pairs": 17,
+    "exact": [
+      7,
+      40
+    ],
+    "on_organiser_text_turns": {
+      "organiser_text_turns": 21,
+      "candidate_also_text_only": 16,
+      "similarity_mean_calls_count_as_zero": 0.177,
+      "candidate_style": {
+        "messages": 17,
+        "median_chars": 483,
+        "share_with_bold": 0.53,
+        "share_with_list": 0.35,
+        "share_with_dollar_sign": 0.18
+      },
+      "organiser_style": {
+        "messages": 21,
+        "median_chars": 402,
+        "share_with_bold": 0.43,
+        "share_with_list": 0.38,
+        "share_with_dollar_sign": 0.14
+      }
+    },
+    "turns_with_several_calls": [
+      0,
+      0
+    ],
+    "mean_token_logp_candidate_vs_organiser": [
+      -0.832,
+      -0.959,
+      40
+    ]
+  },
+  "qwen36_thinking": {
+    "answered": 40,
+    "errors": 0,
+    "same_kind": [
+      29,
+      40
+    ],
+    "same_first_call_name": [
+      14,
+      14
+    ],
+    "same_first_call_with_arguments": [
+      13,
+      14
+    ],
+    "text_similarity_mean": 0.308,
+    "text_pairs": 15,
+    "exact": [
+      13,
+      40
+    ],
+    "on_organiser_text_turns": {
+      "organiser_text_turns": 21,
+      "candidate_also_text_only": 15,
+      "similarity_mean_calls_count_as_zero": 0.22,
+      "candidate_style": {
+        "messages": 15,
+        "median_chars": 418,
+        "share_with_bold": 0.47,
+        "share_with_list": 0.33,
+        "share_with_dollar_sign": 0.13
+      },
+      "organiser_style": {
+        "messages": 21,
+        "median_chars": 402,
+        "share_with_bold": 0.43,
+        "share_with_list": 0.38,
+        "share_with_dollar_sign": 0.14
+      }
+    },
+    "turns_with_several_calls": [
+      0,
+      0
+    ],
+    "mean_token_logp_candidate_vs_organiser": [
+      -0.807,
+      -0.96,
+      38
+    ]
+  },
+  "qwen36_tools_in_system": {
+    "answered": 40,
+    "errors": 0,
+    "same_kind": [
+      29,
+      40
+    ],
+    "same_first_call_name": [
+      12,
+      13
+    ],
+    "same_first_call_with_arguments": [
+      10,
+      13
+    ],
+    "text_similarity_mean": 0.248,
+    "text_pairs": 16,
+    "exact": [
+      7,
+      40
+    ],
+    "on_organiser_text_turns": {
+      "organiser_text_turns": 21,
+      "candidate_also_text_only": 16,
+      "similarity_mean_calls_count_as_zero": 0.189,
+      "candidate_style": {
+        "messages": 16,
+        "median_chars": 377,
+        "share_with_bold": 0.31,
+        "share_with_list": 0.25,
+        "share_with_dollar_sign": 0.06
+      },
+      "organiser_style": {
+        "messages": 21,
+        "median_chars": 402,
+        "share_with_bold": 0.43,
+        "share_with_list": 0.38,
+        "share_with_dollar_sign": 0.14
+      }
+    },
+    "turns_with_several_calls": [
+      0,
+      0
+    ],
+    "mean_token_logp_candidate_vs_organiser": [
+      -0.742,
       -0.959,
       40
     ]
