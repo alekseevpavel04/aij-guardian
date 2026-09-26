@@ -1,0 +1,65 @@
+{
+  "test_share": 0.2372,
+  "views": {
+    "agreed_contexts_v1s": {
+      "rows": 343,
+      "positives": 53,
+      "submitted": {
+        "auroc": 0.9583,
+        "at_test_share": {
+          "flagged": 81,
+          "true_positives": 47,
+          "f1": 0.7015
+        }
+      },
+      "candidate": {
+        "auroc": 0.982,
+        "at_test_share": {
+          "flagged": 81,
+          "true_positives": 50,
+          "f1": 0.7463
+        }
+      }
+    },
+    "all_contexts_v1s": {
+      "rows": 384,
+      "positives": 67,
+      "submitted": {
+        "auroc": 0.9166,
+        "at_test_share": {
+          "flagged": 91,
+          "true_positives": 54,
+          "f1": 0.6835
+        }
+      },
+      "candidate": {
+        "auroc": 0.9383,
+        "at_test_share": {
+          "flagged": 91,
+          "true_positives": 55,
+          "f1": 0.6962
+        }
+      }
+    },
+    "all_contexts_opus": {
+      "rows": 384,
+      "positives": 80,
+      "submitted": {
+        "auroc": 0.8867,
+        "at_test_share": {
+          "flagged": 91,
+          "true_positives": 56,
+          "f1": 0.655
+        }
+      },
+      "candidate": {
+        "auroc": 0.9112,
+        "at_test_share": {
+          "flagged": 91,
+          "true_positives": 60,
+          "f1": 0.7018
+        }
+      }
+    }
+  }
+}
