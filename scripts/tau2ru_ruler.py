@@ -47,14 +47,21 @@ EMB = ROOT / "data/interim/embeddings"
 CJK = "[぀-ヿ㐀-鿿]"  # kana and CJK ideographs
 
 
-def simulation_labels(mode: str, rows: pd.DataFrame, opus_dir: Path, v1s_name: str) -> pd.Series:
+def simulation_labels(
+    mode: str, rows: pd.DataFrame, opus_dir: Path, v1s_name: str, only_double: bool = False
+) -> pd.Series:
     opus = {r["id"]: int(r["label"]) for f in opus_dir.glob("*/opus.jsonl") for r in journal.read(f)}
     path = ROOT / "data/interim/labels" / f"{v1s_name}.jsonl"
     v1s = {r["id"]: int(r["score"] >= 0.5) for r in journal.read(path)} if path.exists() else {}
+    if only_double:  # compare labellers on the same turns: only turns both have labelled
+        opus = {i: v for i, v in opus.items() if i in v1s}
+        v1s = {i: v for i, v in v1s.items() if i in opus}
     if mode == "opus":
         found = opus
     elif mode == "v1s":
         found = v1s
+    elif mode == "both":  # a disagreement becomes 0.5 and enters twice, as 0 and as 1, at half weight
+        found = {i: (opus[i] + v1s[i]) / 2 for i in opus if i in v1s}
     else:
         found = {i: opus[i] for i in opus if i in v1s and opus[i] == v1s[i]}
     return rows.id.map(found)
@@ -70,7 +77,8 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--contexts", type=Path, default=ROOT / "data/synthetic/organizer_contexts.parquet")
     ap.add_argument("--rows", type=Path, default=ROOT / "data/synthetic/tau2_ru_rows.parquet")
-    ap.add_argument("--labels", choices=("agreed", "opus", "v1s"), default="agreed")
+    ap.add_argument("--labels", choices=("agreed", "opus", "v1s", "both"), default="agreed")
+    ap.add_argument("--only-double-labelled", action="store_true", help="only simulation turns both labellers labelled")
     ap.add_argument("--prefix", default="q4_tok_tau2ru", help="token pass of the rows; its final vectors feed head B")
     ap.add_argument("--opus-dir", type=Path, default=ROOT / "data/synthetic/opus_labels_tau2ru")
     ap.add_argument("--v1s", default="labeler_v1s_tau2ru")
@@ -111,13 +119,15 @@ def main() -> None:
         cjk = part.response.str.contains(CJK)
         dropped += int(cjk.sum())
         part = part[~cjk].copy()
-        part["label"] = simulation_labels(args.labels, part, Path(opus_dir), args.v1s)
+        part["label"] = simulation_labels(args.labels, part, Path(opus_dir), args.v1s, args.only_double_labelled)
         frames.append(part[part.label.notna()])
         # the token pass's final vectors equal the server's last-token vectors (cosine >= 0.995 on the contexts)
         sim_vecs |= vectors(f"{prefix}_final_org")
         sim_feats |= features(prefix)
         sim_logp |= mean_logp(prefix)
     sim = pd.concat(frames)
+    soft = sim.label == 0.5
+    sim = pd.concat([sim[~soft].assign(lw=1.0), sim[soft].assign(label=0, lw=0.5), sim[soft].assign(label=1, lw=0.5)])
     sim["label"] = sim.label.astype(int)
     sim["task"] = [f"{d}__{data_id(t)}"[: len(d) + 2 + CUT] for d, t in zip(sim.domain, sim.task_id, strict=True)]
 
@@ -134,7 +144,7 @@ def main() -> None:
     tau = tau[tau.id.isin(vecs)]
     turns = sim.groupby(sim.id.str.split("::").str[0]).id.transform("size")
     organiser_turns = contexts.groupby("task").id.size().mean()
-    sim["w"] = organiser_turns / turns if args.dialogue_weight else 1.0
+    sim["w"] = (organiser_turns / turns if args.dialogue_weight else 1.0) * sim.lw
 
     ruler = Ruler(contexts, vecs, written(V3_V4, contexts), None)
     y, x, tasks, pairs = ruler.label["v1s"], ruler.x, ruler.tasks, ruler.pairs
