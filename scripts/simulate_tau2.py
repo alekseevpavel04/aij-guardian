@@ -104,7 +104,7 @@ def main() -> None:
     # reward is only a side signal here, so the same local model grades them
     nl_assertions.DEFAULT_LLM_NL_ASSERTIONS = args.model
     nl_assertions.DEFAULT_LLM_NL_ASSERTIONS_ARGS = llm_args
-    grade = nl_assertions.NLEvaluator.calculate_reward.__func__
+    grade = nl_assertions.NLAssertionsEvaluator.calculate_reward.__func__
 
     def grade_or_note(cls, task, full_trajectory):
         # a local model may answer the grader in prose instead of JSON; the dialogue is what we need, so its
@@ -119,7 +119,7 @@ def main() -> None:
                 reward_breakdown={RewardType.NL_ASSERTION: 0.0},
             )
 
-    nl_assertions.NLEvaluator.calculate_reward = classmethod(grade_or_note)
+    nl_assertions.NLAssertionsEvaluator.calculate_reward = classmethod(grade_or_note)
     task_ids = args.tasks.split(",") if args.tasks else None
     config = TextRunConfig(
         domain=args.domain,
