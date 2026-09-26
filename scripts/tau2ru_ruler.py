@@ -44,6 +44,7 @@ from turn_ruler import RULES  # noqa: E402
 from uncertainty_source_grid import features  # noqa: E402
 
 EMB = ROOT / "data/interim/embeddings"
+CJK = r"[぀-ヿ㐀-鿿]"
 
 
 def simulation_labels(mode: str, rows: pd.DataFrame, opus_dir: Path, v1s_name: str) -> pd.Series:
@@ -86,6 +87,10 @@ def main() -> None:
 
     contexts = pd.read_parquet(args.contexts)
     sim = pd.read_parquet(args.rows)
+    # Qwen3.6 at Q4 now and then slips Chinese words into a Russian sentence; the organiser's data has none,
+    # so such turns would teach a cue the test cannot have
+    cjk = sim.response.str.contains(CJK)
+    sim = sim[~cjk]
     sim["label"] = simulation_labels(args.labels, sim, args.opus_dir, args.v1s)
     sim = sim[sim.label.notna()].copy()
     sim["label"] = sim.label.astype(int)
@@ -115,6 +120,7 @@ def main() -> None:
     org_logp, sim_logp = mean_logp("q4_tok"), mean_logp(args.prefix)
     result: dict = {
         "labels": args.labels,
+        "turns_dropped_for_chinese_words": int(cjk.sum()),
         "rows": len(sim),
         "positives": int(sim.label.sum()),
         "dialogues": int(sim.id.str.split("::").str[0].nunique()),
