@@ -39,7 +39,7 @@ from head_combos import ranks  # noqa: E402
 from head_models import lgbm  # noqa: E402
 from judge_eval import load  # noqa: E402
 from pairs_effect import written  # noqa: E402
-from train_head_ru import vectors  # noqa: E402
+from train_head_ru import at_share, auroc, vectors  # noqa: E402
 from turn_ruler import RULES  # noqa: E402
 from uncertainty_source_grid import features  # noqa: E402
 
@@ -187,14 +187,39 @@ def main() -> None:
         "head_b_alone": ruler.auroc_ci(b_ref)["auroc"],
         "uncertainty_alone": ruler.auroc_ci(u_ref)["auroc"],
         "system": ruler.auroc_ci(reference)["auroc"],
+        "system_f1_at_test_share_all_contexts": {t: at_share(ruler.label[t], reference)["f1"] for t in ("v1s", "opus")},
     }
     logistic_ref = system(head_b("logistic", 0.0), u_ref)
+
+    def f1_at_share(truth: np.ndarray, s: np.ndarray) -> float:
+        return at_share(truth, s)["f1"]
+
+    def new_ruler(s: np.ndarray, base: np.ndarray) -> dict:
+        """F1 when the test's share is flagged, on all contexts, per labeller, with its difference to the
+        reference and a bootstrap over dialogues. The v1s view is the independent one: the simulation rows
+        are labelled by Opus, so the Opus view may favour what Opus teaches."""
+        out = {}
+        rng = np.random.default_rng(0)
+        for teacher in ("v1s", "opus"):
+            truth = ruler.label[teacher]
+            diffs = []
+            for _ in range(1000):
+                idx = np.concatenate([ruler.groups[k] for k in rng.integers(0, len(ruler.groups), len(ruler.groups))])
+                diffs.append(f1_at_share(truth[idx], s[idx]) - f1_at_share(truth[idx], base[idx]))
+            out[teacher] = {
+                "f1": f1_at_share(truth, s),
+                "f1_minus_reference": round(f1_at_share(truth, s) - f1_at_share(truth, base), 4),
+                "ci95": [round(float(v), 3) for v in np.percentile(diffs, [2.5, 97.5])],
+                "auroc": round(float(auroc(truth, s)), 4),
+            }
+        return out
 
     def report(name: str, b: np.ndarray, u: np.ndarray, against: np.ndarray = reference) -> None:
         result["variants"][name] = {
             "head_b_alone": ruler.auroc_ci(b)["auroc"],
             "uncertainty_alone": ruler.auroc_ci(u)["auroc"],
             "system_minus_reference": ruler.paired(system(b, u), against),
+            "new_ruler_all_contexts": new_ruler(system(b, u), against),
         }
         print(name, json.dumps(result["variants"][name]), flush=True)
 
