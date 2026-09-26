@@ -76,6 +76,12 @@ def main() -> None:
     ap.add_argument("--v1s", default="labeler_v1s_tau2ru")
     ap.add_argument("--tag", default="tau2ru", help="name of the result file")
     ap.add_argument(
+        "--source",
+        action="append",
+        default=[],
+        help="rows|prefix|opus_dir of one simulation set; repeat to pool several (overrides the three above)",
+    )
+    ap.add_argument(
         "--dialogue-weight",
         action="store_true",
         help="a simulated dialogue weighs as much in all as an organiser's one (8B dialogues loop to ~26 turns)",
@@ -86,21 +92,29 @@ def main() -> None:
     out = args.out or ROOT / f"results/{args.tag}_ruler_{args.labels}{suffix}.json"
 
     contexts = pd.read_parquet(args.contexts)
-    sim = pd.read_parquet(args.rows)
-    # Qwen3.6 at Q4 now and then slips Chinese words into a Russian sentence; the organiser's data has none,
-    # so such turns would teach a cue the test cannot have
-    cjk = sim.response.str.contains(CJK)
-    sim = sim[~cjk]
-    sim["label"] = simulation_labels(args.labels, sim, args.opus_dir, args.v1s)
-    sim = sim[sim.label.notna()].copy()
+    sources = [tuple(x.split("|")) for x in args.source] or [(str(args.rows), args.prefix, str(args.opus_dir))]
+    frames, sim_vecs, sim_feats, sim_logp, dropped = [], {}, {}, {}, 0
+    for rows_path, prefix, opus_dir in sources:
+        part = pd.read_parquet(rows_path)
+        # Qwen3.6 at Q4 now and then slips Chinese words into a Russian sentence; the organiser's data has
+        # none, so such turns would teach a cue the test cannot have
+        cjk = part.response.str.contains(CJK)
+        dropped += int(cjk.sum())
+        part = part[~cjk].copy()
+        part["label"] = simulation_labels(args.labels, part, Path(opus_dir), args.v1s)
+        frames.append(part[part.label.notna()])
+        # the token pass's final vectors equal the server's last-token vectors (cosine >= 0.995 on the contexts)
+        sim_vecs |= vectors(f"{prefix}_final_org")
+        sim_feats |= features(prefix)
+        sim_logp |= mean_logp(prefix)
+    sim = pd.concat(frames)
     sim["label"] = sim.label.astype(int)
     sim["task"] = [f"{d}__{data_id(t)}"[: len(d) + 2 + CUT] for d, t in zip(sim.domain, sim.task_id, strict=True)]
 
-    # the token pass's final vectors equal the server's last-token vectors (cosine >= 0.995 on the contexts)
-    vecs = vectors("q4_last_org") | vectors("q4_last_extdev_all") | vectors(f"{args.prefix}_final_org")
+    vecs = vectors("q4_last_org") | vectors("q4_last_extdev_all") | sim_vecs
     for name in ("q4_last_pairs_02", "q4_last_pairs_03"):
         vecs |= vectors(name)
-    own, sim_feats = features("q4_tok"), features(args.prefix)
+    own = features("q4_tok")
     sim = sim[sim.id.isin(vecs) & sim.id.isin(sim_feats)]
     tau = load("ext_dev", None, 0)
     tau = tau[tau.id.isin(vecs)]
@@ -117,10 +131,11 @@ def main() -> None:
             for r in ruler.ctx.itertuples()
         ]
     )
-    org_logp, sim_logp = mean_logp("q4_tok"), mean_logp(args.prefix)
+    org_logp = mean_logp("q4_tok")
     result: dict = {
         "labels": args.labels,
-        "turns_dropped_for_chinese_words": int(cjk.sum()),
+        "sources": [list(x) for x in sources],
+        "turns_dropped_for_chinese_words": dropped,
         "rows": len(sim),
         "positives": int(sim.label.sum()),
         "dialogues": int(sim.id.str.split("::").str[0].nunique()),
