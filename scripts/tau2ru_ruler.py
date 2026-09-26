@@ -46,13 +46,9 @@ from uncertainty_source_grid import features  # noqa: E402
 EMB = ROOT / "data/interim/embeddings"
 
 
-def simulation_labels(mode: str, rows: pd.DataFrame) -> pd.Series:
-    opus = {
-        r["id"]: int(r["label"])
-        for f in (ROOT / "data/synthetic/opus_labels_tau2ru").glob("*/opus.jsonl")
-        for r in journal.read(f)
-    }
-    path = ROOT / "data/interim/labels/labeler_v1s_tau2ru.jsonl"
+def simulation_labels(mode: str, rows: pd.DataFrame, opus_dir: Path, v1s_name: str) -> pd.Series:
+    opus = {r["id"]: int(r["label"]) for f in opus_dir.glob("*/opus.jsonl") for r in journal.read(f)}
+    path = ROOT / "data/interim/labels" / f"{v1s_name}.jsonl"
     v1s = {r["id"]: int(r["score"] >= 0.5) for r in journal.read(path)} if path.exists() else {}
     if mode == "opus":
         found = opus
@@ -74,6 +70,10 @@ def main() -> None:
     ap.add_argument("--contexts", type=Path, default=ROOT / "data/synthetic/organizer_contexts.parquet")
     ap.add_argument("--rows", type=Path, default=ROOT / "data/synthetic/tau2_ru_rows.parquet")
     ap.add_argument("--labels", choices=("agreed", "opus", "v1s"), default="agreed")
+    ap.add_argument("--prefix", default="q4_tok_tau2ru", help="token pass of the rows; its final vectors feed head B")
+    ap.add_argument("--opus-dir", type=Path, default=ROOT / "data/synthetic/opus_labels_tau2ru")
+    ap.add_argument("--v1s", default="labeler_v1s_tau2ru")
+    ap.add_argument("--tag", default="tau2ru", help="name of the result file")
     ap.add_argument(
         "--dialogue-weight",
         action="store_true",
@@ -82,19 +82,20 @@ def main() -> None:
     ap.add_argument("--out", type=Path, default=None)
     args = ap.parse_args()
     suffix = "_dialogue_weight" if args.dialogue_weight else ""
-    out = args.out or ROOT / f"results/tau2ru_ruler_{args.labels}{suffix}.json"
+    out = args.out or ROOT / f"results/{args.tag}_ruler_{args.labels}{suffix}.json"
 
     contexts = pd.read_parquet(args.contexts)
     sim = pd.read_parquet(args.rows)
-    sim["label"] = simulation_labels(args.labels, sim)
+    sim["label"] = simulation_labels(args.labels, sim, args.opus_dir, args.v1s)
     sim = sim[sim.label.notna()].copy()
     sim["label"] = sim.label.astype(int)
     sim["task"] = [f"{d}__{data_id(t)}"[: len(d) + 2 + CUT] for d, t in zip(sim.domain, sim.task_id, strict=True)]
 
-    vecs = vectors("q4_last_org") | vectors("q4_last_extdev_all") | vectors("q4_last_tau2ru")
+    # the token pass's final vectors equal the server's last-token vectors (cosine >= 0.995 on the contexts)
+    vecs = vectors("q4_last_org") | vectors("q4_last_extdev_all") | vectors(f"{args.prefix}_final_org")
     for name in ("q4_last_pairs_02", "q4_last_pairs_03"):
         vecs |= vectors(name)
-    own, sim_feats = features("q4_tok"), features("q4_tok_tau2ru")
+    own, sim_feats = features("q4_tok"), features(args.prefix)
     sim = sim[sim.id.isin(vecs) & sim.id.isin(sim_feats)]
     tau = load("ext_dev", None, 0)
     tau = tau[tau.id.isin(vecs)]
@@ -111,7 +112,7 @@ def main() -> None:
             for r in ruler.ctx.itertuples()
         ]
     )
-    org_logp, sim_logp = mean_logp("q4_tok"), mean_logp("q4_tok_tau2ru")
+    org_logp, sim_logp = mean_logp("q4_tok"), mean_logp(args.prefix)
     result: dict = {
         "labels": args.labels,
         "rows": len(sim),

@@ -64,17 +64,29 @@ def main() -> None:
     ap.add_argument("--max-steps", type=int, default=100)
     ap.add_argument("--instructions", type=Path, default=ROOT / "configs/agent_instruction_ru.txt")
     ap.add_argument("--out", type=Path, default=ROOT / "data/synthetic/tau2_ru")
+    ap.add_argument("--temperature", type=float, default=0.0)
+    ap.add_argument("--thinking", action="store_true", help="the agent reasons first (the server must allow it)")
+    ap.add_argument(
+        "--organiser-system",
+        type=Path,
+        default=None,
+        help="JSON of the organiser's ⟦SYSTEM⟧ block per domain (with its tool list); the agent gets it verbatim",
+    )
     args = ap.parse_args()
 
     patch_language(args.instructions)
+    if args.organiser_system:
+        system = json.loads(args.organiser_system.read_text(encoding="utf-8"))[args.domain]
+        llm_agent.LLMAgent.system_prompt = property(lambda self: system)
     llm_args = {
         "api_base": args.api_base,
         "api_key": "local",
-        "temperature": 0.0,
+        "temperature": args.temperature,
         # the organiser's agent makes several calls in one turn; the model may, if it wants to
         "parallel_tool_calls": True,
         "extra_body": {"chat_template_kwargs": {"enable_thinking": False}},
     }
+    agent_args = {**llm_args, "extra_body": {"chat_template_kwargs": {"enable_thinking": args.thinking}}}
     # tasks graded by natural-language assertions call τ²'s default judge (an OpenAI model); the
     # reward is only a side signal here, so the same local model grades them
     nl_assertions.DEFAULT_LLM_NL_ASSERTIONS = args.model
@@ -84,7 +96,7 @@ def main() -> None:
         domain=args.domain,
         task_ids=task_ids,
         llm_agent=args.model,
-        llm_args_agent=llm_args,
+        llm_args_agent=agent_args,
         llm_user=args.model,
         llm_args_user=llm_args,
         max_steps=args.max_steps,
@@ -108,6 +120,9 @@ def main() -> None:
                 "model": args.model,
                 "nl_assertions_judge": args.model,
                 "parallel_tool_calls": True,
+                "temperature": args.temperature,
+                "agent_thinking": args.thinking,
+                "organiser_system": bool(args.organiser_system),
                 "seconds": round(time.monotonic() - started, 1),
                 "simulation": json.loads(simulation.model_dump_json()),
             }

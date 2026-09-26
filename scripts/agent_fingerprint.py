@@ -56,10 +56,11 @@ def dump_tools() -> None:
     (OUT / "tools.json").write_text(json.dumps(schemas, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
 
 
-def messages(prompt: str) -> list[dict]:
+def messages(prompt: str, tools_in_system: bool = False) -> list[dict]:
     turns = parse_transcript(prompt)
     system = next(t for t in turns if t.role == "SYSTEM").text
-    system = system[: system.find("[AVAILABLE TOOLS]")].strip() if "[AVAILABLE TOOLS]" in system else system
+    if "[AVAILABLE TOOLS]" in system and not tools_in_system:
+        system = system[: system.find("[AVAILABLE TOOLS]")].strip()
     out = [{"role": "system", "content": system}]
     for t in turns:
         if t.role == "USER":
@@ -91,16 +92,18 @@ def body(response: str) -> str:
     return response.split("\n", 1)[1] if response.startswith("⟦") and "\n" in response else response
 
 
-def generate(api_base: str, model: str, chat: list[dict], tools: list[dict]) -> dict:
+def generate(
+    api_base: str, model: str, chat: list[dict], tools: list[dict], temperature: float = 0.0, thinking: bool = False
+) -> dict:
     payload = {
         "model": model,
         "messages": chat,
         "tools": tools,
-        "temperature": 0.0,
-        "max_tokens": 1024,
+        "temperature": temperature,
+        "max_tokens": 3072 if thinking else 1024,
         # the organiser's agent makes up to 9 calls in one turn, so a candidate may too
         "parallel_tool_calls": True,
-        "chat_template_kwargs": {"enable_thinking": False},
+        "chat_template_kwargs": {"enable_thinking": thinking},
     }
     request = urllib.request.Request(
         f"{api_base}/chat/completions", json.dumps(payload).encode(), {"Content-Type": "application/json"}
@@ -226,6 +229,13 @@ def main() -> None:
     ap.add_argument("--name", help="candidate name, the output file's stem")
     ap.add_argument("--model", help="the server's model alias")
     ap.add_argument("--api-base", default="http://127.0.0.1:8081/v1")
+    ap.add_argument("--temperature", type=float, default=0.0)
+    ap.add_argument("--thinking", action="store_true", help="let the model reason first (the server must allow it)")
+    ap.add_argument(
+        "--tools-in-system",
+        action="store_true",
+        help="keep the [AVAILABLE TOOLS] list in the system text, as in the data, besides the API tools",
+    )
     ap.add_argument("--report", action="store_true")
     ap.add_argument("--dump-tools", action="store_true")
     ap.add_argument("--rows-out", type=Path, default=None, help="write every candidate's answers as rows and stop")
@@ -256,7 +266,14 @@ def main() -> None:
             continue
         started = time.monotonic()
         try:
-            message = generate(args.api_base, args.model, messages(row.prompt), schemas[row.domain])
+            message = generate(
+                args.api_base,
+                args.model,
+                messages(row.prompt, args.tools_in_system),
+                schemas[row.domain],
+                args.temperature,
+                args.thinking,
+            )
             record = {"id": row.id, "generated": rendered(message), "organiser": row.response}
         except Exception as error:  # a model that cannot take tools is itself a finding; keep going
             record = {"id": row.id, "error": repr(error)[:500], "organiser": row.response}
