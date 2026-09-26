@@ -20,6 +20,8 @@ Each answer is appended to data/interim/fingerprint/<name>.jsonl, so a rerun con
 import argparse
 import difflib
 import json
+import re
+import statistics
 import sys
 import time
 import urllib.request
@@ -37,6 +39,7 @@ from guardian.render import _call_line  # noqa: E402
 OUT = ROOT / "data/interim/fingerprint"
 DOMAINS = ("airline", "retail", "telecom")
 SAMPLE = 40
+LIST_RE = re.compile(r"^\s*(?:[-•*]|\d+[.)])\s", re.MULTILINE)
 
 
 def sample(contexts: Path) -> pd.DataFrame:
@@ -141,6 +144,37 @@ def mean_logp(prefix: str) -> dict[str, float]:
     return {r["id"]: sum(r["logp"]) / len(r["logp"]) for r in journal.read(path) if r["logp"]}
 
 
+def style(texts: list[str]) -> dict:
+    """Surface habits of a writer's messages to the user: length, bold, lists."""
+    texts = [t for t in texts if t]
+    if not texts:
+        return {"messages": 0}
+    return {
+        "messages": len(texts),
+        "median_chars": int(statistics.median(len(t) for t in texts)),
+        "share_with_bold": round(sum("**" in t for t in texts) / len(texts), 2),
+        "share_with_list": round(sum(bool(LIST_RE.search(t)) for t in texts) / len(texts), 2),
+        "share_with_dollar_sign": round(sum("$" in t for t in texts) / len(texts), 2),
+    }
+
+
+def on_organiser_text_turns(rows: list[dict]) -> dict:
+    """Where the organiser's agent wrote to the user without a call: does the candidate write too, how close."""
+    turns = [r for r in rows if kind_and_calls(body(r["organiser"]))[0] == "text"]
+    prose = [kind_and_calls(r["generated"])[2] for r in turns]
+    ratios = [
+        difflib.SequenceMatcher(None, p, kind_and_calls(body(r["organiser"]))[2]).ratio()
+        for p, r in zip(prose, turns, strict=True)
+    ]
+    return {
+        "organiser_text_turns": len(turns),
+        "candidate_also_text_only": sum(kind_and_calls(r["generated"])[0] == "text" for r in turns),
+        "similarity_mean_calls_count_as_zero": round(sum(ratios) / len(ratios), 3) if ratios else None,
+        "candidate_style": style(prose),
+        "organiser_style": style([kind_and_calls(body(r["organiser"]))[2] for r in turns]),
+    }
+
+
 def report() -> dict:
     result = {}
     fp, org = mean_logp("q4_tok_fp"), mean_logp("q4_tok")
@@ -170,6 +204,7 @@ def report() -> dict:
             "text_similarity_mean": round(sum(ratios) / len(ratios), 3) if ratios else None,
             "text_pairs": len(ratios),
             "exact": [exact, len(rows)],
+            "on_organiser_text_turns": on_organiser_text_turns(rows),
             "turns_with_several_calls": [
                 sum(len(kind_and_calls(r["generated"])[1]) > 1 for r in rows),
                 sum(len(kind_and_calls(body(r["organiser"]))[1]) > 1 for r in rows),
