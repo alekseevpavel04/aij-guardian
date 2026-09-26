@@ -13,6 +13,7 @@ checks that the notebook's metadata says private before it goes out.
 
 import argparse
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -27,7 +28,8 @@ BASE = ROOT / "data/kaggle"
 
 
 def run(*args: str) -> str:
-    out = subprocess.run([KAGGLE, *args], capture_output=True, text=True, encoding="utf-8")
+    env = {**os.environ, "PYTHONIOENCODING": "utf-8"}  # the notebook log is not in the console code page
+    out = subprocess.run([KAGGLE, *args], capture_output=True, text=True, encoding="utf-8", env=env)
     print(out.stdout.strip() or out.stderr.strip())
     if out.returncode:
         raise SystemExit(out.returncode)

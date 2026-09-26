@@ -64,7 +64,10 @@ def setup_python() -> Path:
         sh(f"git clone -q https://github.com/sierra-research/tau2-bench {TMP / 'tau2-bench'}")
         sh(f"git -C {TMP / 'tau2-bench'} checkout -q {TAU2_COMMIT}")
         sh(f"uv venv -q --python 3.12 {env}")
-        sh(f"uv pip install -q --python {env / 'bin/python'} -e {TMP / 'tau2-bench'}")
+        # the versions of the home environment: an unpinned install left out websockets, which τ² imports
+        requirements = KIT / "configs/tau2_requirements.txt"
+        sh(f"uv pip install -q --python {env / 'bin/python'} -r {requirements} -e {TMP / 'tau2-bench'}")
+    sh(f"{env / 'bin/python'} {KIT / 'scripts/simulate_tau2.py'} --help > /dev/null")  # imports τ² and our code
     return env / "bin/python"
 
 
@@ -170,6 +173,7 @@ def simulate(python: Path, agent: str, tasks: list[tuple[str, str]], out: Path, 
     thinking = ["--thinking"] if MODELS[agent][3] else []
     running: list[tuple[str, str, float, subprocess.Popen]] = []
     queue = list(tasks)
+    exits: list[int] = []
     env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
     while queue or running:
         while queue and len(running) < 2 and time.time() < stop_at:
@@ -202,7 +206,10 @@ def simulate(python: Path, agent: str, tasks: list[tuple[str, str]], out: Path, 
             domain, task, began, process = item
             if process.poll() is not None:
                 running.remove(item)
+                exits.append(process.returncode)
                 log(f"{domain} {task[:60]} exit {process.returncode}, {time.time() - began:.0f} s")
+                if len(exits) == 4 and all(exits):
+                    raise RuntimeError("the first four dialogues all failed, see simulate_errors.log")
         time.sleep(2)
 
 

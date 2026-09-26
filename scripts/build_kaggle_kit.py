@@ -30,6 +30,7 @@ FILES = [
     "src/guardian/render.py",
     "src/guardian/tau2_sim.py",
     "configs/agent_instruction_ru.txt",
+    "configs/tau2_requirements.txt",
 ]
 SHARES = {"airline": 0.33, "retail": 0.20, "telecom": 0.47}
 
