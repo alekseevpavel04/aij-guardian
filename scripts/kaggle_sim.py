@@ -101,15 +101,31 @@ def cuda_driver_library() -> Path:
     raise RuntimeError("no libcuda.so found")
 
 
+def restore_library_links(folder: Path) -> None:
+    """libllama.so -> libllama.so.0 -> libllama.so.0.4.1 are symlinks in the build; an unpacked dataset may keep
+    only the full names, so the short ones are made again where missing."""
+    for full in folder.glob("*.so.*.*"):
+        base = full.name.split(".so.")[0] + ".so"
+        for short in (base, base + "." + full.name.split(".so.")[1].split(".")[0]):
+            if not (folder / short).exists():
+                (folder / short).symlink_to(full.name)
+
+
 def setup_llama() -> Path:
     """The build takes about 45 minutes of a session, so each session leaves build/bin in its output and a later
     session with that output attached unpacks it instead. It goes back to the same path: the build-tree rpath
     of llama-server points at the shared libraries there."""
     server = TMP / "llama.cpp/build/bin/llama-server"
     cached = sorted(Path("/kaggle/input").glob(f"**/{LLAMA_BIN}"))
+    unpacked = sorted(Path("/kaggle/input").glob("**/llama.cpp/build/bin/llama-server"))
     if not server.exists() and cached:
         log(f"unpacking {cached[0]}")
         sh(f"tar -xzf {cached[0]} -C /")
+    elif not server.exists() and unpacked:  # the tarball uploaded as a dataset, which Kaggle unpacks
+        log(f"copying {unpacked[0].parent}")
+        shutil.copytree(unpacked[0].parent, server.parent, dirs_exist_ok=True)
+        sh(f"chmod +x {server.parent}/*")
+        restore_library_links(server.parent)
     if not server.exists():
         sh(
             f"git -c advice.detachedHead=false clone -q --depth 1 --branch {LLAMA_TAG} "

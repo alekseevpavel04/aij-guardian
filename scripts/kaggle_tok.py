@@ -15,6 +15,7 @@ tok kit (scripts/build_tok_kit.py) with the llama.cpp b11052 build another sessi
 
 import argparse
 import os
+import shutil
 import subprocess
 import sys
 import time
@@ -33,6 +34,31 @@ def log(text: str) -> None:
     print(line, flush=True)
     with open(WORK / "kaggle_tok.log", "a", encoding="utf-8") as f:
         print(line, file=f)
+
+
+def restore_library_links(folder: Path) -> None:
+    """libllama.so -> libllama.so.0 -> libllama.so.0.4.1 are symlinks in the build; an unpacked dataset may keep
+    only the full names, so the short ones are made again where missing."""
+    for full in folder.glob("*.so.*.*"):
+        base = full.name.split(".so.")[0] + ".so"
+        for short in (base, base + "." + full.name.split(".so.")[1].split(".")[0]):
+            if not (folder / short).exists():
+                (folder / short).symlink_to(full.name)
+
+
+def attach_build() -> None:
+    """The llama.cpp build of another session: its output's tarball, or the same tarball uploaded as a dataset,
+    which Kaggle unpacks (then the files come without the executable bit)."""
+    tarball = sorted(Path("/kaggle/input").glob("**/llama_bin_b11052_sm75.tar.gz"))
+    if tarball:
+        subprocess.run(f"tar -xzf {tarball[0]} -C /", shell=True, check=True)
+        return
+    unpacked = sorted(Path("/kaggle/input").glob("**/llama.cpp/build/bin/llama-server"))
+    if not unpacked:
+        raise RuntimeError("no llama.cpp build attached (a kaggle_sim.py session output or aij-llama-bin)")
+    shutil.copytree(unpacked[0].parent, LIB, dirs_exist_ok=True)
+    subprocess.run(f"chmod +x {LIB}/*", shell=True, check=True)
+    restore_library_links(LIB)
 
 
 def token_pass(rows: str, prefix: str, gguf: Path, stop_at: float) -> None:
@@ -80,10 +106,7 @@ def main() -> None:
     WORK.mkdir(parents=True, exist_ok=True)
     TMP.mkdir(parents=True, exist_ok=True)
     subprocess.run("nvidia-smi --query-gpu=name,memory.total --format=csv", shell=True)
-    cached = sorted(Path("/kaggle/input").glob("**/llama_bin_b11052_sm75.tar.gz"))
-    if not cached:
-        raise RuntimeError("no llama.cpp build attached (a kaggle_sim.py session output)")
-    subprocess.run(f"tar -xzf {cached[0]} -C /", shell=True, check=True)
+    attach_build()
     from huggingface_hub import hf_hub_download
 
     gguf = Path(hf_hub_download(*MODEL, local_dir=TMP / "models"))
