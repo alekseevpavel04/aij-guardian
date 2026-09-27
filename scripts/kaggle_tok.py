@@ -37,8 +37,12 @@ def log(text: str) -> None:
 
 
 def restore_library_links(folder: Path) -> None:
-    """libllama.so -> libllama.so.0 -> libllama.so.0.4.1 are symlinks in the build; an unpacked dataset may keep
-    only the full names, so the short ones are made again where missing."""
+    """libllama.so -> libllama.so.0 -> libllama.so.0.4.1 are symlinks in the build; a dataset unpacked by Kaggle
+    turns them into files of a few bytes (27.09: "libggml.so: file too short"), so those go and the links are
+    made again."""
+    for stub in folder.glob("lib*.so*"):
+        if not stub.is_symlink() and stub.stat().st_size < 1024:
+            stub.unlink()
     for full in folder.glob("*.so.*.*"):
         base = full.name.split(".so.")[0] + ".so"
         for short in (base, base + "." + full.name.split(".so.")[1].split(".")[0]):
