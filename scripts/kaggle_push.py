@@ -1,4 +1,5 @@
 """Drive the Kaggle simulation sessions from here with the official Kaggle CLI (token in ~/.kaggle/kaggle.json).
+The datasets belong to the account of that token.
 
     python scripts/kaggle_push.py kit                                  # new version of the private kit dataset
     python scripts/kaggle_push.py push --name aij-sim-run1 --agent q36n --tasks tasks_run1.json
@@ -6,6 +7,7 @@
     python scripts/kaggle_push.py push --name aij-sim-test --mode test
     python scripts/kaggle_push.py status --name aij-sim-run1
     python scripts/kaggle_push.py fetch --name aij-sim-run1             # output into data/kaggle/out/<name>
+    python scripts/kaggle_push.py bin                                  # the llama.cpp build as a private dataset
 
 Everything stays private: the kit holds the agent instruction found in the organiser's data, and every push
 checks that the notebook's metadata says private before it goes out.
@@ -21,9 +23,21 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 KAGGLE = str(Path(sys.executable).parent / "kaggle")
-OWNER = "alekseevpavel"
+BUILD = "llama_bin_b11052_sm75.tar.gz"
+
+
+def account() -> str:
+    from kaggle.api.kaggle_api_extended import KaggleApi
+
+    api = KaggleApi()
+    api.authenticate()
+    return api.get_config_value("username")
+
+
+OWNER = account()
 KIT_DATASET = f"{OWNER}/aij-sim-kit-zip"
 TOK_DATASET = f"{OWNER}/aij-tok-kit-zip"
+BIN_DATASET = f"{OWNER}/aij-llama-bin"
 ACCELERATOR = "NvidiaTeslaT4"
 BASE = ROOT / "data/kaggle"
 
@@ -73,7 +87,7 @@ def push(args: argparse.Namespace) -> None:
         "is_private": True,
         "enable_gpu": True,
         "enable_internet": True,
-        "dataset_sources": [dataset],
+        "dataset_sources": [dataset] + ([BIN_DATASET] if args.binary_dataset else []),
         "competition_sources": [],
         # an earlier session's output carries the built llama-server (kaggle_sim.py unpacks it)
         "kernel_sources": [f"{OWNER}/{args.binary_from}"] if args.binary_from else [],
@@ -87,25 +101,36 @@ def push(args: argparse.Namespace) -> None:
         raise SystemExit("push refused")
 
 
-def kit(args: argparse.Namespace) -> None:
-    """A new version of the sim kit, or of the tok kit with --tok-kit; --create makes the dataset the first time
-    (the CLI creates datasets private unless told --public)."""
-    name, dataset = ("aij-tok-kit.zip", TOK_DATASET) if args.tok_kit else ("aij-sim-kit.zip", KIT_DATASET)
+def upload(name: str, source: Path, dataset: str) -> None:
+    """A new version of a private dataset, or the dataset itself the first time (the CLI creates datasets private
+    unless told --public)."""
     folder = BASE / "kit_upload"
     shutil.rmtree(folder, ignore_errors=True)
     folder.mkdir(parents=True)
-    shutil.copy(BASE / name, folder / name)
+    shutil.copy(source, folder / name)
     meta = {"id": dataset, "title": dataset.split("/")[1], "licenses": [{"name": "other"}]}
     (folder / "dataset-metadata.json").write_text(json.dumps(meta), encoding="utf-8")
-    if args.create:
-        run("datasets", "create", "-p", str(folder))
-    else:
+    env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
+    exists = subprocess.run([KAGGLE, "datasets", "status", dataset], capture_output=True, text=True, env=env)
+    if exists.returncode == 0 and "ready" in exists.stdout:
         run("datasets", "version", "-p", str(folder), "-m", "kit update")
+    else:
+        run("datasets", "create", "-p", str(folder))
+
+
+def kit(args: argparse.Namespace) -> None:
+    name, dataset = ("aij-tok-kit.zip", TOK_DATASET) if args.tok_kit else ("aij-sim-kit.zip", KIT_DATASET)
+    upload(name, BASE / name, dataset)
+
+
+def binary(_: argparse.Namespace) -> None:
+    """The build an earlier session left in its output (kaggle_sim.py packs it), as a dataset of its own."""
+    upload(BUILD, next((BASE / "out").glob(f"*/{BUILD}")), BIN_DATASET)
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("action", choices=("kit", "push", "status", "fetch"))
+    ap.add_argument("action", choices=("kit", "push", "status", "fetch", "bin"))
     ap.add_argument("--name", default="aij-sim-test")
     ap.add_argument("--mode", choices=("test", "run"), default="run")
     ap.add_argument("--agent", default="q36n")
@@ -114,11 +139,13 @@ def main() -> None:
     ap.add_argument("--user-temperature", type=float, default=None)
     ap.add_argument("--tok", nargs="+", default=None, help="rows_name:prefix pairs: a token pass session instead")
     ap.add_argument("--tok-kit", action="store_true", help="kit: the token pass kit")
-    ap.add_argument("--create", action="store_true", help="kit: create the dataset (first upload)")
+    ap.add_argument("--binary-dataset", action="store_true", help="attach the aij-llama-bin dataset")
     ap.add_argument("--binary-from", default=None, help="a finished session whose output has the llama-server build")
     args = ap.parse_args()
     if args.action == "kit":
         kit(args)
+    elif args.action == "bin":
+        binary(args)
     elif args.action == "push":
         push(args)
     elif args.action == "status":
