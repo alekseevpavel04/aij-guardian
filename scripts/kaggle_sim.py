@@ -137,7 +137,7 @@ def setup_model(agent: str) -> Path:
     return Path(hf_hub_download(repo, name, local_dir=TMP / "models"))
 
 
-def start_server(server: Path, model: Path, agent: str) -> subprocess.Popen:
+def start_server(server: Path, model: Path, agent: str, slot_tokens: int = 32768) -> subprocess.Popen:
     flags = MODELS[agent][2]
     command = [
         str(server),
@@ -146,7 +146,7 @@ def start_server(server: Path, model: Path, agent: str) -> subprocess.Popen:
         "--n-gpu-layers",
         "99",
         "--ctx-size",
-        "65536",
+        str(2 * slot_tokens),
         "--parallel",
         "2",
         "--flash-attn",
@@ -299,7 +299,6 @@ def main() -> None:
     python = setup_python()
     server = setup_llama()
     model = setup_model(args.agent)
-    process = start_server(server, model, args.agent)
     out = WORK / f"sims_{args.agent}"
     if args.mode == "test":
         tasks, stop_at, max_steps = (
@@ -312,8 +311,12 @@ def main() -> None:
         # an entry may carry a third field, the number of trials of that task (repeats with a sampling user)
         tasks = [(item[0], item[1], item[2] if len(item) > 2 else 1) for item in listed]
         stop_at, max_steps = STARTED + args.stop_after * 3600, args.max_steps
+    banking = any(d == "banking_knowledge" for d, _, _ in tasks)
+    # the organiser's banking prompts reach ~230k characters (knowledge base results in full), so banking needs far
+    # longer slots than the 32k that fit the other domains (27.09: with 32k most banking dialogues failed)
+    process = start_server(server, model, args.agent, 131072 if banking else 32768)
     embedder, embedder_name = None, None
-    if any(d == "banking_knowledge" for d, _, _ in tasks):
+    if banking:
         embedder, embedder_name = start_embedder(server)
         # the documents' embeddings from the kit; the warm-up must find them (a miss would embed 698 documents on
         # the CPU for hours), so it has a time limit
