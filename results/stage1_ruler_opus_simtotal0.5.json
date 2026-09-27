@@ -1,0 +1,108 @@
+{
+  "labels": "opus",
+  "balance": "none",
+  "uncertainty_head_skips": [
+    "glm"
+  ],
+  "context_labels": "v1s",
+  "sources": [
+    [
+      "data/synthetic/tau2_ru_q36_rows.parquet",
+      "q4_tok_tau2q36",
+      "data/synthetic/opus_labels_tau2q36"
+    ],
+    [
+      "data/synthetic/tau2_ru_glm_rows.parquet",
+      "q4_tok_tau2glm",
+      "data/synthetic/opus_labels_tau2glm"
+    ],
+    [
+      "data/synthetic/tau2_ru_q36n_rows.parquet",
+      "q4_tok_tau2q36n",
+      "data/synthetic/opus_labels_tau2q36n"
+    ],
+    [
+      "data/synthetic/tau2_ru_kq36n_s1_rows.parquet",
+      "q4_tok_tau2kq36n",
+      "data/synthetic/opus_labels_tau2kq36n"
+    ],
+    [
+      "data/synthetic/tau2_ru_kq36_s1_rows.parquet",
+      "q4_tok_tau2kq36",
+      "data/synthetic/opus_labels_tau2kq36"
+    ]
+  ],
+  "turns_dropped_for_chinese_words": 13,
+  "negative_share": 1.0,
+  "sim_total": 0.5,
+  "turns_dropped_as_repeats": 0,
+  "rows": 2253,
+  "positives": 237,
+  "dialogues": 127,
+  "rows_of_organiser_tasks": 155,
+  "compared_with_contexts": {
+    "share_of_errors": [
+      0.105,
+      0.174
+    ],
+    "share_with_tool_call": [
+      0.316,
+      0.57
+    ],
+    "median_response_chars": [
+      290,
+      228
+    ],
+    "median_prompt_chars": [
+      29450,
+      29004
+    ],
+    "mean_token_logp": [
+      -1.053,
+      -1.196
+    ]
+  },
+  "variants": {
+    "both_w1.0": {
+      "head_b_alone": 0.9306,
+      "uncertainty_alone": 0.8219,
+      "system_minus_reference": {
+        "difference": 0.003,
+        "ci95": [
+          -0.002,
+          0.008
+        ],
+        "share_above_zero": 0.896
+      },
+      "new_ruler_all_contexts": {
+        "v1s": {
+          "f1": 0.7089,
+          "f1_minus_reference": 0.0127,
+          "ci95": [
+            -0.038,
+            0.048
+          ],
+          "auroc": 0.9395
+        },
+        "opus": {
+          "f1": 0.7602,
+          "f1_minus_reference": 0.0584,
+          "ci95": [
+            0.0,
+            0.083
+          ],
+          "auroc": 0.9278
+        }
+      }
+    }
+  },
+  "candidate": {
+    "head_b_alone": 0.9295,
+    "uncertainty_alone": 0.8113,
+    "system": 0.982,
+    "system_f1_at_test_share_all_contexts": {
+      "v1s": 0.6962,
+      "opus": 0.7018
+    }
+  }
+}

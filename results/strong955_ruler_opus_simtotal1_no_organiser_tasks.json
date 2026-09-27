@@ -1,0 +1,99 @@
+{
+  "labels": "opus",
+  "balance": "none",
+  "uncertainty_head_skips": [
+    "glm"
+  ],
+  "context_labels": "v1s",
+  "sources": [
+    [
+      "data/synthetic/tau2_ru_q36_rows.parquet",
+      "q4_tok_tau2q36",
+      "data/synthetic/opus_labels_tau2q36"
+    ],
+    [
+      "data/synthetic/tau2_ru_glm_rows.parquet",
+      "q4_tok_tau2glm",
+      "data/synthetic/opus_labels_tau2glm"
+    ],
+    [
+      "data/synthetic/tau2_ru_q36n_rows.parquet",
+      "q4_tok_tau2q36n",
+      "data/synthetic/opus_labels_tau2q36n"
+    ]
+  ],
+  "turns_dropped_for_chinese_words": 5,
+  "negative_share": 1.0,
+  "sim_total": 1.0,
+  "sim_domains": null,
+  "turns_dropped_as_repeats": 0,
+  "rows": 800,
+  "positives": 106,
+  "dialogues": 50,
+  "rows_of_organiser_tasks": 0,
+  "compared_with_contexts": {
+    "share_of_errors": [
+      0.133,
+      0.174
+    ],
+    "share_with_tool_call": [
+      0.324,
+      0.57
+    ],
+    "median_response_chars": [
+      382,
+      228
+    ],
+    "median_prompt_chars": [
+      25785,
+      29004
+    ],
+    "mean_token_logp": [
+      -1.083,
+      -1.196
+    ]
+  },
+  "variants": {
+    "both_w1.0": {
+      "head_b_alone": 0.9319,
+      "uncertainty_alone": 0.8057,
+      "system_minus_reference": {
+        "difference": 0.0055,
+        "ci95": [
+          0.0,
+          0.012
+        ],
+        "share_above_zero": 0.985
+      },
+      "new_ruler_all_contexts": {
+        "v1s": {
+          "f1": 0.7089,
+          "f1_minus_reference": 0.0127,
+          "ci95": [
+            -0.053,
+            0.05
+          ],
+          "auroc": 0.9418
+        },
+        "opus": {
+          "f1": 0.7485,
+          "f1_minus_reference": 0.0467,
+          "ci95": [
+            0.0,
+            0.088
+          ],
+          "auroc": 0.9313
+        }
+      }
+    }
+  },
+  "candidate": {
+    "head_b_alone": 0.9295,
+    "uncertainty_alone": 0.8113,
+    "system": 0.982,
+    "system_f1_at_test_share_all_contexts": {
+      "v1s": 0.6962,
+      "opus": 0.7018
+    }
+  }
+}
