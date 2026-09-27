@@ -12,8 +12,9 @@ after it. Kept per row, in the journal format of embed_rows.py (train_head_ru.ve
   the log-probability the model gave it (read at the position before it), the entropy and the margin
   of the top two there, so any summary can be taken later without another pass.
 
-The model loads as llama-server loads it (all layers on the card, the experts' weights in RAM). The
-ctypes structs follow include/llama.h of release b11052 field by field.
+At home the model loads as llama-server loads it (all layers on the card, the experts' weights in RAM); on
+a Kaggle session with two T4 (scripts/kaggle_tok.py) the whole model fits the cards, which is several times
+faster. The ctypes structs follow include/llama.h of release b11052 field by field, on Windows and Linux.
 
     python scripts/embed_llama.py --rows data/synthetic/organizer_contexts.parquet --prefix q4_tok --max-rows 3
 """
@@ -122,13 +123,19 @@ class Batch(C.Structure):
 
 
 class Llama:
-    def __init__(self, gguf: Path, n_ctx: int, n_batch: int, threads: int) -> None:
-        os.add_dll_directory(str(LIB))
-        self.ggml = C.CDLL(str(LIB / "ggml.dll"))
-        base = C.CDLL(str(LIB / "ggml-base.dll"))
-        lib = self.lib = C.CDLL(str(LIB / "llama.dll"))
+    def __init__(
+        self, gguf: Path, n_ctx: int, n_batch: int, threads: int, lib_dir: Path = LIB, experts_in_ram: bool = True
+    ) -> None:
+        if os.name == "nt":
+            os.add_dll_directory(str(lib_dir))
+            names = ("ggml.dll", "ggml-base.dll", "llama.dll")
+        else:
+            names = ("libggml.so", "libggml-base.so", "libllama.so")
+        self.ggml = C.CDLL(str(lib_dir / names[0]))
+        base = C.CDLL(str(lib_dir / names[1]))
+        lib = self.lib = C.CDLL(str(lib_dir / names[2]))
         # the backends are separate DLLs, looked up next to the executable unless a folder is given
-        self.ggml.ggml_backend_load_all_from_path(str(LIB).encode())
+        self.ggml.ggml_backend_load_all_from_path(str(lib_dir).encode())
         lib.llama_backend_init()
         self.ggml.ggml_backend_dev_by_type.restype = C.c_void_p
         self.ggml.ggml_backend_dev_by_type.argtypes = [C.c_int]
@@ -141,7 +148,8 @@ class Llama:
         lib.llama_context_default_params.restype = ContextParams
         mp = lib.llama_model_default_params()
         mp.n_gpu_layers = 99
-        mp.tensor_buft_overrides = self.overrides
+        if experts_in_ram:
+            mp.tensor_buft_overrides = self.overrides
         lib.llama_model_load_from_file.restype = C.c_void_p
         lib.llama_model_load_from_file.argtypes = [C.c_char_p, ModelParams]
         self.model = lib.llama_model_load_from_file(str(gguf).encode(), mp)
@@ -232,11 +240,15 @@ def main() -> None:
     ap.add_argument("--batch", type=int, default=2048)
     ap.add_argument("--threads", type=int, default=6)
     ap.add_argument("--max-rows", type=int, default=None)
+    ap.add_argument("--lib", type=Path, default=LIB, help="folder with the llama.cpp b11052 libraries")
+    ap.add_argument("--all-on-gpu", action="store_true", help="the experts' weights on the cards too (two T4)")
+    ap.add_argument("--out-dir", type=Path, default=ROOT / "data/interim/embeddings")
     args = ap.parse_args()
 
     frame = pd.concat(map(pd.read_parquet, args.rows))
     system_prompt = args.system_prompt.read_text(encoding="utf-8")
-    folder = ROOT / "data/interim/embeddings"
+    folder = args.out_dir
+    folder.mkdir(parents=True, exist_ok=True)
     logs = {k: folder / f"{args.prefix}_{k}_org.jsonl" for k in KINDS}
     stats_log = folder / f"{args.prefix}_uncertainty_org.jsonl"
     for log in [*logs.values(), stats_log]:
@@ -246,7 +258,7 @@ def main() -> None:
     if args.max_rows:
         todo = todo.head(args.max_rows)
     print(f"{len(frame)} rows, {len(done)} done before, {len(todo)} to go", flush=True)
-    llama = Llama(args.gguf, args.n_ctx, args.batch, args.threads)
+    llama = Llama(args.gguf, args.n_ctx, args.batch, args.threads, args.lib, not args.all_on_gpu)
     started = time.monotonic()
     for i, row in enumerate(todo.itertuples(), 1):
         t0 = time.monotonic()

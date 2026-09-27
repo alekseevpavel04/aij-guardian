@@ -60,6 +60,22 @@ def patch_language(instruction_file: Path) -> None:
     user_simulator.SYSTEM_PROMPT = user_simulator.SYSTEM_PROMPT + RUSSIAN_USER
 
 
+def use_local_embeddings(api_base: str) -> None:
+    """banking_knowledge in the organiser's data runs τ²'s "alltools-qwen" retrieval: its KB_search_dense embeds
+    with qwen3-embedding-8b through OpenRouter. Here the same client talks to a local llama-server with a Qwen3
+    embedding model instead; the agent's prompt and tools stay exactly as in the organiser's system block."""
+    from openai import OpenAI
+    from tau2.knowledge.embedders.openrouter_embedder import OpenRouterEmbedder
+
+    original = OpenRouterEmbedder.__init__
+
+    def local(self, *args, **kwargs):
+        original(self, *args, **{**kwargs, "api_key": "local"})
+        self.client = OpenAI(api_key="local", base_url=api_base)
+
+    OpenRouterEmbedder.__init__ = local
+
+
 def file_name(task_id: str, trial: int) -> str:
     safe = "".join(c if c.isalnum() or c in "-_" else "_" for c in task_id)
     return f"{safe}__trial{trial}.json"
@@ -67,7 +83,7 @@ def file_name(task_id: str, trial: int) -> str:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--domain", required=True, choices=("airline", "retail", "telecom"))
+    ap.add_argument("--domain", required=True, choices=("airline", "retail", "telecom", "banking_knowledge"))
     ap.add_argument("--tasks", default=None, help="comma-separated task ids; all tasks of the domain if omitted")
     ap.add_argument("--trials", type=int, default=1)
     ap.add_argument("--model", default="openai/judge")
@@ -76,6 +92,7 @@ def main() -> None:
     ap.add_argument("--instructions", type=Path, default=ROOT / "configs/agent_instruction_ru.txt")
     ap.add_argument("--out", type=Path, default=ROOT / "data/synthetic/tau2_ru")
     ap.add_argument("--temperature", type=float, default=0.0)
+    ap.add_argument("--embed-base", default="http://127.0.0.1:8082/v1", help="embeddings server for banking_knowledge")
     ap.add_argument("--thinking", action="store_true", help="the agent reasons first (the server must allow it)")
     ap.add_argument(
         "--organiser-system",
@@ -121,6 +138,9 @@ def main() -> None:
 
     nl_assertions.NLAssertionsEvaluator.calculate_reward = classmethod(grade_or_note)
     task_ids = args.tasks.split(",") if args.tasks else None
+    banking = args.domain == "banking_knowledge"
+    if banking:
+        use_local_embeddings(args.embed_base)
     config = TextRunConfig(
         domain=args.domain,
         task_ids=task_ids,
@@ -130,6 +150,7 @@ def main() -> None:
         llm_args_user=llm_args,
         max_steps=args.max_steps,
         num_trials=args.trials,
+        retrieval_config="alltools-qwen" if banking else None,
     )
     tasks = get_tasks(task_set_name=args.domain, task_ids=task_ids)
     out = args.out / args.domain
@@ -152,6 +173,7 @@ def main() -> None:
                 "temperature": args.temperature,
                 "agent_thinking": args.thinking,
                 "organiser_system": bool(args.organiser_system),
+                "retrieval": "alltools-qwen, local embeddings" if banking else None,
                 "greeting": GREETING,
                 "seconds": round(time.monotonic() - started, 1),
                 "simulation": json.loads(simulation.model_dump_json()),

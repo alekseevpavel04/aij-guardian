@@ -17,6 +17,7 @@ probability of the turn's tokens.
 """
 
 import argparse
+import difflib
 import json
 import sys
 from pathlib import Path
@@ -72,6 +73,21 @@ def mean_logp(prefix: str) -> dict[str, float]:
     return {r["id"]: float(np.mean(r["logp"])) for r in stats if len(r["logp"])}
 
 
+def repeated_turns(sim: pd.DataFrame) -> np.ndarray:
+    """True for a turn whose text (without its turn marker) nearly repeats the previous turn of its dialogue.
+    Compared once per id: with --labels both a disputed turn is in `sim` twice."""
+    turns = sim.drop_duplicates("id")
+    body = turns.response.str.replace(r"^⟦ASSISTANT · ход \d+⟧\s*", "", regex=True).str[:600]
+    order = turns.assign(dialogue=turns.id.str.split("::").str[0], body=body).sort_values(["dialogue", "turn"])
+    repeats = set()
+    for _, d in order.groupby("dialogue"):
+        ids, texts = d.id.tolist(), d.body.tolist()
+        for i in range(1, len(texts)):
+            if difflib.SequenceMatcher(None, texts[i - 1], texts[i]).ratio() > 0.9:
+                repeats.add(ids[i])
+    return sim.id.isin(repeats).to_numpy()
+
+
 def main() -> None:
     setup()
     ap = argparse.ArgumentParser()
@@ -87,6 +103,12 @@ def main() -> None:
     ap.add_argument("--seed", type=int, default=0, help="which random share, with --fraction")
     ap.add_argument("--quick", action="store_true", help="only the main variant (both heads, weight 1)")
     ap.add_argument("--balance", choices=("none", "match", "negatives", "positives"), default="none")
+    ap.add_argument(
+        "--negative-share", type=float, default=1.0, help="share of the correct simulation turns kept (all errors kept)"
+    )
+    ap.add_argument(
+        "--drop-repeats", action="store_true", help="drop turns that nearly repeat the previous turn of their dialogue"
+    )
     ap.add_argument("--context-labels", choices=("v1s", "agreed", "both", "v1s_duplicated"), default="v1s")
     ap.add_argument(
         "--unc-skip", nargs="*", default=[], help="row id tags (e.g. glm) the uncertainty head does not learn from"
@@ -104,8 +126,11 @@ def main() -> None:
     )
     ap.add_argument("--out", type=Path, default=None)
     args = ap.parse_args()
-    suffix = ("_dialogue_weight" if args.dialogue_weight else "") + (
-        "" if args.balance == "none" else f"_{args.balance}"
+    suffix = (
+        ("_dialogue_weight" if args.dialogue_weight else "")
+        + ("" if args.balance == "none" else f"_{args.balance}")
+        + ("" if args.negative_share == 1.0 else f"_neg{args.negative_share:g}")
+        + ("_norepeats" if args.drop_repeats else "")
     )
     out = args.out or ROOT / f"results/{args.tag}_ruler_{args.labels}{suffix}.json"
 
@@ -127,7 +152,10 @@ def main() -> None:
         sim_logp |= mean_logp(prefix)
     sim = pd.concat(frames)
     soft = sim.label == 0.5
-    sim = pd.concat([sim[~soft].assign(lw=1.0), sim[soft].assign(label=0, lw=0.5), sim[soft].assign(label=1, lw=0.5)])
+    sim = pd.concat(
+        [sim[~soft].assign(lw=1.0), sim[soft].assign(label=0, lw=0.5), sim[soft].assign(label=1, lw=0.5)],
+        ignore_index=True,
+    )
     sim["label"] = sim.label.astype(int)
     sim["task"] = [f"{d}__{data_id(t)}"[: len(d) + 2 + CUT] for d, t in zip(sim.domain, sim.task_id, strict=True)]
 
@@ -140,6 +168,18 @@ def main() -> None:
         dialogues = sorted(sim.id.str.split("::").str[0].unique())
         keep = np.random.default_rng(args.seed).choice(dialogues, round(args.fraction * len(dialogues)), replace=False)
         sim = sim[sim.id.str.split("::").str[0].isin(set(keep))]
+    repeats = 0
+    if args.drop_repeats:
+        # a dialogue stuck in a loop (the user cannot be found, the agent refuses again and again) gives dozens of
+        # near-copies of one turn, all with the same label; the organiser's dialogues are about half as long
+        sim["repeat"] = repeated_turns(sim)
+        repeats = int(sim.repeat.sum())
+        sim = sim[~sim.repeat]
+    if args.negative_share < 1.0:  # a seeded share of the correct turns, every error kept
+        negatives = sim.index[sim.label == 0]
+        rng = np.random.default_rng(args.seed)
+        drop = rng.choice(len(negatives), round((1 - args.negative_share) * len(negatives)), replace=False)
+        sim = sim.drop(index=negatives[drop])
     tau = load("ext_dev", None, 0)
     tau = tau[tau.id.isin(vecs)]
     turns = sim.groupby(sim.id.str.split("::").str[0]).id.transform("size")
@@ -163,6 +203,8 @@ def main() -> None:
         "context_labels": args.context_labels,
         "sources": [list(x) for x in sources],
         "turns_dropped_for_chinese_words": dropped,
+        "negative_share": args.negative_share,
+        "turns_dropped_as_repeats": repeats,
         "rows": len(sim),
         "positives": int(sim.label.sum()),
         "dialogues": int(sim.id.str.split("::").str[0].nunique()),

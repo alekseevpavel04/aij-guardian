@@ -23,6 +23,7 @@ ROOT = Path(__file__).resolve().parents[1]
 KAGGLE = str(Path(sys.executable).parent / "kaggle")
 OWNER = "alekseevpavel"
 KIT_DATASET = f"{OWNER}/aij-sim-kit-zip"
+TOK_DATASET = f"{OWNER}/aij-tok-kit-zip"
 ACCELERATOR = "NvidiaTeslaT4"
 BASE = ROOT / "data/kaggle"
 
@@ -36,13 +37,12 @@ def run(*args: str) -> str:
     return out.stdout
 
 
-def notebook(mode: str, agent: str, tasks: str, stop_after: float) -> dict:
+def notebook(script: str, arguments: list[str]) -> dict:
     code = (
         "import glob, subprocess, sys\n"
-        "script = glob.glob('/kaggle/input/**/kaggle_sim.py', recursive=True)[0]\n"
+        f"script = glob.glob('/kaggle/input/**/{script}', recursive=True)[0]\n"
         "print(script)\n"
-        f"subprocess.run([sys.executable, script, '--mode', '{mode}', '--agent', '{agent}', "
-        f"'--stop-after', '{stop_after}'" + (f", '--tasks', '{tasks}'" if mode == "run" else "") + "], check=True)\n"
+        f"subprocess.run([sys.executable, script, *{arguments!r}], check=True)\n"
     )
     return {
         "cells": [{"cell_type": "code", "execution_count": None, "metadata": {}, "outputs": [], "source": code}],
@@ -55,9 +55,14 @@ def notebook(mode: str, agent: str, tasks: str, stop_after: float) -> dict:
 def push(args: argparse.Namespace) -> None:
     folder = BASE / "kernels" / args.name
     folder.mkdir(parents=True, exist_ok=True)
-    (folder / "notebook.ipynb").write_text(
-        json.dumps(notebook(args.mode, args.agent, args.tasks, args.stop_after), indent=1), encoding="utf-8"
-    )
+    if args.tok:
+        script, dataset = "kaggle_tok.py", TOK_DATASET
+        arguments = ["--rows", *args.tok, "--stop-after", str(args.stop_after)]
+    else:
+        script, dataset = "kaggle_sim.py", KIT_DATASET
+        arguments = ["--mode", args.mode, "--agent", args.agent, "--stop-after", str(args.stop_after)]
+        arguments += ["--tasks", args.tasks] if args.mode == "run" else []
+    (folder / "notebook.ipynb").write_text(json.dumps(notebook(script, arguments), indent=1), encoding="utf-8")
     meta = {
         "id": f"{OWNER}/{args.name}",
         "title": args.name,
@@ -67,7 +72,7 @@ def push(args: argparse.Namespace) -> None:
         "is_private": True,
         "enable_gpu": True,
         "enable_internet": True,
-        "dataset_sources": [KIT_DATASET],
+        "dataset_sources": [dataset],
         "competition_sources": [],
         # an earlier session's output carries the built llama-server (kaggle_sim.py unpacks it)
         "kernel_sources": [f"{OWNER}/{args.binary_from}"] if args.binary_from else [],
@@ -79,13 +84,20 @@ def push(args: argparse.Namespace) -> None:
     run("kernels", "push", "-p", str(folder), "--accelerator", ACCELERATOR)
 
 
-def kit(_: argparse.Namespace) -> None:
+def kit(args: argparse.Namespace) -> None:
+    """A new version of the sim kit, or of the tok kit with --tok-kit; --create makes the dataset the first time
+    (the CLI creates datasets private unless told --public)."""
+    name, dataset = ("aij-tok-kit.zip", TOK_DATASET) if args.tok_kit else ("aij-sim-kit.zip", KIT_DATASET)
     folder = BASE / "kit_upload"
     shutil.rmtree(folder, ignore_errors=True)
     folder.mkdir(parents=True)
-    shutil.copy(BASE / "aij-sim-kit.zip", folder / "aij-sim-kit.zip")
-    (folder / "dataset-metadata.json").write_text(json.dumps({"id": KIT_DATASET}), encoding="utf-8")
-    run("datasets", "version", "-p", str(folder), "-m", "kit update")
+    shutil.copy(BASE / name, folder / name)
+    meta = {"id": dataset, "title": dataset.split("/")[1], "licenses": [{"name": "other"}]}
+    (folder / "dataset-metadata.json").write_text(json.dumps(meta), encoding="utf-8")
+    if args.create:
+        run("datasets", "create", "-p", str(folder))
+    else:
+        run("datasets", "version", "-p", str(folder), "-m", "kit update")
 
 
 def main() -> None:
@@ -96,6 +108,9 @@ def main() -> None:
     ap.add_argument("--agent", default="q36n")
     ap.add_argument("--tasks", default="tasks_run1.json")
     ap.add_argument("--stop-after", type=float, default=7.9)
+    ap.add_argument("--tok", nargs="+", default=None, help="rows_name:prefix pairs: a token pass session instead")
+    ap.add_argument("--tok-kit", action="store_true", help="kit: the token pass kit")
+    ap.add_argument("--create", action="store_true", help="kit: create the dataset (first upload)")
     ap.add_argument("--binary-from", default=None, help="a finished session whose output has the llama-server build")
     args = ap.parse_args()
     if args.action == "kit":
