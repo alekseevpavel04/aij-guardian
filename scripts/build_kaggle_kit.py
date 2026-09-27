@@ -45,13 +45,31 @@ def used_tasks() -> set[tuple[str, str]]:
     return used
 
 
+def organiser_repeats(organiser: set[str]) -> list[list]:
+    """Repeats of the organiser's own 40 tasks (DECISIONS 45): two trials of each task with a sampling user; a cut
+    telecom id matching several τ² tasks gets two of them, one trial each. The ruler keeps a task's simulations out
+    of the fold where that task is held out, so they do not leak into the measure."""
+    match: dict[str, list] = {}
+    for domain in (*SHARES, "banking_knowledge"):
+        for t in tasks(domain):
+            key = f"{domain}__{data_id(t['id'])}"[: len(domain) + 2 + CUT]
+            if key in organiser:
+                match.setdefault(key, []).append([domain, t["id"]])
+    items = []
+    for key in sorted(organiser):
+        found = match[key]
+        items += [[*found[0], 2]] if len(found) == 1 else [[*x, 1] for x in random.Random(key).sample(found, 2)]
+    random.Random(0).shuffle(items)
+    return items
+
+
 def listed_in_kit(kit: Path) -> set[tuple[str, str]]:
     """Tasks of the current kit's lists: a session may still be running one of them."""
     if not kit.exists():
         return set()
     with zipfile.ZipFile(kit) as z:
         names = [n for n in z.namelist() if n.startswith("tasks/")]
-        return {(d, t) for n in names for d, t in json.loads(z.read(n))}
+        return {(x[0], x[1]) for n in names if n != "tasks/tasks_org.json" for x in json.loads(z.read(n))}
 
 
 def main() -> None:
@@ -100,6 +118,7 @@ def main() -> None:
             if ("banking_knowledge", t["id"]) not in used and f"banking_knowledge__{t['id']}" not in organiser
         ]
         z.writestr("tasks/tasks_bank.json", json.dumps(bank, ensure_ascii=False, indent=0))
+        z.writestr("tasks/tasks_org.json", json.dumps(organiser_repeats(organiser), ensure_ascii=False, indent=0))
         for path in sorted((ROOT / "data/synthetic/banking_kb_ru").glob("*.json")):
             z.write(path, f"data/synthetic/banking_kb_ru/{path.name}")
         # τ²'s cache of the documents' qwen3-embedding-8b embeddings, made at home (kaggle_sim.py explains why)

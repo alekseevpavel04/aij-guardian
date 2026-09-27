@@ -201,7 +201,15 @@ def start_embedder(server: Path) -> tuple[subprocess.Popen, str]:
     raise RuntimeError("no embedding server, see embed_server.log")
 
 
-def simulate(python: Path, agent: str, tasks: list[tuple[str, str]], out: Path, stop_at: float, max_steps: int) -> None:
+def simulate(
+    python: Path,
+    agent: str,
+    tasks: list[tuple[str, str, int]],
+    out: Path,
+    stop_at: float,
+    max_steps: int,
+    user_temperature: float | None,
+) -> None:
     thinking = ["--thinking"] if MODELS[agent][3] else []
     running: list[tuple[str, str, float, subprocess.Popen]] = []
     queue = list(tasks)
@@ -209,7 +217,7 @@ def simulate(python: Path, agent: str, tasks: list[tuple[str, str]], out: Path, 
     env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
     while queue or running:
         while queue and len(running) < 2 and time.time() < stop_at:
-            domain, task = queue.pop(0)
+            domain, task, trials = queue.pop(0)
             command = [
                 str(python),
                 str(KIT / "scripts/simulate_tau2.py"),
@@ -225,7 +233,10 @@ def simulate(python: Path, agent: str, tasks: list[tuple[str, str]], out: Path, 
                 str(max_steps),
                 "--out",
                 str(out),
+                "--trials",
+                str(trials),
                 *thinking,
+                *(["--user-temperature", str(user_temperature)] if user_temperature is not None else []),
             ]
             err = open(WORK / "simulate_errors.log", "a")  # noqa: SIM115 - held by the running process
             # the working folder holds τ²'s embeddings cache (data/.embeddings_cache), shared by all dialogues
@@ -279,6 +290,7 @@ def main() -> None:
     ap.add_argument("--tasks", default=None, help="task list JSON in the kit ({domain: [task ids]})")
     ap.add_argument("--stop-after", type=float, default=7.9, help="hours from the session start")
     ap.add_argument("--max-steps", type=int, default=80)
+    ap.add_argument("--user-temperature", type=float, default=None)
     args = ap.parse_args()
 
     WORK.mkdir(parents=True, exist_ok=True)
@@ -290,13 +302,18 @@ def main() -> None:
     process = start_server(server, model, args.agent)
     out = WORK / f"sims_{args.agent}"
     if args.mode == "test":
-        tasks, stop_at, max_steps = [("airline", "0"), ("banking_knowledge", "task_001")], time.time() + 25 * 60, 30
+        tasks, stop_at, max_steps = (
+            [("airline", "0", 1), ("banking_knowledge", "task_001", 1)],
+            time.time() + 25 * 60,
+            30,
+        )
     else:
         listed = json.loads((KIT / "tasks" / args.tasks).read_text(encoding="utf-8"))
-        tasks = [(d, t) for d, t in listed]
+        # an entry may carry a third field, the number of trials of that task (repeats with a sampling user)
+        tasks = [(item[0], item[1], item[2] if len(item) > 2 else 1) for item in listed]
         stop_at, max_steps = STARTED + args.stop_after * 3600, args.max_steps
     embedder, embedder_name = None, None
-    if any(d == "banking_knowledge" for d, _ in tasks):
+    if any(d == "banking_knowledge" for d, _, _ in tasks):
         embedder, embedder_name = start_embedder(server)
         # the documents' embeddings from the kit; the warm-up must find them (a miss would embed 698 documents on
         # the CPU for hours), so it has a time limit
@@ -305,7 +322,7 @@ def main() -> None:
         sh(f"cd {TMP} && timeout 1200 {warm} > {WORK / 'warm_knowledge.log'} 2>&1")
     log(f"{len(tasks)} tasks, new ones start until {time.strftime('%H:%M', time.localtime(stop_at))}")
     try:
-        simulate(python, args.agent, tasks, out, stop_at, max_steps)
+        simulate(python, args.agent, tasks, out, stop_at, max_steps, args.user_temperature)
     finally:
         process.terminate()
         if embedder:

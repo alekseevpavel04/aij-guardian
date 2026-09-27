@@ -140,6 +140,9 @@ def main() -> None:
     ap.add_argument("--instructions", type=Path, default=ROOT / "configs/agent_instruction_ru.txt")
     ap.add_argument("--out", type=Path, default=ROOT / "data/synthetic/tau2_ru")
     ap.add_argument("--temperature", type=float, default=0.0)
+    ap.add_argument(
+        "--user-temperature", type=float, default=None, help="the user simulator's own (default: --temperature)"
+    )
     ap.add_argument("--embed-base", default="http://127.0.0.1:8082/v1", help="embeddings server for banking_knowledge")
     ap.add_argument("--knowledge", type=Path, default=ROOT / "data/synthetic/banking_kb_ru")
     ap.add_argument("--warm-knowledge", action="store_true", help="only embed the knowledge base into the cache")
@@ -166,6 +169,9 @@ def main() -> None:
         "extra_body": {"chat_template_kwargs": {"enable_thinking": False}},
     }
     agent_args = {**llm_args, "extra_body": {"chat_template_kwargs": {"enable_thinking": args.thinking}}}
+    # a repeat of a task with the agent unchanged (greedy) differs only if the user does: the user may sample
+    user_temperature = args.temperature if args.user_temperature is None else args.user_temperature
+    user_args = {**llm_args, "temperature": user_temperature}
     if args.thinking:  # a runaway reasoning must not hold a turn forever; the server also caps the thinking
         agent_args["max_tokens"] = 4096
     # tasks graded by natural-language assertions call τ²'s default judge (an OpenAI model); the
@@ -202,7 +208,7 @@ def main() -> None:
         llm_agent=args.model,
         llm_args_agent=agent_args,
         llm_user=args.model,
-        llm_args_user=llm_args,
+        llm_args_user=user_args,
         max_steps=args.max_steps,
         num_trials=args.trials,
         retrieval_config=variant,
@@ -226,6 +232,7 @@ def main() -> None:
                 "nl_assertions_judge": args.model,
                 "parallel_tool_calls": True,
                 "temperature": args.temperature,
+                "user_temperature": user_temperature,
                 "agent_thinking": args.thinking,
                 "organiser_system": bool(args.organiser_system),
                 "retrieval": f"{variant}, Russian knowledge base, local embeddings" if banking else None,

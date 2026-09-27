@@ -62,6 +62,7 @@ def push(args: argparse.Namespace) -> None:
         script, dataset = "kaggle_sim.py", KIT_DATASET
         arguments = ["--mode", args.mode, "--agent", args.agent, "--stop-after", str(args.stop_after)]
         arguments += ["--tasks", args.tasks] if args.mode == "run" else []
+        arguments += ["--user-temperature", str(args.user_temperature)] if args.user_temperature is not None else []
     (folder / "notebook.ipynb").write_text(json.dumps(notebook(script, arguments), indent=1), encoding="utf-8")
     meta = {
         "id": f"{OWNER}/{args.name}",
@@ -108,6 +109,7 @@ def main() -> None:
     ap.add_argument("--agent", default="q36n")
     ap.add_argument("--tasks", default="tasks_run1.json")
     ap.add_argument("--stop-after", type=float, default=7.9)
+    ap.add_argument("--user-temperature", type=float, default=None)
     ap.add_argument("--tok", nargs="+", default=None, help="rows_name:prefix pairs: a token pass session instead")
     ap.add_argument("--tok-kit", action="store_true", help="kit: the token pass kit")
     ap.add_argument("--create", action="store_true", help="kit: create the dataset (first upload)")

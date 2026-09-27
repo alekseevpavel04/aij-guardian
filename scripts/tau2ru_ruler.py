@@ -106,6 +106,7 @@ def main() -> None:
     ap.add_argument(
         "--negative-share", type=float, default=1.0, help="share of the correct simulation turns kept (all errors kept)"
     )
+    ap.add_argument("--no-organiser-tasks", action="store_true", help="drop simulation rows of the organiser's tasks")
     ap.add_argument("--sim-domains", nargs="*", default=None, help="keep only the simulation rows of these domains")
     ap.add_argument(
         "--sim-total",
@@ -140,6 +141,7 @@ def main() -> None:
         + ("_norepeats" if args.drop_repeats else "")
         + ("" if args.sim_total is None else f"_simtotal{args.sim_total:g}")
         + ("" if args.sim_domains is None else "_" + "_".join(args.sim_domains))
+        + ("_no_organiser_tasks" if args.no_organiser_tasks else "")
     )
     out = args.out or ROOT / f"results/{args.tag}_ruler_{args.labels}{suffix}.json"
 
@@ -179,6 +181,8 @@ def main() -> None:
         sim = sim[sim.id.str.split("::").str[0].isin(set(keep))]
     if args.sim_domains is not None:
         sim = sim[sim.domain.isin(args.sim_domains)]
+    if args.no_organiser_tasks:
+        sim = sim[~sim.task.isin(set(contexts.task))]
     repeats = 0
     if args.drop_repeats:
         # a dialogue stuck in a loop (the user cannot be found, the agent refuses again and again) gives dozens of
@@ -285,6 +289,7 @@ def main() -> None:
         for fit, held in GroupKFold(FOLDS).split(x, y, tasks):
             held_tasks = set(tasks[held])
             s = sim[~sim.task.isin(held_tasks)]
+            assert not s.task.isin(held_tasks).any(), "a held-out task's simulation in training"
             for seed in range(3):
                 p = pairs[~pairs.task.isin(held_tasks)]
                 keep = np.random.default_rng(seed).choice(
@@ -317,6 +322,7 @@ def main() -> None:
         scores = np.zeros(len(y))
         for fit, held in GroupKFold(FOLDS).split(xu, y, tasks):
             s = sim[~sim.task.isin(set(tasks[held]))] if sim_weight else sim.iloc[:0]
+            assert not s.task.isin(set(tasks[held])).any(), "a held-out task's simulation in training"
             # an agent of another family shifts the token probabilities; its rows can be kept out of this head
             s = s[~s.id.str.split("__").str[0].isin(args.unc_skip)]
             rows, labels, weights = context_rows(fit)
