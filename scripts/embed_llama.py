@@ -185,6 +185,7 @@ class Llama:
         lib.llama_get_memory.restype = C.c_void_p
         lib.llama_get_memory.argtypes = [C.c_void_p]
         lib.llama_memory_clear.argtypes = [C.c_void_p, C.c_bool]
+        lib.llama_set_embeddings.argtypes = [C.c_void_p, C.c_bool]
         self.n_batch = n_batch
         self.batch = lib.llama_batch_init(n_batch, 0, 1)
 
@@ -210,6 +211,9 @@ class Llama:
                 b.logits[k] = int(start + k in wanted)
                 if start + k in wanted:
                     outputs.append(k)
+            # with embeddings on and no pooling llama.cpp outputs every token of the batch (states and logits over
+            # the whole vocabulary); a chunk of history with no wanted position needs neither, only its cache
+            self.lib.llama_set_embeddings(self.ctx, bool(outputs))
             if self.lib.llama_decode(self.ctx, b) != 0:
                 raise RuntimeError(f"decode failed at token {start}")
             for k in outputs:
