@@ -106,6 +106,13 @@ def main() -> None:
     ap.add_argument(
         "--negative-share", type=float, default=1.0, help="share of the correct simulation turns kept (all errors kept)"
     )
+    ap.add_argument("--sim-domains", nargs="*", default=None, help="keep only the simulation rows of these domains")
+    ap.add_argument(
+        "--sim-total",
+        type=float,
+        default=None,
+        help="the simulation rows weigh this many times the fold's own rows in all (default: 1 per row)",
+    )
     ap.add_argument(
         "--drop-repeats", action="store_true", help="drop turns that nearly repeat the previous turn of their dialogue"
     )
@@ -131,6 +138,8 @@ def main() -> None:
         + ("" if args.balance == "none" else f"_{args.balance}")
         + ("" if args.negative_share == 1.0 else f"_neg{args.negative_share:g}")
         + ("_norepeats" if args.drop_repeats else "")
+        + ("" if args.sim_total is None else f"_simtotal{args.sim_total:g}")
+        + ("" if args.sim_domains is None else "_" + "_".join(args.sim_domains))
     )
     out = args.out or ROOT / f"results/{args.tag}_ruler_{args.labels}{suffix}.json"
 
@@ -168,6 +177,8 @@ def main() -> None:
         dialogues = sorted(sim.id.str.split("::").str[0].unique())
         keep = np.random.default_rng(args.seed).choice(dialogues, round(args.fraction * len(dialogues)), replace=False)
         sim = sim[sim.id.str.split("::").str[0].isin(set(keep))]
+    if args.sim_domains is not None:
+        sim = sim[sim.domain.isin(args.sim_domains)]
     repeats = 0
     if args.drop_repeats:
         # a dialogue stuck in a loop (the user cannot be found, the agent refuses again and again) gives dozens of
@@ -204,6 +215,8 @@ def main() -> None:
         "sources": [list(x) for x in sources],
         "turns_dropped_for_chinese_words": dropped,
         "negative_share": args.negative_share,
+        "sim_total": args.sim_total,
+        "sim_domains": args.sim_domains,
         "turns_dropped_as_repeats": repeats,
         "rows": len(sim),
         "positives": int(sim.label.sum()),
@@ -242,6 +255,14 @@ def main() -> None:
 
     agree = ruler.agree
 
+    def sim_weights(s: pd.DataFrame, sim_weight: float, own: float) -> np.ndarray:
+        """1 per simulation row by default; with --sim-total their sum is that many times the fold's own weight,
+        so 2000 simulated turns cannot outweigh the ~300 contexts of a fold (stage 1, 27.09)."""
+        w = sim_weight * s.w.to_numpy() * balance(s)
+        if args.sim_total is not None and w.sum() > 0:
+            w = w * args.sim_total * own / w.sum()
+        return w
+
     def context_rows(fit: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """The contexts of a fold as training rows, per --context-labels: the v1s labels; only contexts where
         v1s and Opus agree; or both labellers (a disagreement enters twice, as 0 and as 1, at half weight)."""
@@ -274,13 +295,13 @@ def main() -> None:
                 xs = [x[rows], np.stack([vecs[i] for i in p.id])]
                 ys = [labels, p.label.to_numpy()]
                 ws = [weights, np.ones(len(p))]
-                if sim_weight and len(s):
-                    xs.append(np.stack([vecs[i] for i in s.id]))
-                    ys.append(s.label.to_numpy())
-                    ws.append(sim_weight * s.w.to_numpy() * balance(s))
                 # τ² weighs half of the Russian rows without the simulations, so adding simulations does not
                 # also raise the weight of τ² (it did before 26.09 evening)
                 n = len(fit) + len(p)
+                if sim_weight and len(s):
+                    xs.append(np.stack([vecs[i] for i in s.id]))
+                    ys.append(s.label.to_numpy())
+                    ws.append(sim_weights(s, sim_weight, n))
                 xs.append(np.stack([vecs[i] for i in tau.id]))
                 ys.append(tau.label.to_numpy())
                 ws.append(np.full(len(tau), 0.5 * n / len(tau)))
@@ -301,7 +322,7 @@ def main() -> None:
             rows, labels, weights = context_rows(fit)
             xf = np.vstack([xu[rows], *([np.stack([sim_feats[i] for i in s.id])] if len(s) else [])])
             yf = np.concatenate([labels, s.label.to_numpy()]).astype(int)
-            wf = np.concatenate([weights, sim_weight * s.w.to_numpy() * balance(s)])
+            wf = np.concatenate([weights, sim_weights(s, sim_weight, float(weights.sum()))])
             sc = StandardScaler().fit(xf)
             m = LogisticRegression(C=1.0, max_iter=5000).fit(sc.transform(xf), yf, sample_weight=wf)
             scores[held] = m.predict_proba(sc.transform(xu[held]))[:, 1]
