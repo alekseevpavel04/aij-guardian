@@ -44,9 +44,11 @@ MODELS = {
 }
 # banking_knowledge's KB_search_dense: the organiser's model (qwen3-embedding-8b) on the cards if it fits next to
 # the agent, else the small one on the CPU; the summary says which one served
+# (a whole document must fit one ubatch: the longest Russian one is 3347 tokens; 8192 left no room on the cards
+# next to the agent, 27.09)
 EMBEDDERS = [
-    ("Qwen/Qwen3-Embedding-8B-GGUF", "Qwen3-Embedding-8B-Q4_K_M.gguf", ["--n-gpu-layers", "99"]),
-    ("Qwen/Qwen3-Embedding-0.6B-GGUF", "Qwen3-Embedding-0.6B-Q8_0.gguf", ["--n-gpu-layers", "0"]),
+    ("Qwen/Qwen3-Embedding-8B-GGUF", "Qwen3-Embedding-8B-Q4_K_M.gguf", ["--n-gpu-layers", "99"], "4096", True),
+    ("Qwen/Qwen3-Embedding-0.6B-GGUF", "Qwen3-Embedding-0.6B-Q8_0.gguf", ["--n-gpu-layers", "0"], "8192", False),
 ]
 STARTED = time.time()
 
@@ -178,12 +180,15 @@ def start_server(server: Path, model: Path, agent: str) -> subprocess.Popen:
 def start_embedder(server: Path) -> tuple[subprocess.Popen, str]:
     from huggingface_hub import hf_hub_download
 
-    for repo, name, flags in EMBEDDERS:
+    for repo, name, flags, batch, gpu in EMBEDDERS:
         model = hf_hub_download(repo, name, local_dir=TMP / "models")
-        command = [str(server), "--model", model, "--embedding", "--pooling", "last", "--ctx-size", "8192"]
-        command += ["--parallel", "1", "--batch-size", "8192", "--ubatch-size", "8192", "--port", "8082", *flags]
+        command = [str(server), "--model", model, "--embedding", "--pooling", "last", "--ctx-size", batch]
+        command += ["--parallel", "1", "--batch-size", batch, "--ubatch-size", batch, "--port", "8082", *flags]
+        # with no layers on the cards llama.cpp still offloads batch operations to them, so hide them
+        env = os.environ if gpu else {**os.environ, "CUDA_VISIBLE_DEVICES": ""}
         log("$ " + " ".join(command))
-        process = subprocess.Popen(command, stdout=open(WORK / "embed_server.log", "a"), stderr=subprocess.STDOUT)  # noqa: SIM115
+        server_log = open(WORK / "embed_server.log", "a")  # noqa: SIM115 - the server outlives this function
+        process = subprocess.Popen(command, stdout=server_log, stderr=subprocess.STDOUT, env=env)
         for _ in range(150):
             if process.poll() is not None:
                 break
@@ -295,6 +300,8 @@ def main() -> None:
     embedder, embedder_name = None, None
     if any(d == "banking_knowledge" for d, _ in tasks):
         embedder, embedder_name = start_embedder(server)
+        # one process embeds the knowledge base into τ²'s cache first, so the dialogues do not each do it
+        sh(f"cd {TMP} && {python} {KIT / 'scripts/simulate_tau2.py'} --domain banking_knowledge --warm-knowledge")
     log(f"{len(tasks)} tasks, new ones start until {time.strftime('%H:%M', time.localtime(stop_at))}")
     try:
         simulate(python, args.agent, tasks, out, stop_at, max_steps)

@@ -142,6 +142,7 @@ def main() -> None:
     ap.add_argument("--temperature", type=float, default=0.0)
     ap.add_argument("--embed-base", default="http://127.0.0.1:8082/v1", help="embeddings server for banking_knowledge")
     ap.add_argument("--knowledge", type=Path, default=ROOT / "data/synthetic/banking_kb_ru")
+    ap.add_argument("--warm-knowledge", action="store_true", help="only embed the knowledge base into the cache")
     ap.add_argument("--banking-policy", type=Path, default=ROOT / "configs/organiser_banking_policy.txt")
     ap.add_argument("--thinking", action="store_true", help="the agent reasons first (the server must allow it)")
     ap.add_argument(
@@ -190,6 +191,11 @@ def main() -> None:
     task_ids = args.tasks.split(",") if args.tasks else None
     banking = args.domain == "banking_knowledge"
     variant = organiser_banking(args.embed_base, args.knowledge, args.banking_policy) if banking else None
+    if args.warm_knowledge:
+        from tau2.domains.banking_knowledge.environment import get_environment
+
+        get_environment(retrieval_variant=variant)
+        return
     config = TextRunConfig(
         domain=args.domain,
         task_ids=task_ids,
