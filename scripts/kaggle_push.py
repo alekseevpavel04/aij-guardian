@@ -82,7 +82,9 @@ def push(args: argparse.Namespace) -> None:
     written = json.loads((folder / "kernel-metadata.json").read_text(encoding="utf-8"))
     if written.get("is_private") is not True:
         raise SystemExit("refusing to push: the notebook is not private")
-    run("kernels", "push", "-p", str(folder), "--accelerator", ACCELERATOR)
+    # the CLI exits 0 on a refused push too ("Maximum batch GPU session count of 2 reached")
+    if "successfully pushed" not in run("kernels", "push", "-p", str(folder), "--accelerator", ACCELERATOR):
+        raise SystemExit("push refused")
 
 
 def kit(args: argparse.Namespace) -> None:
