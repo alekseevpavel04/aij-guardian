@@ -42,13 +42,11 @@ MODELS = {
     ),
     "glm": ("unsloth/GLM-4.7-Flash-GGUF", "GLM-4.7-Flash-Q4_K_M.gguf", ["--reasoning", "off"], False),
 }
-# banking_knowledge's KB_search_dense: the organiser's model (qwen3-embedding-8b) on the cards if it fits next to
-# the agent, else the small one on the CPU; the summary says which one served
-# (a whole document must fit one ubatch: the longest Russian one is 3347 tokens; 8192 left no room on the cards
-# next to the agent, 27.09)
+# banking_knowledge's KB_search_dense uses the organiser's model, qwen3-embedding-8b. It does not fit the cards next to
+# the agent (even at ubatch 4096, 27.09), so the documents' embeddings come in the kit, made at home with the same
+# model into τ²'s own cache (data/kb_embeddings_cache), and the server here embeds only the queries, on the CPU.
 EMBEDDERS = [
-    ("Qwen/Qwen3-Embedding-8B-GGUF", "Qwen3-Embedding-8B-Q4_K_M.gguf", ["--n-gpu-layers", "99"], "4096", True),
-    ("Qwen/Qwen3-Embedding-0.6B-GGUF", "Qwen3-Embedding-0.6B-Q8_0.gguf", ["--n-gpu-layers", "0"], "8192", False),
+    ("Qwen/Qwen3-Embedding-8B-GGUF", "Qwen3-Embedding-8B-Q4_K_M.gguf", ["--n-gpu-layers", "0"], "4096", False),
 ]
 STARTED = time.time()
 
@@ -300,8 +298,11 @@ def main() -> None:
     embedder, embedder_name = None, None
     if any(d == "banking_knowledge" for d, _ in tasks):
         embedder, embedder_name = start_embedder(server)
-        # one process embeds the knowledge base into τ²'s cache first, so the dialogues do not each do it
-        sh(f"cd {TMP} && {python} {KIT / 'scripts/simulate_tau2.py'} --domain banking_knowledge --warm-knowledge")
+        # the documents' embeddings from the kit; the warm-up must find them (a miss would embed 698 documents on
+        # the CPU for hours), so it has a time limit
+        shutil.copytree(KIT / "data/kb_embeddings_cache", TMP / "data/.embeddings_cache", dirs_exist_ok=True)
+        warm = f"{python} {KIT / 'scripts/simulate_tau2.py'} --domain banking_knowledge --warm-knowledge"
+        sh(f"cd {TMP} && timeout 1200 {warm} > {WORK / 'warm_knowledge.log'} 2>&1")
     log(f"{len(tasks)} tasks, new ones start until {time.strftime('%H:%M', time.localtime(stop_at))}")
     try:
         simulate(python, args.agent, tasks, out, stop_at, max_steps)

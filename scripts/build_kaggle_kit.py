@@ -102,6 +102,9 @@ def main() -> None:
         z.writestr("tasks/tasks_bank.json", json.dumps(bank, ensure_ascii=False, indent=0))
         for path in sorted((ROOT / "data/synthetic/banking_kb_ru").glob("*.json")):
             z.write(path, f"data/synthetic/banking_kb_ru/{path.name}")
+        # τ²'s cache of the documents' qwen3-embedding-8b embeddings, made at home (kaggle_sim.py explains why)
+        for path in sorted((ROOT / "data/interim/kb_cache_build/data/.embeddings_cache").glob("*")):
+            z.write(path, f"data/kb_embeddings_cache/{path.name}")
     counts = [{d: sum(1 for x in run if x[0] == d) for d in SHARES} for run in lists]
     print(args.out, "runs:", counts, "left in the pools:", {d: len(p) for d, p in pools.items()}, "banking:", len(bank))
 
