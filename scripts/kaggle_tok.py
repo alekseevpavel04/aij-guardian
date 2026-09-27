@@ -53,7 +53,9 @@ def token_pass(rows: str, prefix: str, gguf: Path, stop_at: float) -> None:
         "--out-dir",
         str(WORK / "embeddings"),
     ]
-    env = {**os.environ, "PYTHONPATH": str(KIT / "src"), "LD_LIBRARY_PATH": str(LIB), "PYTHONIOENCODING": "utf-8"}
+    # prepended: the image's own path holds libcuda.so.1 (/usr/local/nvidia/lib64)
+    libraries = ":".join(filter(None, [str(LIB), os.environ.get("LD_LIBRARY_PATH"), "/usr/local/nvidia/lib64"]))
+    env = {**os.environ, "PYTHONPATH": str(KIT / "src"), "LD_LIBRARY_PATH": libraries, "PYTHONIOENCODING": "utf-8"}
     log(f"{rows} -> {prefix}")
     with open(WORK / f"embed_{prefix}.log", "a", encoding="utf-8") as out:
         process = subprocess.Popen(command, stdout=out, stderr=subprocess.STDOUT, env=env)
@@ -65,6 +67,8 @@ def token_pass(rows: str, prefix: str, gguf: Path, stop_at: float) -> None:
                 return
             time.sleep(5)
     log(f"{rows} exit {process.returncode}")
+    if process.returncode:
+        raise RuntimeError(f"the token pass of {rows} failed, see embed_{prefix}.log")
 
 
 def main() -> None:

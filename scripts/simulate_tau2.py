@@ -60,20 +60,68 @@ def patch_language(instruction_file: Path) -> None:
     user_simulator.SYSTEM_PROMPT = user_simulator.SYSTEM_PROMPT + RUSSIAN_USER
 
 
-def use_local_embeddings(api_base: str) -> None:
-    """banking_knowledge in the organiser's data runs τ²'s "alltools-qwen" retrieval: its KB_search_dense embeds
-    with qwen3-embedding-8b through OpenRouter. Here the same client talks to a local llama-server with a Qwen3
-    embedding model instead; the agent's prompt and tools stay exactly as in the organiser's system block."""
+def organiser_banking(embed_base: str, knowledge: Path, policy: Path) -> str:
+    """banking_knowledge as the organiser's system block shows it, on this τ² commit:
+
+    - tools: base banking tools + KB_search_bm25 + KB_search_dense + grep (here "alltools" has a sandboxed
+      shell instead of grep, which also needs Linux binaries), the variant registered as "organiser-alltools";
+    - KB_search_dense embeds with qwen3-embedding-8b through OpenRouter there; here the same client talks to a
+      local llama-server with a Qwen3 embedding model;
+    - the knowledge base in Russian (scripts/kb_translation.py) and the organiser's policy text verbatim, which
+      says so and describes these three tools."""
+    import dataclasses
+
     from openai import OpenAI
+    from tau2.domains.banking_knowledge import environment, retrieval
+    from tau2.domains.banking_knowledge import retrieval_mixins as mixins
+    from tau2.domains.banking_knowledge.data_model import Document, KnowledgeBase
+    from tau2.domains.banking_knowledge.tools import KnowledgeTools
     from tau2.knowledge.embedders.openrouter_embedder import OpenRouterEmbedder
 
-    original = OpenRouterEmbedder.__init__
+    original_embedder = OpenRouterEmbedder.__init__
 
-    def local(self, *args, **kwargs):
-        original(self, *args, **{**kwargs, "api_key": "local"})
-        self.client = OpenAI(api_key="local", base_url=api_base)
+    def local_embedder(self, *args, **kwargs):
+        original_embedder(self, *args, **{**kwargs, "api_key": "local"})
+        self.client = OpenAI(api_key="local", base_url=embed_base)
 
-    OpenRouterEmbedder.__init__ = local
+    OpenRouterEmbedder.__init__ = local_embedder
+
+    class AllToolsGrep(
+        mixins.KBSearchBm25AllToolsMixin, mixins.KBSearchDenseAllToolsMixin, mixins.GrepMixin, KnowledgeTools
+    ):
+        def __init__(self, db, bm25, dense, grep):
+            super().__init__(db)
+            self._kb_bm25_pipeline, self._kb_dense_pipeline, self._grep_pipeline = bm25, dense, grep
+
+    name = "organiser-alltools"
+    retrieval.RETRIEVAL_VARIANTS[name] = dataclasses.replace(
+        retrieval.RETRIEVAL_VARIANTS["alltools-qwen"], name=name, shell=None, grep=retrieval.GrepSpec()
+    )
+    build_tools, text = retrieval.build_tools, policy.read_text(encoding="utf-8").strip()
+
+    def tools(variant, db, knowledge_base, read_log_allowlist=None):
+        if variant.name != name:
+            return build_tools(variant, db, knowledge_base, read_log_allowlist=read_log_allowlist)
+        pipeline = retrieval._create_kb_pipeline
+        toolkit = AllToolsGrep(
+            db,
+            pipeline(variant.kb_search_bm25, knowledge_base),
+            pipeline(variant.kb_search_dense, knowledge_base),
+            retrieval._create_grep_pipeline(variant.grep, knowledge_base),
+        )
+        toolkit.set_read_log_allowlist(read_log_allowlist)
+        return toolkit
+
+    def russian_knowledge_base() -> KnowledgeBase:  # read as UTF-8 on Windows too, only τ²'s own fields
+        docs = [json.loads(p.read_text(encoding="utf-8")) for p in sorted(knowledge.glob("*.json"))]
+        return KnowledgeBase(
+            documents={d["id"]: Document(id=d["id"], title=d["title"], content=d["content"]) for d in docs}
+        )
+
+    environment.build_tools = tools
+    environment.build_policy = lambda variant, knowledge_base, task=None: text
+    environment.get_knowledge_base = russian_knowledge_base
+    return name
 
 
 def file_name(task_id: str, trial: int) -> str:
@@ -93,6 +141,8 @@ def main() -> None:
     ap.add_argument("--out", type=Path, default=ROOT / "data/synthetic/tau2_ru")
     ap.add_argument("--temperature", type=float, default=0.0)
     ap.add_argument("--embed-base", default="http://127.0.0.1:8082/v1", help="embeddings server for banking_knowledge")
+    ap.add_argument("--knowledge", type=Path, default=ROOT / "data/synthetic/banking_kb_ru")
+    ap.add_argument("--banking-policy", type=Path, default=ROOT / "configs/organiser_banking_policy.txt")
     ap.add_argument("--thinking", action="store_true", help="the agent reasons first (the server must allow it)")
     ap.add_argument(
         "--organiser-system",
@@ -139,8 +189,7 @@ def main() -> None:
     nl_assertions.NLAssertionsEvaluator.calculate_reward = classmethod(grade_or_note)
     task_ids = args.tasks.split(",") if args.tasks else None
     banking = args.domain == "banking_knowledge"
-    if banking:
-        use_local_embeddings(args.embed_base)
+    variant = organiser_banking(args.embed_base, args.knowledge, args.banking_policy) if banking else None
     config = TextRunConfig(
         domain=args.domain,
         task_ids=task_ids,
@@ -150,7 +199,7 @@ def main() -> None:
         llm_args_user=llm_args,
         max_steps=args.max_steps,
         num_trials=args.trials,
-        retrieval_config="alltools-qwen" if banking else None,
+        retrieval_config=variant,
     )
     tasks = get_tasks(task_set_name=args.domain, task_ids=task_ids)
     out = args.out / args.domain
@@ -173,7 +222,7 @@ def main() -> None:
                 "temperature": args.temperature,
                 "agent_thinking": args.thinking,
                 "organiser_system": bool(args.organiser_system),
-                "retrieval": "alltools-qwen, local embeddings" if banking else None,
+                "retrieval": f"{variant}, Russian knowledge base, local embeddings" if banking else None,
                 "greeting": GREETING,
                 "seconds": round(time.monotonic() - started, 1),
                 "simulation": json.loads(simulation.model_dump_json()),

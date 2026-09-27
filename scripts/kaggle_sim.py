@@ -42,6 +42,12 @@ MODELS = {
     ),
     "glm": ("unsloth/GLM-4.7-Flash-GGUF", "GLM-4.7-Flash-Q4_K_M.gguf", ["--reasoning", "off"], False),
 }
+# banking_knowledge's KB_search_dense: the organiser's model (qwen3-embedding-8b) on the cards if it fits next to
+# the agent, else the small one on the CPU; the summary says which one served
+EMBEDDERS = [
+    ("Qwen/Qwen3-Embedding-8B-GGUF", "Qwen3-Embedding-8B-Q4_K_M.gguf", ["--n-gpu-layers", "99"]),
+    ("Qwen/Qwen3-Embedding-0.6B-GGUF", "Qwen3-Embedding-0.6B-Q8_0.gguf", ["--n-gpu-layers", "0"]),
+]
 STARTED = time.time()
 
 
@@ -169,6 +175,29 @@ def start_server(server: Path, model: Path, agent: str) -> subprocess.Popen:
     raise RuntimeError("llama-server did not come up, see llama_server.log")
 
 
+def start_embedder(server: Path) -> tuple[subprocess.Popen, str]:
+    from huggingface_hub import hf_hub_download
+
+    for repo, name, flags in EMBEDDERS:
+        model = hf_hub_download(repo, name, local_dir=TMP / "models")
+        command = [str(server), "--model", model, "--embedding", "--pooling", "last", "--ctx-size", "8192"]
+        command += ["--parallel", "1", "--batch-size", "8192", "--ubatch-size", "8192", "--port", "8082", *flags]
+        log("$ " + " ".join(command))
+        process = subprocess.Popen(command, stdout=open(WORK / "embed_server.log", "a"), stderr=subprocess.STDOUT)  # noqa: SIM115
+        for _ in range(150):
+            if process.poll() is not None:
+                break
+            try:
+                if b'"ok"' in urllib.request.urlopen("http://127.0.0.1:8082/health", timeout=2).read():
+                    log(f"embedder up: {name}")
+                    return process, name
+            except Exception:
+                time.sleep(2)
+        process.kill()
+        log(f"embedder {name} did not come up")
+    raise RuntimeError("no embedding server, see embed_server.log")
+
+
 def simulate(python: Path, agent: str, tasks: list[tuple[str, str]], out: Path, stop_at: float, max_steps: int) -> None:
     thinking = ["--thinking"] if MODELS[agent][3] else []
     running: list[tuple[str, str, float, subprocess.Popen]] = []
@@ -196,9 +225,9 @@ def simulate(python: Path, agent: str, tasks: list[tuple[str, str]], out: Path, 
                 *thinking,
             ]
             err = open(WORK / "simulate_errors.log", "a")  # noqa: SIM115 - held by the running process
-            running.append(
-                (domain, task, time.time(), subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=err, env=env))
-            )
+            # the working folder holds τ²'s embeddings cache (data/.embeddings_cache), shared by all dialogues
+            process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=err, env=env, cwd=TMP)
+            running.append((domain, task, time.time(), process))
         if time.time() >= stop_at and queue:
             log(f"time is up: {len(queue)} tasks not started")
             queue = []
@@ -213,7 +242,7 @@ def simulate(python: Path, agent: str, tasks: list[tuple[str, str]], out: Path, 
         time.sleep(2)
 
 
-def summarise(out: Path, agent: str) -> None:
+def summarise(out: Path, agent: str, embedder: str | None = None) -> None:
     rows = []
     for path in sorted(out.glob("*/*.json")):
         record = json.loads(path.read_text(encoding="utf-8"))
@@ -229,6 +258,7 @@ def summarise(out: Path, agent: str) -> None:
         )
     summary = {
         "agent": agent,
+        "embedder": embedder,
         "dialogues": len(rows),
         "session_seconds": round(time.time() - STARTED),
         "mean_seconds_per_dialogue": round(sum(r["seconds"] for r in rows) / len(rows), 1) if rows else None,
@@ -257,17 +287,22 @@ def main() -> None:
     process = start_server(server, model, args.agent)
     out = WORK / f"sims_{args.agent}"
     if args.mode == "test":
-        tasks, stop_at, max_steps = [("airline", "0"), ("airline", "1")], time.time() + 20 * 60, 30
+        tasks, stop_at, max_steps = [("airline", "0"), ("banking_knowledge", "task_001")], time.time() + 25 * 60, 30
     else:
         listed = json.loads((KIT / "tasks" / args.tasks).read_text(encoding="utf-8"))
         tasks = [(d, t) for d, t in listed]
         stop_at, max_steps = STARTED + args.stop_after * 3600, args.max_steps
+    embedder, embedder_name = None, None
+    if any(d == "banking_knowledge" for d, _ in tasks):
+        embedder, embedder_name = start_embedder(server)
     log(f"{len(tasks)} tasks, new ones start until {time.strftime('%H:%M', time.localtime(stop_at))}")
     try:
         simulate(python, args.agent, tasks, out, stop_at, max_steps)
     finally:
         process.terminate()
-        summarise(out, args.agent)
+        if embedder:
+            embedder.terminate()
+        summarise(out, args.agent, embedder_name)
 
 
 if __name__ == "__main__":

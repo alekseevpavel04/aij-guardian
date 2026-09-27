@@ -5,7 +5,7 @@ rows and errors used, the old ruler's difference to the candidate (AUROC on the 
 bootstrap), both heads alone, and the new ruler by the independent v1s labels (AUROC and F1 at the test's
 share on all contexts). The same --source arguments as tau2ru_ruler.py.
 
-    python scripts/sim_scale_curve.py --tag q36 --source "rows|prefix|opus_dir"
+    python scripts/sim_scale_curve.py --tag q36 --source "rows|prefix|opus_dir" --extra --unc-skip glm
 """
 
 import argparse
@@ -23,6 +23,7 @@ def main() -> None:
     ap.add_argument("--tag", required=True)
     ap.add_argument("--fractions", type=float, nargs="+", default=[0.25, 0.5, 0.75, 1.0])
     ap.add_argument("--seeds", type=int, default=3)
+    ap.add_argument("--extra", nargs=argparse.REMAINDER, default=[], help="passed to tau2ru_ruler.py (keep it last)")
     args = ap.parse_args()
 
     out = ROOT / f"results/sim_scale_curve_{args.tag}.json"
@@ -37,6 +38,7 @@ def main() -> None:
                 command += ["--fraction", str(fraction), "--seed", str(seed)]
                 for source in args.source:
                     command += ["--source", source]
+                command += args.extra
                 subprocess.run(command, cwd=ROOT, check=True, capture_output=True)
             r = json.loads(path.read_text(encoding="utf-8"))
             v = r["variants"]["both_w1.0"]

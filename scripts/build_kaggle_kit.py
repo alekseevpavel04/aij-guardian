@@ -31,6 +31,7 @@ FILES = [
     "src/guardian/tau2_sim.py",
     "configs/agent_instruction_ru.txt",
     "configs/tau2_requirements.txt",
+    "configs/organiser_banking_policy.txt",
 ]
 SHARES = {"airline": 0.33, "retail": 0.20, "telecom": 0.47}
 
@@ -44,6 +45,15 @@ def used_tasks() -> set[tuple[str, str]]:
     return used
 
 
+def listed_in_kit(kit: Path) -> set[tuple[str, str]]:
+    """Tasks of the current kit's lists: a session may still be running one of them."""
+    if not kit.exists():
+        return set()
+    with zipfile.ZipFile(kit) as z:
+        names = [n for n in z.namelist() if n.startswith("tasks/")]
+        return {(d, t) for n in names for d, t in json.loads(z.read(n))}
+
+
 def main() -> None:
     setup()
     ap = argparse.ArgumentParser()
@@ -53,7 +63,7 @@ def main() -> None:
     args = ap.parse_args()
 
     organiser = set(pd.read_parquet(ROOT / "data/synthetic/organizer_contexts.parquet").task)
-    used = used_tasks()
+    used = used_tasks() | listed_in_kit(args.out)
     pools = {}
     for domain in SHARES:
         pool = [
@@ -83,8 +93,17 @@ def main() -> None:
             z.write(ROOT / name, name)
         for k, run in enumerate(lists, 1):
             z.writestr(f"tasks/tasks_run{k}.json", json.dumps(run, ensure_ascii=False, indent=0))
+        # banking_knowledge: its own list and the Russian knowledge base (scripts/kb_translation.py)
+        bank = [
+            ["banking_knowledge", t["id"]]
+            for t in tasks("banking_knowledge")
+            if ("banking_knowledge", t["id"]) not in used and f"banking_knowledge__{t['id']}" not in organiser
+        ]
+        z.writestr("tasks/tasks_bank.json", json.dumps(bank, ensure_ascii=False, indent=0))
+        for path in sorted((ROOT / "data/synthetic/banking_kb_ru").glob("*.json")):
+            z.write(path, f"data/synthetic/banking_kb_ru/{path.name}")
     counts = [{d: sum(1 for x in run if x[0] == d) for d in SHARES} for run in lists]
-    print(args.out, "runs:", counts, "left in the pools:", {d: len(p) for d, p in pools.items()})
+    print(args.out, "runs:", counts, "left in the pools:", {d: len(p) for d, p in pools.items()}, "banking:", len(bank))
 
 
 if __name__ == "__main__":
