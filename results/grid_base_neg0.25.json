@@ -1,0 +1,105 @@
+{
+  "labels": "opus",
+  "balance": "none",
+  "uncertainty_head_skips": [
+    "glm",
+    "kglm"
+  ],
+  "context_labels": "v1s",
+  "sources": [
+    [
+      "data/synthetic/tau2_ru_q36_rows.parquet",
+      "q4_tok_tau2q36",
+      "data/synthetic/opus_labels_tau2q36"
+    ],
+    [
+      "data/synthetic/tau2_ru_glm_rows.parquet",
+      "q4_tok_tau2glm",
+      "data/synthetic/opus_labels_tau2glm"
+    ],
+    [
+      "data/synthetic/tau2_ru_q36n_rows.parquet",
+      "q4_tok_tau2q36n",
+      "data/synthetic/opus_labels_tau2q36n"
+    ],
+    [
+      "data/synthetic/tau2_ru_kbank_s350_rows.parquet",
+      "q4_tok_tau2kbank",
+      "data/synthetic/opus_labels_tau2kbank"
+    ]
+  ],
+  "turns_dropped_for_chinese_words": 8,
+  "negative_share": 0.25,
+  "sim_total": 1.0,
+  "sim_domains": null,
+  "turns_dropped_as_repeats": 238,
+  "rows": 392,
+  "positives": 164,
+  "dialogues": 74,
+  "rows_of_organiser_tasks": 117,
+  "compared_with_contexts": {
+    "share_of_errors": [
+      0.418,
+      0.174
+    ],
+    "share_with_tool_call": [
+      0.49,
+      0.57
+    ],
+    "median_response_chars": [
+      335,
+      228
+    ],
+    "median_prompt_chars": [
+      30232,
+      29004
+    ],
+    "mean_token_logp": [
+      -1.099,
+      -1.196
+    ]
+  },
+  "variants": {
+    "both_w1.0": {
+      "head_b_alone": 0.9241,
+      "uncertainty_alone": 0.7712,
+      "system_minus_reference": {
+        "difference": 0.0039,
+        "ci95": [
+          -0.002,
+          0.011
+        ],
+        "share_above_zero": 0.906
+      },
+      "new_ruler_all_contexts": {
+        "v1s": {
+          "f1": 0.7089,
+          "f1_minus_reference": 0.0127,
+          "ci95": [
+            -0.055,
+            0.056
+          ],
+          "auroc": 0.9376
+        },
+        "opus": {
+          "f1": 0.7719,
+          "f1_minus_reference": 0.0701,
+          "ci95": [
+            0.0,
+            0.116
+          ],
+          "auroc": 0.936
+        }
+      }
+    }
+  },
+  "candidate": {
+    "head_b_alone": 0.9295,
+    "uncertainty_alone": 0.8113,
+    "system": 0.982,
+    "system_f1_at_test_share_all_contexts": {
+      "v1s": 0.6962,
+      "opus": 0.7018
+    }
+  }
+}
