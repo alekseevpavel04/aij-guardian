@@ -1,0 +1,17 @@
+{
+  "a": "strong_kbank_ruler_opus_norepeats_simtotal1",
+  "b": "strong955_ruler_opus_norepeats_simtotal1",
+  "domain": "telecom",
+  "contexts": 122,
+  "errors_v1s": 33,
+  "dialogues": 12,
+  "auroc_a": 0.985,
+  "auroc_b": 0.984,
+  "a_minus_b": 0.001,
+  "ci95": [
+    -0.0024,
+    0.0119
+  ],
+  "share_above_zero": 0.54,
+  "repeats": 2000
+}

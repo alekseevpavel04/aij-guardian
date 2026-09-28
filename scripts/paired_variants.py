@@ -29,6 +29,7 @@ def main() -> None:
     ap.add_argument("--key", default="both_w1.0")
     ap.add_argument("--repeats", type=int, default=2000)
     ap.add_argument("--contexts", type=Path, default=ROOT / "data/synthetic/organizer_contexts.parquet")
+    ap.add_argument("--domain", default=None, help="only the contexts of one domain")
     args = ap.parse_args()
 
     a, b = (np.load(ROOT / "results" / f"{n}.scores.npz") for n in (args.a, args.b))
@@ -36,20 +37,25 @@ def main() -> None:
         raise SystemExit("the two runs score different contexts")
     tasks = pd.read_parquet(args.contexts).set_index("id").task
     found = labels(TEACHERS["v1s"].format(split="train")) | labels(TEACHERS["v1s"].format(split="check"))
-    ids = pd.Series(a["ids"])
+    keep = np.array([args.domain is None or i.split("__")[1] == args.domain for i in a["ids"]])
+    ids = pd.Series(a["ids"][keep])
     truth = ids.map(found).to_numpy().astype(int)
     groups = [np.where(ids.map(tasks).to_numpy() == t)[0] for t in np.unique(ids.map(tasks))]
-    sa, sb = a[args.key], b[args.key]
+    sa, sb = a[args.key][keep], b[args.key][keep]
 
     rng = np.random.default_rng(0)
-    diffs = []
+    diffs, one_class = [], 0
     for _ in range(args.repeats):
         idx = np.concatenate([groups[k] for k in rng.integers(0, len(groups), len(groups))])
+        if truth[idx].min() == truth[idx].max():  # a resample of a few dialogues can hold no error at all
+            one_class += 1
+            continue
         diffs.append(auroc(truth[idx], sa[idx]) - auroc(truth[idx], sb[idx]))
     diffs = np.array(diffs)
     result = {
         "a": args.a,
         "b": args.b,
+        "domain": args.domain,
         "contexts": len(ids),
         "errors_v1s": int(truth.sum()),
         "dialogues": len(groups),
@@ -59,8 +65,10 @@ def main() -> None:
         "ci95": [round(float(v), 4) for v in np.percentile(diffs, [2.5, 97.5])],
         "share_above_zero": round(float((diffs > 0).mean()), 3),
         "repeats": args.repeats,
+        "resamples_without_both_classes": one_class,
     }
-    out = ROOT / "results" / f"paired_{args.a}__vs__{args.b}.json"
+    suffix = f"__{args.domain}" if args.domain else ""
+    out = ROOT / "results" / f"paired_{args.a}__vs__{args.b}{suffix}.json"
     out.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(result))
 

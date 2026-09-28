@@ -1,0 +1,16 @@
+{
+  "a": "strong_kbank_ruler_opus_norepeats_simtotal1",
+  "b": "strong955_ruler_opus_norepeats_simtotal1",
+  "contexts": 384,
+  "errors_v1s": 67,
+  "dialogues": 40,
+  "auroc_a": 0.9407,
+  "auroc_b": 0.9476,
+  "a_minus_b": -0.0069,
+  "ci95": [
+    -0.0166,
+    0.0006
+  ],
+  "share_above_zero": 0.036,
+  "repeats": 2000
+}

@@ -1,0 +1,17 @@
+{
+  "a": "strong_kbank_ruler_opus_norepeats_simtotal1",
+  "b": "strong955_ruler_opus_norepeats_simtotal1",
+  "domain": "airline",
+  "contexts": 87,
+  "errors_v1s": 10,
+  "dialogues": 9,
+  "auroc_a": 0.9234,
+  "auroc_b": 0.9305,
+  "a_minus_b": -0.0071,
+  "ci95": [
+    -0.0206,
+    0.0092
+  ],
+  "share_above_zero": 0.234,
+  "repeats": 2000
+}
