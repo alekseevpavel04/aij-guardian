@@ -208,6 +208,8 @@ def final(rows: list[dict], config: dict, started: float) -> list[int] | None:
         "--stop-at",
         str(time.time() + deadline - time.monotonic() - 60 * config["batch_minutes"]),
     ]
+    if config.get("engine"):  # a card other than the platform's (the Kaggle rehearsal on a T4)
+        command += ["--engine-json", json.dumps(config["engine"])]
     with (ROOT / "final_pass.log").open("w", encoding="utf-8") as log:
         process = subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
         while process.poll() is None and time.monotonic() < deadline:

@@ -8,6 +8,8 @@ The datasets belong to the account of that token.
     python scripts/kaggle_push.py status --name aij-sim-run1
     python scripts/kaggle_push.py fetch --name aij-sim-run1             # output into data/kaggle/out/<name>
     python scripts/kaggle_push.py bin                                  # the llama.cpp build as a private dataset
+    python scripts/kaggle_push.py kit --rental                         # the rental kit (build_rental_kit.py)
+    python scripts/kaggle_push.py push --name aij-final-rehearsal --rehearsal  # kaggle_final_rehearsal.py
 
 Everything stays private: the kit holds the agent instruction found in the organiser's data, and every push
 checks that the notebook's metadata says private before it goes out.
@@ -39,6 +41,7 @@ OWNER = account()
 KIT_DATASET = f"{OWNER}/aij-sim-kit-zip"
 TOK_DATASET = f"{OWNER}/aij-tok-kit-zip"
 BIN_DATASET = f"{OWNER}/aij-llama-bin"
+RENTAL_DATASET = f"{OWNER}/aij-rental-kit"
 ACCELERATOR = "NvidiaTeslaT4"
 BASE = ROOT / "data/kaggle"
 
@@ -70,7 +73,9 @@ def notebook(script: str, arguments: list[str]) -> dict:
 def push(args: argparse.Namespace) -> None:
     folder = BASE / "kernels" / args.name
     folder.mkdir(parents=True, exist_ok=True)
-    if args.tok:
+    if args.rehearsal:
+        script, dataset, arguments = "kaggle_final_rehearsal.py", RENTAL_DATASET, []
+    elif args.tok:
         script, dataset = "kaggle_tok.py", TOK_DATASET
         arguments = ["--rows", *args.tok, "--stop-after", str(args.stop_after)]
     else:
@@ -127,6 +132,9 @@ def upload(name: str, source: Path, dataset: str) -> None:
 
 
 def kit(args: argparse.Namespace) -> None:
+    if args.rental:
+        upload("rental_kit.zip", ROOT / "submission_work/rental_kit.zip", RENTAL_DATASET)
+        return
     name, dataset = ("aij-tok-kit.zip", TOK_DATASET) if args.tok_kit else ("aij-sim-kit.zip", KIT_DATASET)
     upload(name, BASE / name, dataset)
 
@@ -147,6 +155,8 @@ def main() -> None:
     ap.add_argument("--user-temperature", type=float, default=None)
     ap.add_argument("--tok", nargs="+", default=None, help="rows_name:prefix pairs: a token pass session instead")
     ap.add_argument("--tok-kit", action="store_true", help="kit: the token pass kit")
+    ap.add_argument("--rental", action="store_true", help="kit: the rental kit (holds organiser data, stays private)")
+    ap.add_argument("--rehearsal", action="store_true", help="push: the rehearsal of the rental on a T4")
     ap.add_argument("--binary-dataset", action="store_true", help="attach the aij-llama-bin dataset")
     ap.add_argument("--binary-from", default=None, help="a finished session whose output has the llama-server build")
     args = ap.parse_args()
