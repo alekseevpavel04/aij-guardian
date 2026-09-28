@@ -14,6 +14,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from sklearn.metrics import average_precision_score
 
 from guardian.env import setup
 
@@ -23,6 +24,23 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from train_head_ru import TEACHERS, auroc, labels  # noqa: E402
 
 VIEWS = (*TEACHERS, "agreed")
+TEST_FLAGS_PER_ERROR = 1.31  # the submissions flagged 1.31 rows per error of the test
+
+
+def average_precision(y: np.ndarray, s: np.ndarray) -> float:
+    return float(average_precision_score(y, s))
+
+
+def f1_at_flags(y: np.ndarray, s: np.ndarray) -> float:
+    """F1 when the top 1.31 x (number of errors) rows are flagged, the test's operating point."""
+    k = round(TEST_FLAGS_PER_ERROR * y.sum())
+    top = np.zeros(len(s), bool)
+    top[np.argsort(-s, kind="stable")[:k]] = True
+    hits = (top & (y == 1)).sum()
+    return float(2 * hits / (k + y.sum()))
+
+
+METRICS = {"auroc": auroc, "ap": average_precision, "f1_at_flags": f1_at_flags}
 
 
 @cache
@@ -43,6 +61,7 @@ def compare(
     key: str = "both_w1.0",
     repeats: int = 2000,
     b_key: str | None = None,
+    metric: str = "auroc",
 ) -> dict:
     """`b_name` "reference" is the system without simulations that the run `a_name` saved with it; teacher
     "agreed" keeps only the contexts where v1s and Opus agree."""
@@ -62,6 +81,7 @@ def compare(
     groups = [np.where(task == t)[0] for t in np.unique(task)]
     sa, sb = a[key][keep], b[b_key][keep]
 
+    score = METRICS[metric]
     rng = np.random.default_rng(0)
     diffs, one_class = [], 0
     for _ in range(repeats):
@@ -69,7 +89,7 @@ def compare(
         if truth[idx].min() == truth[idx].max():  # a resample of a few dialogues can hold no error at all
             one_class += 1
             continue
-        diffs.append(auroc(truth[idx], sa[idx]) - auroc(truth[idx], sb[idx]))
+        diffs.append(score(truth[idx], sa[idx]) - score(truth[idx], sb[idx]))
     diffs = np.array(diffs)
     return {
         "a": a_name if key == "both_w1.0" else f"{a_name}:{key}",
@@ -79,9 +99,10 @@ def compare(
         "teacher": teacher,
         "errors": int(truth.sum()),
         "dialogues": len(groups),
-        "auroc_a": round(float(auroc(truth, sa)), 4),
-        "auroc_b": round(float(auroc(truth, sb)), 4),
-        "a_minus_b": round(float(auroc(truth, sa) - auroc(truth, sb)), 4),
+        "metric": metric,
+        f"{metric}_a": round(float(score(truth, sa)), 4),
+        f"{metric}_b": round(float(score(truth, sb)), 4),
+        "a_minus_b": round(float(score(truth, sa) - score(truth, sb)), 4),
         "ci95": [round(float(v), 4) for v in np.percentile(diffs, [2.5, 97.5])],
         "share_above_zero": round(float((diffs > 0).mean()), 3),
         "repeats": repeats,
@@ -99,11 +120,13 @@ def main() -> None:
     ap.add_argument("--repeats", type=int, default=2000)
     ap.add_argument("--domain", default=None, help="only the contexts of one domain")
     ap.add_argument("--teacher", choices=VIEWS, default="v1s", help="whose labels of the contexts")
+    ap.add_argument("--metric", choices=tuple(METRICS), default="auroc")
     args = ap.parse_args()
 
-    result = compare(args.a, args.b, args.teacher, args.domain, args.key, args.repeats, args.b_key)
+    result = compare(args.a, args.b, args.teacher, args.domain, args.key, args.repeats, args.b_key, args.metric)
     suffix = (f"__{args.domain}" if args.domain else "") + (f"__{args.teacher}" if args.teacher != "v1s" else "")
     suffix += (f"__{args.key}" if args.key != "both_w1.0" else "") + (f"__{args.b_key}" if args.b_key else "")
+    suffix += f"__{args.metric}" if args.metric != "auroc" else ""
     out = ROOT / "results" / f"paired_{args.a}__vs__{args.b}{suffix}.json"
     out.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(result))
