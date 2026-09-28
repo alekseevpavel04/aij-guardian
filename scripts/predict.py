@@ -14,6 +14,11 @@ last-token hidden state (guardian/head.py; GUARDIAN_EMBED_URL for a server that 
 the pooling server does not come up or most of its requests fail, the run falls back to the cascade
 with the cascade's own deadlines, so a head that fails early costs nothing against the known result;
 with "fallback": "rules" it falls back to the rules alone, whose score on the test is known exactly.
+
+With the `final` strategy (DECISIONS 46, 47) one pass of the same model per row (scripts/final_pass.py, in a
+process of its own with a deadline) gives head B its last-token vector and the uncertainty head the turn's token
+probabilities; each row is labelled 1 when a rule fires or its score reaches the threshold, on its own, never as
+a share of the file (guardian.final). Rows the pass has not scored by the deadline get the rules' label.
 """
 
 import json
@@ -157,6 +162,77 @@ def head(rows: list[dict], config: dict, started: float) -> list[int] | None:
     return labels
 
 
+def final(rows: list[dict], config: dict, started: float) -> list[int] | None:
+    """Rules, then the final heads on one pass of the judge model; None when the pass scored no row."""
+    import subprocess
+    import tempfile
+
+    import numpy as np
+
+    from guardian import journal
+    from guardian.cascade import combine, rule_labels
+    from guardian.extract import decode
+    from guardian.final import Final
+    from guardian.serving import stop
+    from guardian.uncertainty import features
+
+    rules = rule_labels(rows, tuple(config["checks"]))
+    print(f"rules fired on {sum(rules)} of {len(rows)} rows", file=sys.stderr)
+    model = Final.load(ROOT / "model" / config["final"])
+    work = Path(tempfile.mkdtemp(prefix="guardian_final_"))
+    with (work / "rows.jsonl").open("w", encoding="utf-8") as f:
+        for i, row in enumerate(rows):
+            record = {"id": str(i), "prompt": row.get("prompt", ""), "response": row.get("response", "")}
+            f.write(json.dumps(record, ensure_ascii=False) + "\n")
+    deadline = started + 60 * config["final_minutes"]
+    worker = os.environ.get("GUARDIAN_FINAL_PASS", str(ROOT / "scripts" / "final_pass.py"))
+    command = [
+        sys.executable,
+        worker,
+        "--rows",
+        str(work / "rows.jsonl"),
+        "--prefix",
+        "test",
+        "--model-dir",
+        str(ROOT / "model"),
+        "--system-prompt",
+        str(ROOT / "model" / config["prompt"]),
+        "--out-dir",
+        str(work),
+        "--max-model-len",
+        str(config["max_model_len"]),
+        "--gpu-memory-utilization",
+        str(config["gpu_memory_utilization"]),
+        # no new batch after this; a batch under way is cut off at the deadline
+        "--stop-at",
+        str(time.time() + deadline - time.monotonic() - 60 * config["batch_minutes"]),
+    ]
+    with (ROOT / "final_pass.log").open("w", encoding="utf-8") as log:
+        process = subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
+        while process.poll() is None and time.monotonic() < deadline:
+            time.sleep(5)
+        stop(process)
+    print(f"pass exit {process.returncode} after {time.monotonic() - started:.0f} s", file=sys.stderr)
+
+    vectors = {r["id"]: decode(r["vector"]) for r in journal.read(work / "test_final_org.jsonl")}
+    parts = {r["id"]: r["parts"] for r in journal.read(work / "test_parts_org.jsonl")}
+    stats = {r["id"]: r for r in journal.read(work / "test_uncertainty_org.jsonl")}
+    scored = [i for i in range(len(rows)) if str(i) in stats and str(i) in vectors and str(i) in parts]
+    print(f"pass scored {len(scored)} of {len(rows)} rows", file=sys.stderr)
+    if not scored:
+        return None
+    scores = model.score(
+        np.stack([vectors[str(i)] for i in scored]),
+        np.stack([features(stats[str(i)], parts[str(i)]) for i in scored]),
+    )
+    flags = [0] * len(rows)
+    for i, s in zip(scored, scores, strict=True):
+        flags[i] = int(s >= model.threshold)
+    labels = combine(rules, flags)
+    print(f"threshold {model.threshold}: {sum(flags)} flagged; with the rules {sum(labels)}", file=sys.stderr)
+    return labels
+
+
 def main() -> None:
     started = time.monotonic()
     input_path, output_path = main_argv()
@@ -169,6 +245,14 @@ def main() -> None:
 
     failures = 0
     labels = None
+    if config.get("strategy") == "final":
+        try:
+            labels = final(rows, config, started)
+        except Exception as error:  # the rules' score on the test is known; a failed pass must not cost more
+            print(f"final failed: {type(error).__name__}: {error}", file=sys.stderr)
+        if labels is None:
+            print("falling back to the rules", file=sys.stderr)
+            labels, failures = per_row(rows, Predictor(checks=tuple(config["checks"])))
     if config.get("strategy") == "head":
         try:
             labels = head(rows, config, started)

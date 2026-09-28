@@ -5,6 +5,8 @@
     python scripts/build_submission.py --strategy cascade --share 0.3 --prompt configs/prompts/judge_v1.md
     python scripts/build_submission.py --strategy head --head configs/heads/head_a.json \
         --without repeated_call --prompt data/raw/baseline/baseline/src/hallucination_detector/prompt.md
+    python scripts/build_submission.py --strategy final --final submission_work/final_fp8.json \
+        --prompt data/raw/baseline/baseline/src/hallucination_detector/prompt.md
 
 A head archive carries the same weights and the cascade's settings as its fallback (scripts/predict.py).
 
@@ -48,6 +50,10 @@ MODULES = (
     "serving.py",
     "cascade.py",
     "head.py",
+    "journal.py",
+    "uncertainty.py",
+    "extract.py",
+    "final.py",
 )
 MODEL_DIR = ROOT / "data/raw/baseline/baseline/model"
 # vLLM start and the whole run must fit the platform's 30 minutes; what is not scored by then is
@@ -57,6 +63,15 @@ CASCADE["total_minutes"] = 25
 # the head scores until the cascade's own deadline; it gives way to the cascade only when more than
 # max_errors of its requests fail (scripts/predict.py)
 HEAD = {"head": "head.json", "head_minutes": CASCADE["total_minutes"], "max_errors": 0.5}
+# the final strategy's pass (scripts/final_pass.py) starts no batch in the last batch_minutes before its deadline;
+# the rules label whatever it has not scored. The output matrix needs about 2.5 GiB of the card beside vLLM.
+FINAL = {
+    "final": "final.json",
+    "final_minutes": 26,
+    "batch_minutes": 3,
+    "max_model_len": 131072,
+    "gpu_memory_utilization": 0.85,
+}
 
 PYPROJECT = """[build-system]
 requires = ["setuptools"]
@@ -104,6 +119,7 @@ def build(
     fallback: str = "cascade",
     threshold: float | None = None,
     calibration: Path | None = None,
+    final: Path | None = None,
 ) -> None:
     if out_dir.exists():
         shutil.rmtree(out_dir)
@@ -114,6 +130,8 @@ def build(
     for module in MODULES:
         shutil.copy(ROOT / "src/guardian" / module, out_dir / "src/guardian" / module)
     shutil.copy(ROOT / "scripts/predict.py", out_dir / "scripts/predict.py")
+    if strategy == "final":
+        shutil.copy(ROOT / "scripts/final_pass.py", out_dir / "scripts/final_pass.py")
 
     (out_dir / "pyproject.toml").write_text(PYPROJECT.format(version=version), encoding="utf-8")
     (out_dir / "README.md").write_text(README.format(strategy=strategy), encoding="utf-8")
@@ -127,6 +145,12 @@ def build(
             # each row is decided on its own against a threshold on the home scale (DECISIONS.md, 33 and 35)
             config |= {"threshold": threshold, "calibration": "calibration.json"}
             shutil.copy(calibration, out_dir / "model/calibration.json")
+    if strategy == "final":
+        # the checks the heads were trained next to travel with them (tau2ru_ruler.py --export)
+        exported = json.loads(final.read_text(encoding="utf-8"))
+        config |= FINAL | {"checks": exported["checks"], "prompt": "judge_prompt.md"}
+        shutil.copy(final, out_dir / "model/final.json")
+        (out_dir / "model/judge_prompt.md").write_text(prompt.read_text(encoding="utf-8"), encoding="utf-8")
     if strategy in ("cascade", "head"):
         config |= CASCADE | {"share": share, "prompt": "judge_prompt.md", "thinking_tokens": thinking_tokens}
         text = prompt.read_text(encoding="utf-8")
@@ -201,7 +225,8 @@ def check_archive(archive: Path) -> list[str]:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--strategy", choices=("constant", "rules", "cascade", "head"), default="rules")
+    ap.add_argument("--strategy", choices=("constant", "rules", "cascade", "head", "final"), default="rules")
+    ap.add_argument("--final", type=Path, default=None, help="final: heads exported by tau2ru_ruler.py --export")
     ap.add_argument("--head", type=Path, default=None, help="head: exported head (scripts/export_head.py)")
     ap.add_argument(
         "--fallback", choices=("cascade", "rules"), default="cascade", help="head: what runs if the head cannot"
@@ -234,6 +259,7 @@ def main() -> None:
         args.fallback,
         args.threshold,
         args.calibration,
+        args.final,
     )
     suffix = f"_{args.label}" if args.strategy == "constant" else "".join(f"_no_{c}" for c in args.without)
     if args.strategy == "cascade":
@@ -245,7 +271,9 @@ def main() -> None:
         suffix += f"_threshold{args.threshold}" if args.threshold is not None else ""
     name = f"guardian_{args.strategy}{suffix}.zip"
     archive = args.archive or ROOT / "submissions" / name
-    if args.strategy in ("cascade", "head"):
+    if args.strategy == "final":
+        suffix += f"_{args.final.stem}"
+    if args.strategy in ("cascade", "head", "final"):
         shutil.copyfile(weights_base(args.model_dir), archive)
         zip_dir(args.out, archive, mode="a")
     else:
