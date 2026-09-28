@@ -5,4 +5,3 @@ lightgbm==4.7.0
 scikit-learn==1.9.1
 pandas>=2.2
 pyarrow>=17
-huggingface_hub[cli]

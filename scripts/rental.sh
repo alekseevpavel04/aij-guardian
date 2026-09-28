@@ -27,7 +27,7 @@ setup)
     nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv
     ;;
 model)
-    huggingface-cli download Qwen/Qwen3.6-35B-A3B-FP8 --local-dir "$MODEL" 2>&1 | tail -2
+    $PY -c "from huggingface_hub import snapshot_download; snapshot_download('Qwen/Qwen3.6-35B-A3B-FP8', local_dir='$MODEL')"
     $PY scripts/weights_fingerprint.py --model-dir "$MODEL" --check results/weights_fingerprint.json
     ;;
 pass)
@@ -68,7 +68,7 @@ archive)
 timing)
     nvidia-smi --query-gpu=timestamp,memory.used --format=csv -l 5 > logs/rental_gpu.csv &
     SMI=$!
-    /usr/bin/time -v $PY submission/scripts/predict.py --input data/rental/timing.parquet \
+    $PY submission/scripts/predict.py --input data/rental/timing.parquet \
         --output submission_work/timing_predictions.parquet 2>&1 | tee logs/rental_timing.log
     kill $SMI
     cp submission/final_pass.log logs/rental_timing_pass.log
