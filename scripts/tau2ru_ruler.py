@@ -122,7 +122,12 @@ def main() -> None:
     ap.add_argument(
         "--drop-repeats", action="store_true", help="drop turns that nearly repeat the previous turn of their dialogue"
     )
-    ap.add_argument("--context-labels", choices=("v1s", "agreed", "both", "v1s_duplicated"), default="v1s")
+    ap.add_argument("--context-labels", choices=("v1s", "agreed", "both", "v1s_duplicated", "opus"), default="v1s")
+    ap.add_argument("--fold-seed", type=int, default=None, help="another split of the dialogues into folds")
+    ap.add_argument("--tau-weight", type=float, default=0.5, help="τ² rows weigh this share of the Russian rows")
+    ap.add_argument(
+        "--importance", action="store_true", help="weigh simulation rows by how much they look like the contexts"
+    )
     ap.add_argument(
         "--unc-skip", nargs="*", default=[], help="row id tags (e.g. glm) the uncertainty head does not learn from"
     )
@@ -137,6 +142,9 @@ def main() -> None:
         action="store_true",
         help="a simulated dialogue weighs as much in all as an organiser's one (8B dialogues loop to ~26 turns)",
     )
+    ap.add_argument(
+        "--sim-head", action="store_true", help="also heads that learn from the simulation rows alone, blended in (--quick)"
+    )
     ap.add_argument("--out", type=Path, default=None)
     args = ap.parse_args()
     suffix = (
@@ -147,6 +155,10 @@ def main() -> None:
         + ("" if args.sim_total is None else f"_simtotal{args.sim_total:g}")
         + ("" if args.sim_domains is None else "_" + "_".join(args.sim_domains))
         + ("_no_organiser_tasks" if args.no_organiser_tasks else "")
+        + ("" if args.fold_seed is None else f"_folds{args.fold_seed}")
+        + ("" if args.tau_weight == 0.5 else f"_tau{args.tau_weight:g}")
+        + ("_importance" if args.importance else "")
+        + ("" if args.context_labels == "v1s" else f"_ctx_{args.context_labels}")
     )
     out = args.out or ROOT / f"results/{args.tag}_ruler_{args.labels}{suffix}.json"
 
@@ -216,6 +228,8 @@ def main() -> None:
         ]
     )
     org_logp = mean_logp("q4_tok")
+    splitter = GroupKFold(FOLDS) if args.fold_seed is None else GroupKFold(FOLDS, shuffle=True, random_state=args.fold_seed)
+    splits = list(splitter.split(x, y, tasks))
     result: dict = {
         "labels": args.labels,
         "balance": args.balance,
@@ -287,14 +301,31 @@ def main() -> None:
             same, split = fit[agree[fit]], fit[~agree[fit]]
             rows = np.concatenate([same, split, split])
             return rows, y[rows], np.concatenate([np.ones(len(same)), np.full(2 * len(split), 0.5)])
+        if args.context_labels == "opus":  # one labelling convention with the simulation rows
+            return fit, ruler.label["opus"][fit], np.ones(len(fit))
         return fit, y[fit], np.ones(len(fit))
+
+    def importance(s: pd.DataFrame, fit: np.ndarray) -> pd.DataFrame:
+        """With --importance, each simulation row's weight times p/(1-p) of a classifier telling the fold's
+        contexts from the simulation rows on the final vectors (clipped to 0.1-10): rows unlike anything in the
+        organiser's data count less."""
+        if not args.importance or not len(s):
+            return s
+        xs = np.stack([vecs[i] for i in s.id])
+        xc = np.vstack([x[fit], xs])
+        yc = np.concatenate([np.ones(len(fit)), np.zeros(len(xs))])
+        sc = StandardScaler().fit(xc)
+        clf = LogisticRegression(C=0.01, max_iter=5000, class_weight="balanced").fit(sc.transform(xc), yc)
+        p = clf.predict_proba(sc.transform(xs))[:, 1]
+        return s.assign(w=s.w.to_numpy() * np.clip(p / (1 - p), 0.1, 10))
 
     def head_b(model: str, sim_weight: float) -> np.ndarray:
         scores = np.zeros(len(y))
-        for fit, held in GroupKFold(FOLDS).split(x, y, tasks):
+        for fit, held in splits:
             held_tasks = set(tasks[held])
             s = sim[~sim.task.isin(held_tasks)]
             assert not s.task.isin(held_tasks).any(), "a held-out task's simulation in training"
+            s = importance(s, fit)
             for seed in range(3):
                 p = pairs[~pairs.task.isin(held_tasks)]
                 keep = np.random.default_rng(seed).choice(
@@ -314,7 +345,7 @@ def main() -> None:
                     ws.append(sim_weights(s, sim_weight, n))
                 xs.append(np.stack([vecs[i] for i in tau.id]))
                 ys.append(tau.label.to_numpy())
-                ws.append(np.full(len(tau), 0.5 * n / len(tau)))
+                ws.append(np.full(len(tau), args.tau_weight * n / len(tau)))
                 xf, yf, wf = np.vstack(xs), np.concatenate(ys).astype(int), np.concatenate(ws)
                 sc = StandardScaler().fit(xf)
                 m = LogisticRegression(C=C, max_iter=5000) if model == "logistic" else lgbm()
@@ -325,10 +356,11 @@ def main() -> None:
 
     def uncertainty(sim_weight: float) -> np.ndarray:
         scores = np.zeros(len(y))
-        for fit, held in GroupKFold(FOLDS).split(xu, y, tasks):
+        for fit, held in splits:
             s = sim[~sim.task.isin(set(tasks[held]))] if sim_weight else sim.iloc[:0]
             assert not s.task.isin(set(tasks[held])).any(), "a held-out task's simulation in training"
             # an agent of another family shifts the token probabilities; its rows can be kept out of this head
+            s = importance(s, fit)
             s = s[~s.id.str.split("__").str[0].isin(args.unc_skip)]
             rows, labels, weights = context_rows(fit)
             xf = np.vstack([xu[rows], *([np.stack([sim_feats[i] for i in s.id])] if len(s) else [])])
@@ -347,7 +379,7 @@ def main() -> None:
         regression on the heads' logits, for each held-out fold fitted on the other folds' out-of-fold scores."""
         z = np.column_stack([logit(b / 3), logit(u)])  # head B sums three seeds' probabilities
         out = np.zeros(len(y))
-        for fit, held in GroupKFold(FOLDS).split(z, y, tasks):
+        for fit, held in splits:
             out[held] = LogisticRegression(C=1.0, max_iter=5000).fit(z[fit], y[fit]).predict_proba(z[held])[:, 1]
         return out + fired  # the rules still label 1 on their own
 
@@ -356,10 +388,29 @@ def main() -> None:
         instead of the other rows of the file, so a row's score does not depend on its neighbours and a fixed
         threshold can be put on it."""
         out = np.zeros(len(y))
-        for fit, held in GroupKFold(FOLDS).split(b, y, tasks):
+        for fit, held in splits:
             fb, fu = np.sort(b[fit]), np.sort(u[fit])
             out[held] = np.searchsorted(fb, b[held]) / len(fb) + 0.5 * np.searchsorted(fu, u[held]) / len(fu)
         return out + 10 * fired
+
+    def sim_only_heads() -> tuple[np.ndarray, np.ndarray]:
+        """Heads that learn from the simulation rows alone, no organiser context, out of fold (a simulation of a
+        held-out task never trains it): B on the final vectors (LightGBM), U on the token statistics (logistic,
+        without the agents of another family, as in uncertainty())."""
+        hb, hu = np.zeros(len(y)), np.zeros(len(y))
+        for _, held in splits:
+            s = sim[~sim.task.isin(set(tasks[held]))]
+            assert not s.task.isin(set(tasks[held])).any(), "a held-out task's simulation in training"
+            xs = np.stack([vecs[i] for i in s.id])
+            sc = StandardScaler().fit(xs)
+            m = lgbm().fit(sc.transform(xs), s.label.to_numpy(), sample_weight=s.w.to_numpy())
+            hb[held] = m.predict_proba(sc.transform(x[held]))[:, 1]
+            s = s[~s.id.str.split("__").str[0].isin(args.unc_skip)]
+            xs = np.stack([sim_feats[i] for i in s.id])
+            sc = StandardScaler().fit(xs)
+            m = LogisticRegression(C=1.0, max_iter=5000).fit(sc.transform(xs), s.label.to_numpy(), sample_weight=s.w.to_numpy())
+            hu[held] = m.predict_proba(sc.transform(xu[held]))[:, 1]
+        return hb, hu
 
     b_ref, u_ref = head_b("lightgbm", 0.0), uncertainty(0.0)
     reference = system(b_ref, u_ref)
@@ -410,6 +461,15 @@ def main() -> None:
 
     if args.quick:  # the scale curve needs only the main variant
         report("both_w1.0", head_b("lightgbm", 1.0), uncertainty(1.0))
+        if args.sim_head:
+            hb, hu = sim_only_heads()
+            result["sim_heads_alone"] = {"b": ruler.auroc_ci(hb)["auroc"], "u": ruler.auroc_ci(hu)["auroc"]}
+            blend = ranks(hb) + 0.5 * ranks(hu)
+            scores["sim_heads_alone"] = blend + 10 * fired
+            for w in (0.25, 0.5, 1.0):
+                scores[f"reference_plus_sim_heads_w{w}"] = reference + w * blend
+                scores[f"reference_plus_sim_b_w{w}"] = reference + w * ranks(hb)
+                scores[f"both_plus_sim_heads_w{w}"] = scores["both_w1.0"] + w * blend
     else:
         for w in (1.0, 0.5):
             b, u = head_b("lightgbm", w), uncertainty(w)

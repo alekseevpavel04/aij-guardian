@@ -11,6 +11,7 @@ on the agreed contexts lies above zero and whose sign v1s and Opus both share.
 
     python scripts/data_grid.py            # runs what is missing (about 2 min each), then the summary
     python scripts/data_grid.py --summary  # only the summary
+    python scripts/data_grid.py --checks   # the checks of the ruler and of how the rows are fed (after the grid)
 """
 
 import argparse
@@ -62,11 +63,32 @@ def grid() -> dict[str, dict]:
     return v
 
 
+def checks() -> dict[str, dict]:
+    """Checks that came after the grid: whether the gain holds on other splits into folds, and
+    whether the rows are fed in the wrong way (token features computed on Kaggle, τ² weight next to the
+    simulations, one labelling convention, rows unlike the organiser's, per-dialogue weight)."""
+    v = {}
+    for seed in (1, 2, 3):
+        v[f"base_folds{seed}"] = {"sources": BASE, "extra": ["--fold-seed", str(seed)]}
+        v[f"all_folds{seed}"] = {"sources": ALL, "extra": ["--fold-seed", str(seed)], "against": f"base_folds{seed}"}
+    v |= {
+        "base_uncertainty_home_features": {"sources": BASE, "unc_skip": ["glm", "kglm", "kbank"]},
+        "base_tau0.25": {"sources": BASE, "extra": ["--tau-weight", "0.25"]},
+        "base_tau0": {"sources": BASE, "extra": ["--tau-weight", "0"]},
+        "base_context_labels_opus": {"sources": BASE, "extra": ["--context-labels", "opus"]},
+        "base_context_labels_both": {"sources": BASE, "extra": ["--context-labels", "both"]},
+        "base_importance": {"sources": BASE, "extra": ["--importance"]},
+        "all_importance": {"sources": ALL, "extra": ["--importance"], "against": "all"},
+        "base_dialogue_weight": {"sources": BASE, "extra": ["--dialogue-weight"]},
+    }
+    return v
+
+
 def run(name: str, spec: dict) -> None:
     out = ROOT / "results" / f"grid_{name}.json"
     if out.with_suffix(".scores.npz").exists():
         return
-    cmd = [sys.executable, "scripts/tau2ru_ruler.py", "--labels", "opus", "--quick", "--unc-skip", "glm", "kglm"]
+    cmd = [sys.executable, "scripts/tau2ru_ruler.py", "--labels", "opus", "--quick", "--unc-skip", *spec.get("unc_skip", ["glm", "kglm"])]
     cmd += ["--tag", f"grid_{name}", "--out", str(out), "--sim-total", str(spec.get("sim_total", 1.0))]
     cmd += ["--drop-repeats"] if spec.get("drop_repeats", True) else []
     for s in spec["sources"]:
@@ -82,11 +104,13 @@ def summary(variants: dict[str, dict]) -> dict:
     for name, spec in variants.items():
         ruler = json.loads((ROOT / "results" / f"grid_{name}.json").read_text(encoding="utf-8"))
         against = {"reference": "reference", "base": "grid_base"}
-        if name.startswith("all_"):
+        if name.startswith("all_") and "against" not in spec:
             against["all"] = "grid_all"
+        if "against" in spec:
+            against[spec["against"]] = f"grid_{spec['against']}"
         rows[name] = {
             "sources": spec["sources"],
-            "settings": {k: spec[k] for k in ("sim_total", "drop_repeats", "extra") if k in spec},
+            "settings": {k: spec[k] for k in ("sim_total", "drop_repeats", "extra", "unc_skip") if k in spec},
             "rows": ruler["rows"],
             "positives": ruler["positives"],
             "dialogues": ruler["dialogues"],
@@ -107,12 +131,13 @@ def summary(variants: dict[str, dict]) -> dict:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--summary", action="store_true", help="only the summary of the runs already made")
+    ap.add_argument("--checks", action="store_true", help="the checks after the grid instead of the grid")
     args = ap.parse_args()
-    variants = grid()
+    variants = checks() if args.checks else grid()
     if not args.summary:
         for name, spec in variants.items():
             run(name, spec)
-    out = ROOT / "results/data_grid.json"
+    out = ROOT / ("results/data_checks.json" if args.checks else "results/data_grid.json")
     out.write_text(json.dumps(summary(variants), indent=1) + "\n", encoding="utf-8")
     print(f"-> {out}")
 
