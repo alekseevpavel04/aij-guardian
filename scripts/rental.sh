@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # The rented A100, step by step (docs/RENTAL.md). Run from the unpacked kit:  bash scripts/rental.sh <step>
 #
+#   guard        first of all: the instance stops itself after GUARD_HOURS (6) whatever happens; its disk stays
 #   setup        pinned requirements (vLLM 0.19.1 like the platform)
 #   model        Qwen/Qwen3.6-35B-A3B-FP8 from the Hub, then the fingerprint check against the organiser's copy
 #   pass         the platform's engine over every training row, one engine for all files (resumable)
@@ -20,6 +21,17 @@ GPU_UTIL=${GPU_UTIL:-0.85}   # 0.90 on a 40 GB card
 mkdir -p logs results submission_work "$EMB"
 
 case "${1:-}" in
+guard)
+    # vast.ai gives each instance its own id and a key that can manage it; stopping ends the GPU charge and keeps
+    # the disk, so the results survive a night nobody watches
+    if [ -z "${CONTAINER_ID:-}" ] || [ -z "${CONTAINER_API_KEY:-}" ]; then
+        echo "no CONTAINER_ID / CONTAINER_API_KEY in this instance: stop it from home instead"
+        exit 1
+    fi
+    $PY -m pip install -q vastai
+    nohup bash -c "sleep ${GUARD_HOURS:-6}h; vastai stop instance $CONTAINER_ID --api-key $CONTAINER_API_KEY"         > logs/guard.log 2>&1 &
+    echo "the instance stops itself at $(date -d "+${GUARD_HOURS:-6} hours")"
+    ;;
 setup)
     $PY -m pip install -r configs/rental_requirements.txt 2>&1 | tail -3
     $PY -m pip install -e . 2>&1 | tail -1
