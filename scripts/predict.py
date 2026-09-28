@@ -180,6 +180,7 @@ def final(rows: list[dict], config: dict, started: float) -> list[int] | None:
     print(f"rules fired on {sum(rules)} of {len(rows)} rows", file=sys.stderr)
     model = Final.load(ROOT / "model" / config["final"])
     work = Path(tempfile.mkdtemp(prefix="guardian_final_"))
+    print(f"pass files in {work}", file=sys.stderr)
     with (work / "rows.jsonl").open("w", encoding="utf-8") as f:
         for i, row in enumerate(rows):
             record = {"id": str(i), "prompt": row.get("prompt", ""), "response": row.get("response", "")}

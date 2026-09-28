@@ -93,7 +93,14 @@ def turn_stats(states, w, ids: list[int], turn: list[int], chunk: int = 256) -> 
 class Pass:
     """The judge model in vLLM's pooling runner (ALL) plus its output matrix and tokenizer."""
 
-    def __init__(self, model_dir: Path, system_prompt: str, max_model_len: int, gpu_memory_utilization: float):
+    def __init__(
+        self,
+        model_dir: Path,
+        system_prompt: str,
+        max_model_len: int,
+        gpu_memory_utilization: float,
+        engine: dict | None = None,
+    ):
         from transformers import AutoTokenizer
         from vllm import LLM
 
@@ -110,6 +117,7 @@ class Pass:
             # the checkpoint is a vision-language model; only its text part is needed
             language_model_only=True,
             enable_prefix_caching=False,
+            **(engine or {}),
         )
         self.w = output_matrix(model_dir)
 

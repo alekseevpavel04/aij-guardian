@@ -242,6 +242,7 @@ def main() -> None:
     ap.add_argument("--version", default="0.1.0")
     ap.add_argument("--out", type=Path, default=ROOT / "submission")
     ap.add_argument("--archive", type=Path, default=None)
+    ap.add_argument("--no-zip", action="store_true", help="only the folder (the rental links the weights into it)")
     ap.add_argument("--without", nargs="+", default=[], choices=DEFAULT_CHECKS, help="checks left out of the predictor")
     args = ap.parse_args()
 
@@ -261,6 +262,9 @@ def main() -> None:
         args.calibration,
         args.final,
     )
+    if args.no_zip:
+        print(f"folder {args.out}, no archive")
+        return
     suffix = f"_{args.label}" if args.strategy == "constant" else "".join(f"_no_{c}" for c in args.without)
     if args.strategy == "cascade":
         prompt_name = args.prompt.stem + (f"+{args.append_prompt.stem}" if args.append_prompt else "")

@@ -1,0 +1,8 @@
+# The rented A100 (docs/RENTAL.md): the platform's engine, and the libraries the heads are trained with, at the
+# versions they had at home when the ruler measured them (28.09.2026). vLLM brings torch, transformers, numpy.
+vllm==0.19.1
+lightgbm==4.7.0
+scikit-learn==1.9.1
+pandas>=2.2
+pyarrow>=17
+huggingface_hub[cli]

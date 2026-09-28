@@ -55,40 +55,20 @@ def batches(rows: list[dict], chars: int, most: int):
         yield batch
 
 
-def main() -> None:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--rows", type=Path, nargs="+", required=True, help="parquet or jsonl with id, prompt, response")
-    ap.add_argument("--prefix", required=True)
-    ap.add_argument("--model-dir", type=Path, required=True)
-    ap.add_argument("--system-prompt", type=Path, required=True, help="the judge prompt (the baseline's)")
-    ap.add_argument("--out-dir", type=Path, required=True)
-    ap.add_argument("--max-model-len", type=int, default=131072)
-    ap.add_argument("--gpu-memory-utilization", type=float, default=0.85, help="the rest holds the output matrix")
-    ap.add_argument("--batch-chars", type=int, default=600_000)
-    ap.add_argument("--batch-rows", type=int, default=32)
-    ap.add_argument("--stop-at", type=float, default=None, help="unix time after which no new batch starts")
-    args = ap.parse_args()
-
-    rows = read_rows(args.rows)
-    args.out_dir.mkdir(parents=True, exist_ok=True)
-    logs = {k: args.out_dir / f"{args.prefix}_{k}_org.jsonl" for k in ("final", "parts", "uncertainty")}
-    skipped_log = args.out_dir / f"{args.prefix}_skipped.jsonl"
+def pass_job(engine: Pass, rows: list[dict], prefix: str, out_dir: Path, args: argparse.Namespace) -> bool:
+    """One file of rows under one prefix; False when the time ran out."""
+    logs = {k: out_dir / f"{prefix}_{k}_org.jsonl" for k in ("final", "parts", "uncertainty")}
+    skipped_log = out_dir / f"{prefix}_skipped.jsonl"
     for log in [*logs.values(), skipped_log]:
         journal.repair(log)
     done = {r["id"] for r in journal.read(logs["uncertainty"])} | {r["id"] for r in journal.read(skipped_log)}
     todo = [r for r in rows if r["id"] not in done]
-    print(f"{len(rows)} rows, {len(done)} done before, {len(todo)} to go", flush=True)
-
-    started = time.monotonic()
-    engine = Pass(
-        args.model_dir, args.system_prompt.read_text(encoding="utf-8"), args.max_model_len, args.gpu_memory_utilization
-    )
-    print(f"engine up in {time.monotonic() - started:.0f} s", flush=True)
+    print(f"{prefix}: {len(rows)} rows, {len(done)} done before, {len(todo)} to go", flush=True)
     passed, tokens, t0 = 0, 0, time.monotonic()
     for batch in batches(todo, args.batch_chars, args.batch_rows):
         if args.stop_at is not None and time.time() > args.stop_at:
             print("time is up", flush=True)
-            break
+            return False
         for row, record in zip(batch, engine.run(batch), strict=True):
             if record is None:
                 journal.append(skipped_log, {"id": row["id"]})
@@ -105,7 +85,48 @@ def main() -> None:
             tokens += record["prompt_tokens"]
         passed += len(batch)
         elapsed = time.monotonic() - t0
-        print(f"{len(done) + passed}/{len(rows)} rows, {tokens / elapsed:.0f} tokens/s, {elapsed:.0f} s", flush=True)
+        print(
+            f"{prefix}: {len(done) + passed}/{len(rows)} rows, {tokens / elapsed:.0f} tokens/s, {elapsed:.0f} s",
+            flush=True,
+        )
+    return True
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--rows", type=Path, nargs="+", default=None, help="parquet or jsonl with id, prompt, response")
+    ap.add_argument("--prefix", default=None)
+    ap.add_argument(
+        "--job", nargs="+", default=[], help="rows_file:prefix pairs, passed in order with one engine (the rental)"
+    )
+    ap.add_argument("--model-dir", type=Path, required=True)
+    ap.add_argument("--system-prompt", type=Path, required=True, help="the judge prompt (the baseline's)")
+    ap.add_argument("--out-dir", type=Path, required=True)
+    ap.add_argument("--max-model-len", type=int, default=131072)
+    ap.add_argument("--gpu-memory-utilization", type=float, default=0.85, help="the rest holds the output matrix")
+    ap.add_argument("--engine-json", default=None, help="more vLLM engine arguments, e.g. dtype for a T4")
+    ap.add_argument("--batch-chars", type=int, default=600_000)
+    ap.add_argument("--batch-rows", type=int, default=32)
+    ap.add_argument("--stop-at", type=float, default=None, help="unix time after which no new batch starts")
+    args = ap.parse_args()
+
+    jobs = [(read_rows(args.rows), args.prefix)] if args.rows else []
+    for job in args.job:
+        path, prefix = job.rsplit(":", 1)
+        jobs.append((read_rows([Path(path)]), prefix))
+    args.out_dir.mkdir(parents=True, exist_ok=True)
+    started = time.monotonic()
+    engine = Pass(
+        args.model_dir,
+        args.system_prompt.read_text(encoding="utf-8"),
+        args.max_model_len,
+        args.gpu_memory_utilization,
+        json.loads(args.engine_json) if args.engine_json else None,
+    )
+    print(f"engine up in {time.monotonic() - started:.0f} s", flush=True)
+    for rows, prefix in jobs:
+        if not pass_job(engine, rows, prefix, args.out_dir, args):
+            break
 
 
 if __name__ == "__main__":
