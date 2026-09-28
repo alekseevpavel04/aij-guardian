@@ -1,0 +1,19 @@
+{
+  "a": "kaggle_s1_ruler_opus_norepeats_simtotal1",
+  "b": "reference",
+  "domain": null,
+  "contexts": 384,
+  "teacher": "v1s",
+  "errors": 67,
+  "dialogues": 40,
+  "auroc_a": 0.9368,
+  "auroc_b": 0.9383,
+  "a_minus_b": -0.0015,
+  "ci95": [
+    -0.0135,
+    0.0092
+  ],
+  "share_above_zero": 0.347,
+  "repeats": 2000,
+  "resamples_without_both_classes": 0
+}

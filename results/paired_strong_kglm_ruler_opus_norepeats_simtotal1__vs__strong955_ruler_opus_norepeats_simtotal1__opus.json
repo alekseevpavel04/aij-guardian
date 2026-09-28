@@ -1,0 +1,19 @@
+{
+  "a": "strong_kglm_ruler_opus_norepeats_simtotal1",
+  "b": "strong955_ruler_opus_norepeats_simtotal1",
+  "domain": null,
+  "contexts": 384,
+  "teacher": "opus",
+  "errors": 80,
+  "dialogues": 40,
+  "auroc_a": 0.9297,
+  "auroc_b": 0.9304,
+  "a_minus_b": -0.0007,
+  "ci95": [
+    -0.0047,
+    0.0039
+  ],
+  "share_above_zero": 0.374,
+  "repeats": 2000,
+  "resamples_without_both_classes": 0
+}

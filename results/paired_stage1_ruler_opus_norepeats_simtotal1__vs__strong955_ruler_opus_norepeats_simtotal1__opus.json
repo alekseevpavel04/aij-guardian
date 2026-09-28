@@ -1,0 +1,19 @@
+{
+  "a": "stage1_ruler_opus_norepeats_simtotal1",
+  "b": "strong955_ruler_opus_norepeats_simtotal1",
+  "domain": null,
+  "contexts": 384,
+  "teacher": "opus",
+  "errors": 80,
+  "dialogues": 40,
+  "auroc_a": 0.9338,
+  "auroc_b": 0.9304,
+  "a_minus_b": 0.0034,
+  "ci95": [
+    -0.0067,
+    0.0173
+  ],
+  "share_above_zero": 0.699,
+  "repeats": 2000,
+  "resamples_without_both_classes": 0
+}

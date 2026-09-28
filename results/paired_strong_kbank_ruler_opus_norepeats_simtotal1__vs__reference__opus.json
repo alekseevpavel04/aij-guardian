@@ -1,0 +1,19 @@
+{
+  "a": "strong_kbank_ruler_opus_norepeats_simtotal1",
+  "b": "reference",
+  "domain": null,
+  "contexts": 384,
+  "teacher": "opus",
+  "errors": 80,
+  "dialogues": 40,
+  "auroc_a": 0.9348,
+  "auroc_b": 0.9112,
+  "a_minus_b": 0.0236,
+  "ci95": [
+    0.0103,
+    0.04
+  ],
+  "share_above_zero": 1.0,
+  "repeats": 2000,
+  "resamples_without_both_classes": 0
+}

@@ -1,4 +1,4 @@
-"""Paired difference in AUROC (v1s labels, all organiser contexts) between two tau2ru_ruler.py runs, from the
+"""Paired difference in AUROC (v1s or Opus labels of the organiser contexts) between two tau2ru_ruler.py runs, from the
 out-of-fold system scores they save, with a bootstrap over dialogues. Both runs score the same contexts, so the
 dialogue-to-dialogue noise they share cancels in the difference.
 
@@ -25,19 +25,25 @@ def main() -> None:
     setup()
     ap = argparse.ArgumentParser()
     ap.add_argument("--a", required=True, help="results/<name>.scores.npz, the variant")
-    ap.add_argument("--b", required=True, help="results/<name>.scores.npz, what it is compared with")
+    ap.add_argument("--b", required=True, help="results/<name>.scores.npz, what it is compared with; `reference`: the system without simulations that run a saved with it")
     ap.add_argument("--key", default="both_w1.0")
     ap.add_argument("--repeats", type=int, default=2000)
     ap.add_argument("--contexts", type=Path, default=ROOT / "data/synthetic/organizer_contexts.parquet")
     ap.add_argument("--domain", default=None, help="only the contexts of one domain")
+    ap.add_argument("--teacher", choices=(*TEACHERS, "agreed"), default="v1s",
+                    help="whose labels of the contexts; agreed: only contexts where v1s and Opus agree")
     args = ap.parse_args()
 
-    a, b = (np.load(ROOT / "results" / f"{n}.scores.npz") for n in (args.a, args.b))
+    a = np.load(ROOT / "results" / f"{args.a}.scores.npz")
+    b = {"ids": a["ids"], args.key: a["reference"]} if args.b == "reference" else np.load(ROOT / "results" / f"{args.b}.scores.npz")
     if not (a["ids"] == b["ids"]).all():
         raise SystemExit("the two runs score different contexts")
     tasks = pd.read_parquet(args.contexts).set_index("id").task
-    found = labels(TEACHERS["v1s"].format(split="train")) | labels(TEACHERS["v1s"].format(split="check"))
+    view = {t: labels(TEACHERS[t].format(split="train")) | labels(TEACHERS[t].format(split="check")) for t in TEACHERS}
+    found = view["v1s"] if args.teacher == "agreed" else view[args.teacher]
     keep = np.array([args.domain is None or i.split("__")[1] == args.domain for i in a["ids"]])
+    if args.teacher == "agreed":
+        keep &= np.array([view["v1s"][i] == view["opus"][i] for i in a["ids"]])
     ids = pd.Series(a["ids"][keep])
     truth = ids.map(found).to_numpy().astype(int)
     groups = [np.where(ids.map(tasks).to_numpy() == t)[0] for t in np.unique(ids.map(tasks))]
@@ -57,7 +63,8 @@ def main() -> None:
         "b": args.b,
         "domain": args.domain,
         "contexts": len(ids),
-        "errors_v1s": int(truth.sum()),
+        "teacher": args.teacher,
+        "errors": int(truth.sum()),
         "dialogues": len(groups),
         "auroc_a": round(float(auroc(truth, sa)), 4),
         "auroc_b": round(float(auroc(truth, sb)), 4),
@@ -67,7 +74,7 @@ def main() -> None:
         "repeats": args.repeats,
         "resamples_without_both_classes": one_class,
     }
-    suffix = f"__{args.domain}" if args.domain else ""
+    suffix = (f"__{args.domain}" if args.domain else "") + (f"__{args.teacher}" if args.teacher != "v1s" else "")
     out = ROOT / "results" / f"paired_{args.a}__vs__{args.b}{suffix}.json"
     out.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(result))
