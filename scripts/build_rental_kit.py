@@ -59,13 +59,11 @@ def main() -> None:
     # a Kaggle session mounts the dataset version that was ready when it started, which twice was the previous one;
     # the rehearsal is told which build to expect and stops at once on another
     build = time.strftime("%Y%m%d-%H%M%S")
-    (args.out.parent / "rental_kit_build.txt").write_text(build + "
-", encoding="utf-8")
+    (args.out.parent / "rental_kit_build.txt").write_text(build + "\n", encoding="utf-8")
     with zipfile.ZipFile(args.out, "w", zipfile.ZIP_DEFLATED) as zf:
         for p in paths:
             zf.write(p, p.relative_to(ROOT).as_posix())
-        zf.writestr("kit_build.txt", build + "
-")
+        zf.writestr("kit_build.txt", build + "\n")
     print(f"{len(paths)} files, {args.out.stat().st_size / 2**20:.0f} MB, build {build} -> {args.out}")
 
 
