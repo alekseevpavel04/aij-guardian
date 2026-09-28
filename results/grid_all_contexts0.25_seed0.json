@@ -1,0 +1,130 @@
+{
+  "labels": "opus",
+  "balance": "none",
+  "uncertainty_head_skips": [
+    "glm",
+    "kglm"
+  ],
+  "context_labels": "v1s",
+  "sources": [
+    [
+      "data/synthetic/tau2_ru_q36_rows.parquet",
+      "q4_tok_tau2q36",
+      "data/synthetic/opus_labels_tau2q36"
+    ],
+    [
+      "data/synthetic/tau2_ru_glm_rows.parquet",
+      "q4_tok_tau2glm",
+      "data/synthetic/opus_labels_tau2glm"
+    ],
+    [
+      "data/synthetic/tau2_ru_q36n_rows.parquet",
+      "q4_tok_tau2q36n",
+      "data/synthetic/opus_labels_tau2q36n"
+    ],
+    [
+      "data/synthetic/tau2_ru_kq36n_s1_rows.parquet",
+      "q4_tok_tau2kq36n",
+      "data/synthetic/opus_labels_tau2kq36n"
+    ],
+    [
+      "data/synthetic/tau2_ru_kq36_s1_rows.parquet",
+      "q4_tok_tau2kq36",
+      "data/synthetic/opus_labels_tau2kq36"
+    ],
+    [
+      "data/synthetic/tau2_ru_kglm_s300_rows.parquet",
+      "q4_tok_tau2kglm",
+      "data/synthetic/opus_labels_tau2kglm"
+    ],
+    [
+      "data/synthetic/tau2_ru_korg_rows.parquet",
+      "q4_tok_tau2korg",
+      "data/synthetic/opus_labels_tau2korg"
+    ],
+    [
+      "data/synthetic/tau2_ru_horg_rows.parquet",
+      "q4_tok_tau2horg",
+      "data/synthetic/opus_labels_tau2horg"
+    ],
+    [
+      "data/synthetic/tau2_ru_kbank_s350_rows.parquet",
+      "q4_tok_tau2kbank",
+      "data/synthetic/opus_labels_tau2kbank"
+    ]
+  ],
+  "turns_dropped_for_chinese_words": 25,
+  "negative_share": 1.0,
+  "sim_total": 1.0,
+  "sim_domains": null,
+  "turns_dropped_as_repeats": 687,
+  "rows": 3391,
+  "positives": 364,
+  "dialogues": 218,
+  "rows_of_organiser_tasks": 1359,
+  "compared_with_contexts": {
+    "share_of_errors": [
+      0.107,
+      0.174
+    ],
+    "share_with_tool_call": [
+      0.391,
+      0.57
+    ],
+    "median_response_chars": [
+      276,
+      228
+    ],
+    "median_prompt_chars": [
+      29913,
+      29004
+    ],
+    "mean_token_logp": [
+      -1.083,
+      -1.196
+    ]
+  },
+  "variants": {
+    "both_w1.0": {
+      "head_b_alone": 0.9299,
+      "uncertainty_alone": 0.6686,
+      "system_minus_reference": {
+        "difference": 0.0185,
+        "ci95": [
+          0.004,
+          0.044
+        ],
+        "share_above_zero": 0.999
+      },
+      "new_ruler_all_contexts": {
+        "v1s": {
+          "f1": 0.6835,
+          "f1_minus_reference": 0.0506,
+          "ci95": [
+            -0.034,
+            0.113
+          ],
+          "auroc": 0.9266
+        },
+        "opus": {
+          "f1": 0.7368,
+          "f1_minus_reference": 0.0818,
+          "ci95": [
+            -0.013,
+            0.129
+          ],
+          "auroc": 0.9314
+        }
+      }
+    }
+  },
+  "candidate": {
+    "head_b_alone": 0.9217,
+    "uncertainty_alone": 0.5745,
+    "system": 0.9586,
+    "system_f1_at_test_share_all_contexts": {
+      "v1s": 0.6329,
+      "opus": 0.655
+    }
+  }
+}

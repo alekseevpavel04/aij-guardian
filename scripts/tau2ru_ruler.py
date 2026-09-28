@@ -49,6 +49,12 @@ CJK = "[぀-ヿ㐀-鿿]"  # kana and CJK ideographs
 
 
 
+LGBM_SIZES = {
+    "default": {},
+    "big": {"n_estimators": 600, "num_leaves": 15},
+    "huge": {"n_estimators": 1500, "num_leaves": 31, "min_child_samples": 20},
+}
+
 def logit(p: np.ndarray) -> np.ndarray:
     p = np.clip(p, 1e-6, 1 - 1e-6)
     return np.log(p / (1 - p))
@@ -128,6 +134,14 @@ def main() -> None:
     ap.add_argument(
         "--importance", action="store_true", help="weigh simulation rows by how much they look like the contexts"
     )
+    ap.add_argument("--pair-share", type=float, default=0.25, help="share of the contexts whose written pairs train B")
+    ap.add_argument(
+        "--lgbm-size", choices=tuple(LGBM_SIZES), default="default", help="head B's trees x leaves: 300x7, 600x15, 1500x31"
+    )
+    ap.add_argument("--domain-match", action="store_true", help="simulation rows weighted to the contexts' domain shares")
+    ap.add_argument(
+        "--context-fraction", type=float, default=1.0, help="share of a fold's dialogues kept for training (--seed)"
+    )
     ap.add_argument(
         "--unc-skip", nargs="*", default=[], help="row id tags (e.g. glm) the uncertainty head does not learn from"
     )
@@ -159,6 +173,10 @@ def main() -> None:
         + ("" if args.tau_weight == 0.5 else f"_tau{args.tau_weight:g}")
         + ("_importance" if args.importance else "")
         + ("" if args.context_labels == "v1s" else f"_ctx_{args.context_labels}")
+        + ("" if args.pair_share == 0.25 else f"_pairs{args.pair_share:g}")
+        + ("" if args.lgbm_size == "default" else f"_lgbm_{args.lgbm_size}")
+        + ("_domain_match" if args.domain_match else "")
+        + ("" if args.context_fraction == 1.0 else f"_contexts{args.context_fraction:g}_seed{args.seed}")
     )
     out = args.out or ROOT / f"results/{args.tag}_ruler_{args.labels}{suffix}.json"
 
@@ -319,23 +337,44 @@ def main() -> None:
         p = clf.predict_proba(sc.transform(xs))[:, 1]
         return s.assign(w=s.w.to_numpy() * np.clip(p / (1 - p), 0.1, 10))
 
+    def domain_match(s: pd.DataFrame, fit: np.ndarray) -> pd.DataFrame:
+        """With --domain-match, the simulation rows of a domain weigh in all as that domain's share of the fold's
+        contexts (the organiser's domain mix), instead of as many rows as the simulations happen to have."""
+        if not args.domain_match or not len(s):
+            return s
+        target = ruler.ctx.domain.iloc[fit].value_counts(normalize=True)
+        have = s.groupby("domain").w.sum() / s.w.sum()
+        return s.assign(w=s.w.to_numpy() * s.domain.map(target.reindex(have.index).fillna(0) / have).to_numpy())
+
+    def kept(fit: np.ndarray) -> np.ndarray:
+        """With --context-fraction, a seeded share of the fold's dialogues: how much the organiser's own contexts
+        are worth next to the simulations."""
+        if args.context_fraction == 1.0:
+            return fit
+        own = sorted(set(tasks[fit]))
+        keep = np.random.default_rng(args.seed).choice(own, round(args.context_fraction * len(own)), replace=False)
+        return fit[np.isin(tasks[fit], keep)]
+
     def head_b(model: str, sim_weight: float) -> np.ndarray:
         scores = np.zeros(len(y))
         for fit, held in splits:
             held_tasks = set(tasks[held])
             s = sim[~sim.task.isin(held_tasks)]
             assert not s.task.isin(held_tasks).any(), "a held-out task's simulation in training"
-            s = importance(s, fit)
+            fit = kept(fit)
+            s = domain_match(importance(s, fit), fit)
             for seed in range(3):
-                p = pairs[~pairs.task.isin(held_tasks)]
+                p = pairs[pairs.task.isin(set(tasks[fit]))]
                 keep = np.random.default_rng(seed).choice(
-                    sorted(p.context_id.unique()), round(0.25 * p.context_id.nunique()), replace=False
+                    sorted(p.context_id.unique()), round(args.pair_share * p.context_id.nunique()), replace=False
                 )
                 p = p[p.context_id.isin(keep)]
                 rows, labels, weights = context_rows(fit)
-                xs = [x[rows], np.stack([vecs[i] for i in p.id])]
-                ys = [labels, p.label.to_numpy()]
-                ws = [weights, np.ones(len(p))]
+                xs, ys, ws = [x[rows]], [labels], [weights]
+                if len(p):
+                    xs.append(np.stack([vecs[i] for i in p.id]))
+                    ys.append(p.label.to_numpy())
+                    ws.append(np.ones(len(p)))
                 # τ² weighs half of the Russian rows without the simulations, so adding simulations does not
                 # also raise the weight of τ² (it did before 26.09 evening)
                 n = len(fit) + len(p)
@@ -348,7 +387,7 @@ def main() -> None:
                 ws.append(np.full(len(tau), args.tau_weight * n / len(tau)))
                 xf, yf, wf = np.vstack(xs), np.concatenate(ys).astype(int), np.concatenate(ws)
                 sc = StandardScaler().fit(xf)
-                m = LogisticRegression(C=C, max_iter=5000) if model == "logistic" else lgbm()
+                m = LogisticRegression(C=C, max_iter=5000) if model == "logistic" else lgbm(**LGBM_SIZES[args.lgbm_size])
                 m.fit(sc.transform(xf), yf, sample_weight=wf)
                 xh = sc.transform(x[held])
                 scores[held] += m.decision_function(xh) if model == "logistic" else m.predict_proba(xh)[:, 1]
@@ -360,7 +399,8 @@ def main() -> None:
             s = sim[~sim.task.isin(set(tasks[held]))] if sim_weight else sim.iloc[:0]
             assert not s.task.isin(set(tasks[held])).any(), "a held-out task's simulation in training"
             # an agent of another family shifts the token probabilities; its rows can be kept out of this head
-            s = importance(s, fit)
+            fit = kept(fit)
+            s = domain_match(importance(s, fit), fit)
             s = s[~s.id.str.split("__").str[0].isin(args.unc_skip)]
             rows, labels, weights = context_rows(fit)
             xf = np.vstack([xu[rows], *([np.stack([sim_feats[i] for i in s.id])] if len(s) else [])])

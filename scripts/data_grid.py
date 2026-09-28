@@ -84,6 +84,44 @@ def checks() -> dict[str, dict]:
     return v
 
 
+def checks2() -> dict[str, dict]:
+    """The second round of checks: how many written pairs, a larger head B for more rows, the
+    organiser's domain mix, and the organiser's own contexts cut to a half or a quarter (the gain of the
+    simulations when the real contexts are scarce says what they are worth)."""
+    v = {
+        "base_pairs0": {"sources": BASE, "extra": ["--pair-share", "0"]},
+        "base_pairs0.5": {"sources": BASE, "extra": ["--pair-share", "0.5"]},
+        "base_lgbm_big": {"sources": BASE, "extra": ["--lgbm-size", "big"]},
+        "all_lgbm_big": {"sources": ALL, "extra": ["--lgbm-size", "big"], "against": "all"},
+        "base_domain_match": {"sources": BASE, "extra": ["--domain-match"]},
+        "all_domain_match": {"sources": ALL, "extra": ["--domain-match"], "against": "all"},
+    }
+    for fraction, seed in ((0.5, 0), (0.5, 1), (0.25, 0)):
+        cut = ["--context-fraction", str(fraction), "--seed", str(seed)]
+        v[f"base_contexts{fraction}_seed{seed}"] = {"sources": BASE, "extra": cut}
+        v[f"all_contexts{fraction}_seed{seed}"] = {
+            "sources": ALL, "extra": cut, "against": f"base_contexts{fraction}_seed{seed}"
+        }
+    return v
+
+
+def checks3() -> dict[str, dict]:
+    """A question of 28.09: do more simulation rows pay off only with a larger head B, as boosting did where
+    the linear head did not? Four amounts of data (strong955, base, all without the repeat sets, all) at three
+    sizes of LightGBM; each run is also compared with strong955 at the same size (the 300x7 runs are in the grid,
+    600x15 on base and all in checks2)."""
+    amounts = {"strong": STRONG, "base": BASE, "all_without_repeat_sets": [s for s in ALL if s not in ("korg", "horg")], "all": ALL}
+    v = {}
+    for size in ("big", "huge"):
+        for name, sources in amounts.items():
+            if size == "big" and name in ("base", "all"):
+                continue
+            v[f"{name}_lgbm_{size}"] = {"sources": sources, "extra": ["--lgbm-size", size]}
+            if name != "strong":
+                v[f"{name}_lgbm_{size}"]["against"] = f"strong_lgbm_{size}"
+    return v
+
+
 def run(name: str, spec: dict) -> None:
     out = ROOT / "results" / f"grid_{name}.json"
     if out.with_suffix(".scores.npz").exists():
@@ -132,12 +170,15 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--summary", action="store_true", help="only the summary of the runs already made")
     ap.add_argument("--checks", action="store_true", help="the checks after the grid instead of the grid")
+    ap.add_argument("--checks2", action="store_true", help="the second round of checks")
+    ap.add_argument("--checks3", action="store_true", help="amount of data against the size of head B")
     args = ap.parse_args()
-    variants = checks() if args.checks else grid()
+    variants = checks3() if args.checks3 else checks2() if args.checks2 else checks() if args.checks else grid()
     if not args.summary:
         for name, spec in variants.items():
             run(name, spec)
-    out = ROOT / ("results/data_checks.json" if args.checks else "results/data_grid.json")
+    name = "data_checks3" if args.checks3 else "data_checks2" if args.checks2 else "data_checks" if args.checks else "data_grid"
+    out = ROOT / f"results/{name}.json"
     out.write_text(json.dumps(summary(variants), indent=1) + "\n", encoding="utf-8")
     print(f"-> {out}")
 
