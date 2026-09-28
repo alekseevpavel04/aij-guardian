@@ -9,6 +9,7 @@ so it goes only to a rented machine and is deleted there afterwards.
 """
 
 import argparse
+import time
 import zipfile
 from pathlib import Path
 
@@ -55,10 +56,17 @@ def main() -> None:
     if missing:
         raise SystemExit(f"missing: {missing}")
     args.out.parent.mkdir(parents=True, exist_ok=True)
+    # a Kaggle session mounts the dataset version that was ready when it started, which twice was the previous one;
+    # the rehearsal is told which build to expect and stops at once on another
+    build = time.strftime("%Y%m%d-%H%M%S")
+    (args.out.parent / "rental_kit_build.txt").write_text(build + "
+", encoding="utf-8")
     with zipfile.ZipFile(args.out, "w", zipfile.ZIP_DEFLATED) as zf:
         for p in paths:
             zf.write(p, p.relative_to(ROOT).as_posix())
-    print(f"{len(paths)} files, {args.out.stat().st_size / 2**20:.0f} MB -> {args.out}")
+        zf.writestr("kit_build.txt", build + "
+")
+    print(f"{len(paths)} files, {args.out.stat().st_size / 2**20:.0f} MB, build {build} -> {args.out}")
 
 
 if __name__ == "__main__":

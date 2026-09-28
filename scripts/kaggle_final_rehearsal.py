@@ -16,6 +16,7 @@ Everything goes to /kaggle/working/rehearsal.json and the logs next to it.
     python /kaggle/input/aij-rental-kit/scripts/kaggle_final_rehearsal.py
 """
 
+import argparse
 import json
 import os
 import shutil
@@ -169,7 +170,15 @@ def synthetic_heads() -> Path:
 
 
 def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--expect-build", required=True, help="the kit build this session must run (build_rental_kit.py)")
+    args = ap.parse_args()
     WORK.mkdir(parents=True, exist_ok=True)
+    build = (KIT_SOURCE / "kit_build.txt").read_text(encoding="utf-8").strip()
+    RESULT["kit_build"] = build
+    if build != args.expect_build:
+        save()
+        raise SystemExit(f"the session mounted kit build {build}, not {args.expect_build}: push again")
     shutil.copytree(KIT_SOURCE, KIT, dirs_exist_ok=True)
     env = {**os.environ, "PYTHONPATH": str(KIT / "src"), "PYTHONIOENCODING": "utf-8"}
     run("pip", [sys.executable, "-m", "pip", "install", "-q", "vllm==0.19.1"])

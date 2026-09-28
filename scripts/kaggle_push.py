@@ -74,7 +74,8 @@ def push(args: argparse.Namespace) -> None:
     folder = BASE / "kernels" / args.name
     folder.mkdir(parents=True, exist_ok=True)
     if args.rehearsal:
-        script, dataset, arguments = "kaggle_final_rehearsal.py", RENTAL_DATASET, []
+        build = (ROOT / "submission_work/rental_kit_build.txt").read_text(encoding="utf-8").strip()
+        script, dataset, arguments = "kaggle_final_rehearsal.py", RENTAL_DATASET, ["--expect-build", build]
     elif args.tok:
         script, dataset = "kaggle_tok.py", TOK_DATASET
         arguments = ["--rows", *args.tok, "--stop-after", str(args.stop_after)]
@@ -122,11 +123,13 @@ def upload(name: str, source: Path, dataset: str) -> None:
         run("datasets", "version", "-p", str(folder), "-m", "kit update")
     else:
         run("datasets", "create", "-p", str(folder))
-    # a session pushed while the version is still being built runs the previous one
+    # a session pushed while the version is still being built runs the previous one; "ready" alone was not enough
+    # (28.09, twice), so a minute more after it
     for _ in range(60):
         time.sleep(10)
         status = subprocess.run([KAGGLE, "datasets", "status", dataset], capture_output=True, text=True, env=env)
         if "ready" in status.stdout:
+            time.sleep(60)
             return
     raise SystemExit(f"{dataset} is not ready after 10 minutes")
 
