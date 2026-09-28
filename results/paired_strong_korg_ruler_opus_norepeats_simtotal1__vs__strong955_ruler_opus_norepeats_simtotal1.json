@@ -1,0 +1,16 @@
+{
+  "a": "strong_korg_ruler_opus_norepeats_simtotal1",
+  "b": "strong955_ruler_opus_norepeats_simtotal1",
+  "contexts": 384,
+  "errors_v1s": 67,
+  "dialogues": 40,
+  "auroc_a": 0.9386,
+  "auroc_b": 0.9476,
+  "a_minus_b": -0.009,
+  "ci95": [
+    -0.0167,
+    -0.0026
+  ],
+  "share_above_zero": 0.004,
+  "repeats": 2000
+}
