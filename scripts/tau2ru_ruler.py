@@ -536,6 +536,17 @@ def main() -> None:
         check_u = float(np.abs(loaded.head_u.proba(xu) - m_u.predict_proba(sc_u.transform(xu))[:, 1]).max())
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(final) + "\n", encoding="utf-8")
+        # what threshold_shift.py needs to compare the threshold with a fixed share on files of another error share
+        np.savez(
+            path.with_suffix(".oof.npz"),
+            ids=ruler.ctx.id.to_numpy().astype(str),
+            score=score,
+            fired=fired,
+            held_flags=held_flags,
+            v1s=y,
+            opus=ruler.label["opus"],
+            tasks=tasks.astype(str),
+        )
         return {
             "file": str(path),
             "threshold": final["threshold"],
