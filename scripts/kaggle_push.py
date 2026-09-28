@@ -19,6 +19,7 @@ import os
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -116,6 +117,13 @@ def upload(name: str, source: Path, dataset: str) -> None:
         run("datasets", "version", "-p", str(folder), "-m", "kit update")
     else:
         run("datasets", "create", "-p", str(folder))
+    # a session pushed while the version is still being built runs the previous one
+    for _ in range(60):
+        time.sleep(10)
+        status = subprocess.run([KAGGLE, "datasets", "status", dataset], capture_output=True, text=True, env=env)
+        if "ready" in status.stdout:
+            return
+    raise SystemExit(f"{dataset} is not ready after 10 minutes")
 
 
 def kit(args: argparse.Namespace) -> None:
