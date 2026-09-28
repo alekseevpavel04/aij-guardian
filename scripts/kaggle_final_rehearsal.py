@@ -3,13 +3,13 @@
 
 What only a machine with vLLM can check, before paying for one:
 
-1. scripts/final_pass.py on 40 organiser contexts: the engine starts, the ALL pooler returns every token's state,
+1. scripts/final_pass.py on 12 organiser contexts: the engine starts, the ALL pooler returns every token's state,
    the output matrix is found, the journals are written; the tokens per second;
 2. the turn's token log-probabilities of the pass against vLLM's own prompt_logprobs on the three shortest rows;
-3. heads trained on those 40 rows (only to have a model of the right shape, their scores mean nothing), the
-   submission folder built by scripts/build_submission.py, and scripts/predict.py run on 60 rows with the pass as
+3. heads trained on those 12 rows (only to have a model of the right shape, their scores mean nothing), the
+   submission folder built by scripts/build_submission.py, and scripts/predict.py run on 20 rows with the pass as
    its own process;
-4. the submission's features of the 40 contexts against the pass's (scripts/compare_passes.py).
+4. the submission's features of the 12 contexts against the pass's (scripts/compare_passes.py).
 
 Everything goes to /kaggle/working/rehearsal.json and the logs next to it.
 
@@ -85,7 +85,7 @@ tok = AutoTokenizer.from_pretrained("{MODEL}")
 prompt = open("{PROMPT}", encoding="utf-8").read()
 rendered = [render_tokens(tok, prompt, r.prompt, r.response) for r in rows.itertuples()]
 llm = LLM(model="{MODEL}", max_model_len={MAX_LEN}, gpu_memory_utilization=0.6, language_model_only=True,
-          **{json.dumps(ENGINE)})
+          **{ENGINE!r})
 out = llm.generate([TokensPrompt(prompt_token_ids=x.ids) for x in rendered],
                    SamplingParams(max_tokens=1, prompt_logprobs=0))
 res = {{}}
@@ -104,7 +104,7 @@ json.dump(res, open("{WORK}/vllm_prompt_logprobs.json", "w"))
 
 
 def synthetic_heads() -> Path:
-    """Heads of the right shape trained on the 40 rehearsal contexts with their v1s labels."""
+    """Heads of the right shape trained on the rehearsal contexts with their v1s labels."""
     import numpy as np
     from lightgbm import LGBMClassifier
     from sklearn.linear_model import LogisticRegression
@@ -130,6 +130,8 @@ def synthetic_heads() -> Path:
     x = np.stack([vec[i] for i in ids])
     xu = np.stack([features(unc[i], par[i]) for i in ids])
     y = np.array([labels[i] for i in ids])
+    if y.min() == y.max():  # twelve contexts can hold no error; the heads only need both classes to have a shape
+        y[0] = 1 - y[0]
     heads = []
     b = np.zeros(len(ids))
     for seed in range(3):
@@ -189,10 +191,10 @@ def main() -> None:
 
     import pandas as pd
 
-    contexts = pd.read_parquet(KIT / "data/rental/contexts.parquet").sample(40, random_state=0)
+    contexts = pd.read_parquet(KIT / "data/rental/contexts.parquet").sample(12, random_state=0)
     contexts.to_parquet(KIT / "data/rental/r_contexts.parquet", index=False)
     timing = pd.read_parquet(KIT / "data/rental/timing.parquet")
-    valid_like = timing.iloc[384:404]  # the labelled rows of valid, not among the contexts
+    valid_like = timing.iloc[384:392]  # the labelled rows of valid, not among the contexts
     pd.concat([contexts, valid_like]).to_parquet(KIT / "data/rental/r_timing.parquet", index=False)
     RESULT["rows"] = {"pass": len(contexts), "predict": len(contexts) + len(valid_like)}
 
