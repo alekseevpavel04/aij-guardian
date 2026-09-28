@@ -26,6 +26,7 @@ from sklearn.linear_model import LogisticRegression
 from guardian import journal
 from guardian.env import setup
 from guardian.rules import Context, evidence
+from guardian.uncertainty import part_summary, summary
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
@@ -47,40 +48,6 @@ RULES = (
     "no_op_replacement",
 )
 WEIGHTS = (0.25, 0.5, 1.0)
-
-
-def summary(r: dict) -> np.ndarray:
-    lp, h, m = (np.asarray(r[k], dtype=float) for k in ("logp", "entropy", "margin"))
-    top = np.sort(h)[-10:]
-    return np.array(
-        [
-            lp.mean(),
-            lp.min(),
-            lp.std(),
-            np.quantile(lp, 0.05),
-            np.quantile(lp, 0.25),
-            (lp < np.log(0.1)).mean(),
-            (lp < np.log(0.01)).mean(),
-            h.mean(),
-            h.max(),
-            top.mean(),
-            m.mean(),
-            np.log(len(lp)),
-        ]
-    )
-
-
-def part_summary(r: dict, parts: list[str]) -> np.ndarray:
-    """For argument values, argument names, tool names and text (layout left out): count, lowest and
-    mean log-probability, share below 0.01, mean and highest entropy."""
-    lp, h, kinds = np.asarray(r["logp"], dtype=float), np.asarray(r["entropy"], dtype=float), np.asarray(parts)
-    out = []
-    for part in ("value", "key", "name", "text"):
-        x, e = lp[kinds == part], h[kinds == part]
-        out += (
-            [np.log1p(len(x)), x.min(), x.mean(), (x < np.log(0.01)).mean(), e.mean(), e.max()] if len(x) else [0.0] * 6
-        )
-    return np.array(out)
 
 
 def main() -> None:

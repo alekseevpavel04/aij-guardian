@@ -30,6 +30,8 @@ from sklearn.preprocessing import StandardScaler
 
 from guardian import journal
 from guardian.env import setup
+from guardian.final import Final, rank_against, tree_arrays
+from guardian.metrics import binary_scores
 from guardian.rules import Context, evidence
 from guardian.tau2_tasks import CUT, data_id
 
@@ -48,16 +50,17 @@ EMB = ROOT / "data/interim/embeddings"
 CJK = "[぀-ヿ㐀-鿿]"  # kana and CJK ideographs
 
 
-
 LGBM_SIZES = {
     "default": {},
     "big": {"n_estimators": 600, "num_leaves": 15},
     "huge": {"n_estimators": 1500, "num_leaves": 31, "min_child_samples": 20},
 }
 
+
 def logit(p: np.ndarray) -> np.ndarray:
     p = np.clip(p, 1e-6, 1 - 1e-6)
     return np.log(p / (1 - p))
+
 
 def simulation_labels(
     mode: str, rows: pd.DataFrame, opus_dir: Path, v1s_name: str, only_double: bool = False
@@ -136,9 +139,14 @@ def main() -> None:
     )
     ap.add_argument("--pair-share", type=float, default=0.25, help="share of the contexts whose written pairs train B")
     ap.add_argument(
-        "--lgbm-size", choices=tuple(LGBM_SIZES), default="default", help="head B's trees x leaves: 300x7, 600x15, 1500x31"
+        "--lgbm-size",
+        choices=tuple(LGBM_SIZES),
+        default="default",
+        help="head B's trees x leaves: 300x7, 600x15, 1500x31",
     )
-    ap.add_argument("--domain-match", action="store_true", help="simulation rows weighted to the contexts' domain shares")
+    ap.add_argument(
+        "--domain-match", action="store_true", help="simulation rows weighted to the contexts' domain shares"
+    )
     ap.add_argument(
         "--context-fraction", type=float, default=1.0, help="share of a fold's dialogues kept for training (--seed)"
     )
@@ -157,7 +165,19 @@ def main() -> None:
         help="a simulated dialogue weighs as much in all as an organiser's one (8B dialogues loop to ~26 turns)",
     )
     ap.add_argument(
-        "--sim-head", action="store_true", help="also heads that learn from the simulation rows alone, blended in (--quick)"
+        "--sim-head",
+        action="store_true",
+        help="also heads that learn from the simulation rows alone, blended in (--quick)",
+    )
+    ap.add_argument("--context-vectors", default="q4_last_org", help="last-token vectors of the organiser's contexts")
+    ap.add_argument("--context-features", default="q4_tok", help="token pass of the contexts (uncertainty head)")
+    ap.add_argument("--tau-vectors", default="q4_last_extdev_all", help="last-token vectors of the τ² rows")
+    ap.add_argument("--pair-vectors", nargs="+", default=["q4_last_pairs_02", "q4_last_pairs_03"])
+    ap.add_argument(
+        "--export",
+        type=Path,
+        default=None,
+        help="also train the heads on all contexts and write them for the submission",
     )
     ap.add_argument("--out", type=Path, default=None)
     args = ap.parse_args()
@@ -205,10 +225,10 @@ def main() -> None:
     sim["label"] = sim.label.astype(int)
     sim["task"] = [f"{d}__{data_id(t)}"[: len(d) + 2 + CUT] for d, t in zip(sim.domain, sim.task_id, strict=True)]
 
-    vecs = vectors("q4_last_org") | vectors("q4_last_extdev_all") | sim_vecs
-    for name in ("q4_last_pairs_02", "q4_last_pairs_03"):
+    vecs = vectors(args.context_vectors) | vectors(args.tau_vectors) | sim_vecs
+    for name in args.pair_vectors:
         vecs |= vectors(name)
-    own = features("q4_tok")
+    own = features(args.context_features)
     sim = sim[sim.id.isin(vecs) & sim.id.isin(sim_feats)]
     if args.fraction < 1.0:  # a random share of the simulated dialogues, for the scale curve
         dialogues = sorted(sim.id.str.split("::").str[0].unique())
@@ -245,8 +265,10 @@ def main() -> None:
             for r in ruler.ctx.itertuples()
         ]
     )
-    org_logp = mean_logp("q4_tok")
-    splitter = GroupKFold(FOLDS) if args.fold_seed is None else GroupKFold(FOLDS, shuffle=True, random_state=args.fold_seed)
+    org_logp = mean_logp(args.context_features)
+    splitter = (
+        GroupKFold(FOLDS) if args.fold_seed is None else GroupKFold(FOLDS, shuffle=True, random_state=args.fold_seed)
+    )
     splits = list(splitter.split(x, y, tasks))
     result: dict = {
         "labels": args.labels,
@@ -355,59 +377,71 @@ def main() -> None:
         keep = np.random.default_rng(args.seed).choice(own, round(args.context_fraction * len(own)), replace=False)
         return fit[np.isin(tasks[fit], keep)]
 
+    def fit_b(fit: np.ndarray, held_tasks: set, model: str, sim_weight: float) -> list[tuple]:
+        """Head B trained on the contexts `fit` (three seeds, each with its own quarter of the pairs), the
+        simulation rows of every task but `held_tasks`, and τ²: a (scaler, model) per seed."""
+        s = sim[~sim.task.isin(held_tasks)]
+        assert not s.task.isin(held_tasks).any(), "a held-out task's simulation in training"
+        fit = kept(fit)
+        s = domain_match(importance(s, fit), fit)
+        out = []
+        for seed in range(3):
+            p = pairs[pairs.task.isin(set(tasks[fit]))]
+            keep = np.random.default_rng(seed).choice(
+                sorted(p.context_id.unique()), round(args.pair_share * p.context_id.nunique()), replace=False
+            )
+            p = p[p.context_id.isin(keep)]
+            rows, labels, weights = context_rows(fit)
+            xs, ys, ws = [x[rows]], [labels], [weights]
+            if len(p):
+                xs.append(np.stack([vecs[i] for i in p.id]))
+                ys.append(p.label.to_numpy())
+                ws.append(np.ones(len(p)))
+            # τ² weighs half of the Russian rows without the simulations, so adding simulations does not
+            # also raise the weight of τ² (it did before 26.09 evening)
+            n = len(fit) + len(p)
+            if sim_weight and len(s):
+                xs.append(np.stack([vecs[i] for i in s.id]))
+                ys.append(s.label.to_numpy())
+                ws.append(sim_weights(s, sim_weight, n))
+            xs.append(np.stack([vecs[i] for i in tau.id]))
+            ys.append(tau.label.to_numpy())
+            ws.append(np.full(len(tau), args.tau_weight * n / len(tau)))
+            xf, yf, wf = np.vstack(xs), np.concatenate(ys).astype(int), np.concatenate(ws)
+            sc = StandardScaler().fit(xf)
+            m = LogisticRegression(C=C, max_iter=5000) if model == "logistic" else lgbm(**LGBM_SIZES[args.lgbm_size])
+            m.fit(sc.transform(xf), yf, sample_weight=wf)
+            out.append((sc, m))
+        return out
+
     def head_b(model: str, sim_weight: float) -> np.ndarray:
         scores = np.zeros(len(y))
         for fit, held in splits:
-            held_tasks = set(tasks[held])
-            s = sim[~sim.task.isin(held_tasks)]
-            assert not s.task.isin(held_tasks).any(), "a held-out task's simulation in training"
-            fit = kept(fit)
-            s = domain_match(importance(s, fit), fit)
-            for seed in range(3):
-                p = pairs[pairs.task.isin(set(tasks[fit]))]
-                keep = np.random.default_rng(seed).choice(
-                    sorted(p.context_id.unique()), round(args.pair_share * p.context_id.nunique()), replace=False
-                )
-                p = p[p.context_id.isin(keep)]
-                rows, labels, weights = context_rows(fit)
-                xs, ys, ws = [x[rows]], [labels], [weights]
-                if len(p):
-                    xs.append(np.stack([vecs[i] for i in p.id]))
-                    ys.append(p.label.to_numpy())
-                    ws.append(np.ones(len(p)))
-                # τ² weighs half of the Russian rows without the simulations, so adding simulations does not
-                # also raise the weight of τ² (it did before 26.09 evening)
-                n = len(fit) + len(p)
-                if sim_weight and len(s):
-                    xs.append(np.stack([vecs[i] for i in s.id]))
-                    ys.append(s.label.to_numpy())
-                    ws.append(sim_weights(s, sim_weight, n))
-                xs.append(np.stack([vecs[i] for i in tau.id]))
-                ys.append(tau.label.to_numpy())
-                ws.append(np.full(len(tau), args.tau_weight * n / len(tau)))
-                xf, yf, wf = np.vstack(xs), np.concatenate(ys).astype(int), np.concatenate(ws)
-                sc = StandardScaler().fit(xf)
-                m = LogisticRegression(C=C, max_iter=5000) if model == "logistic" else lgbm(**LGBM_SIZES[args.lgbm_size])
-                m.fit(sc.transform(xf), yf, sample_weight=wf)
+            for sc, m in fit_b(fit, set(tasks[held]), model, sim_weight):
                 xh = sc.transform(x[held])
                 scores[held] += m.decision_function(xh) if model == "logistic" else m.predict_proba(xh)[:, 1]
         return scores
 
+    def fit_u(fit: np.ndarray, held_tasks: set, sim_weight: float) -> tuple:
+        """The uncertainty head trained on the contexts `fit` and the simulation rows of every task but
+        `held_tasks`: (scaler, model)."""
+        s = sim[~sim.task.isin(held_tasks)] if sim_weight else sim.iloc[:0]
+        assert not s.task.isin(held_tasks).any(), "a held-out task's simulation in training"
+        fit = kept(fit)
+        s = domain_match(importance(s, fit), fit)
+        # an agent of another family shifts the token probabilities; its rows can be kept out of this head
+        s = s[~s.id.str.split("__").str[0].isin(args.unc_skip)]
+        rows, labels, weights = context_rows(fit)
+        xf = np.vstack([xu[rows], *([np.stack([sim_feats[i] for i in s.id])] if len(s) else [])])
+        yf = np.concatenate([labels, s.label.to_numpy()]).astype(int)
+        wf = np.concatenate([weights, sim_weights(s, sim_weight, float(weights.sum()))])
+        sc = StandardScaler().fit(xf)
+        return sc, LogisticRegression(C=1.0, max_iter=5000).fit(sc.transform(xf), yf, sample_weight=wf)
+
     def uncertainty(sim_weight: float) -> np.ndarray:
         scores = np.zeros(len(y))
         for fit, held in splits:
-            s = sim[~sim.task.isin(set(tasks[held]))] if sim_weight else sim.iloc[:0]
-            assert not s.task.isin(set(tasks[held])).any(), "a held-out task's simulation in training"
-            # an agent of another family shifts the token probabilities; its rows can be kept out of this head
-            fit = kept(fit)
-            s = domain_match(importance(s, fit), fit)
-            s = s[~s.id.str.split("__").str[0].isin(args.unc_skip)]
-            rows, labels, weights = context_rows(fit)
-            xf = np.vstack([xu[rows], *([np.stack([sim_feats[i] for i in s.id])] if len(s) else [])])
-            yf = np.concatenate([labels, s.label.to_numpy()]).astype(int)
-            wf = np.concatenate([weights, sim_weights(s, sim_weight, float(weights.sum()))])
-            sc = StandardScaler().fit(xf)
-            m = LogisticRegression(C=1.0, max_iter=5000).fit(sc.transform(xf), yf, sample_weight=wf)
+            sc, m = fit_u(fit, set(tasks[held]), sim_weight)
             scores[held] = m.predict_proba(sc.transform(xu[held]))[:, 1]
         return scores
 
@@ -448,9 +482,72 @@ def main() -> None:
             s = s[~s.id.str.split("__").str[0].isin(args.unc_skip)]
             xs = np.stack([sim_feats[i] for i in s.id])
             sc = StandardScaler().fit(xs)
-            m = LogisticRegression(C=1.0, max_iter=5000).fit(sc.transform(xs), s.label.to_numpy(), sample_weight=s.w.to_numpy())
+            m = LogisticRegression(C=1.0, max_iter=5000).fit(
+                sc.transform(xs), s.label.to_numpy(), sample_weight=s.w.to_numpy()
+            )
             hu[held] = m.predict_proba(sc.transform(xu[held]))[:, 1]
         return hb, hu
+
+    def export(path: Path, b_oof: np.ndarray, u_oof: np.ndarray) -> dict:
+        """The final heads for the submission (guardian.final): head B and the uncertainty head trained on every
+        context and every simulation row, the out-of-fold scores of the contexts as the reference each head's
+        score is ranked against, and the threshold on the system score that gives the best F1 by the v1s labels
+        on the contexts. The threshold is also chosen on four folds and applied to the fifth, to show how much
+        choosing it costs."""
+        everything = np.arange(len(y))
+        heads_b = fit_b(everything, set(), "lightgbm", 1.0)
+        sc_u, m_u = fit_u(everything, set(), 1.0)
+        final = {
+            "head_b": [
+                {
+                    "mean": sc.mean_.tolist(),
+                    "scale": sc.scale_.tolist(),
+                    "trees": [tree_arrays(t["tree_structure"]) for t in m.booster_.dump_model()["tree_info"]],
+                }
+                for sc, m in heads_b
+            ],
+            "head_u": {
+                "mean": sc_u.mean_.tolist(),
+                "scale": sc_u.scale_.tolist(),
+                "coef": m_u.coef_[0].tolist(),
+                "intercept": float(m_u.intercept_[0]),
+            },
+            "reference_b": np.sort(b_oof).tolist(),
+            "reference_u": np.sort(u_oof).tolist(),
+            "weight_u": 0.5,
+            "checks": list(RULES),
+        }
+        score = rank_against(np.sort(b_oof), b_oof) + 0.5 * rank_against(np.sort(u_oof), u_oof)
+
+        def best(rows: np.ndarray) -> float:
+            candidates = np.unique(score[rows])
+            f1 = [binary_scores(y[rows], (fired[rows] | (score[rows] >= t)).astype(int)).f1 for t in candidates]
+            return float(candidates[int(np.argmax(f1))])
+
+        final["threshold"] = best(everything)
+        flagged = fired | (score >= final["threshold"])
+        held_flags = np.zeros(len(y), bool)
+        for fit, held in splits:
+            held_flags[held] = fired[held] | (score[held] >= best(fit))
+        # the exported model must give the contexts the scores its training code gives them
+        loaded = Final.from_dict(final)
+        in_sample = sum(m.predict_proba(sc.transform(x))[:, 1] for sc, m in heads_b)
+        check = float(np.abs(sum(h.proba(x) for h in loaded.head_b) - in_sample).max())
+        check_u = float(np.abs(loaded.head_u.proba(xu) - m_u.predict_proba(sc_u.transform(xu))[:, 1]).max())
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(final) + "\n", encoding="utf-8")
+        return {
+            "file": str(path),
+            "threshold": final["threshold"],
+            "f1_at_threshold_v1s": round(binary_scores(y, flagged.astype(int)).f1, 4),
+            "flags_per_error": round(float(flagged.sum() / y.sum()), 3),
+            "threshold_chosen_on_other_folds": {
+                "f1_v1s": round(binary_scores(y, held_flags.astype(int)).f1, 4),
+                "flags_per_error": round(float(held_flags.sum() / y.sum()), 3),
+            },
+            "exported_vs_trained_max_abs_diff": {"head_b": check, "head_u": check_u},
+            "rows": {"contexts": len(y), "simulation": len(sim), "tau": len(tau), "pairs_all": len(pairs)},
+        }
 
     b_ref, u_ref = head_b("lightgbm", 0.0), uncertainty(0.0)
     reference = system(b_ref, u_ref)
@@ -500,7 +597,10 @@ def main() -> None:
         scores[f"{name}_quantile"] = quantiles(b, u)
 
     if args.quick:  # the scale curve needs only the main variant
-        report("both_w1.0", head_b("lightgbm", 1.0), uncertainty(1.0))
+        b_oof, u_oof = head_b("lightgbm", 1.0), uncertainty(1.0)
+        report("both_w1.0", b_oof, u_oof)
+        if args.export:
+            result["export"] = export(args.export, b_oof, u_oof)
         if args.sim_head:
             hb, hu = sim_only_heads()
             result["sim_heads_alone"] = {"b": ruler.auroc_ci(hb)["auroc"], "u": ruler.auroc_ci(hu)["auroc"]}

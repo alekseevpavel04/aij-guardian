@@ -67,7 +67,11 @@ def compare(
     "agreed" keeps only the contexts where v1s and Opus agree."""
     a = np.load(ROOT / "results" / f"{a_name}.scores.npz")
     b_key = b_key or key
-    b = {"ids": a["ids"], b_key: a["reference"]} if b_name == "reference" else np.load(ROOT / "results" / f"{b_name}.scores.npz")
+    b = (
+        {"ids": a["ids"], b_key: a["reference"]}
+        if b_name == "reference"
+        else np.load(ROOT / "results" / f"{b_name}.scores.npz")
+    )
     if not (a["ids"] == b["ids"]).all():
         raise SystemExit("the two runs score different contexts")
     view = views()

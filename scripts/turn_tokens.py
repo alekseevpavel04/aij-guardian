@@ -12,7 +12,6 @@ to results through turn_ruler.py.
 
 import argparse
 import ctypes as C
-import re
 import sys
 from pathlib import Path
 
@@ -21,16 +20,12 @@ import pandas as pd
 from guardian import journal
 from guardian.env import setup
 from guardian.judge import render
+from guardian.uncertainty import part_of_each_char
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from embed_llama import GGUF, LIB, ModelParams  # noqa: E402
 from embed_rows import BASELINE_PROMPT  # noqa: E402
-
-CALL_RE = re.compile(r"→ TOOL_CALL (\w+): (\{.*\})")
-# a JSON value: a quoted string (escapes allowed) or a number, right after a colon
-VALUE_RE = re.compile(r':\s*("(?:[^"\\]|\\.)*"|-?\d+(?:\.\d+)?)')
-KEY_RE = re.compile(r'"((?:[^"\\]|\\.)*)"\s*:')
 
 
 class Vocab:
@@ -64,30 +59,6 @@ class Vocab:
         buf = C.create_string_buffer(256)
         n = self.lib.llama_token_to_piece(self.vocab, token, buf, 256, 0, True)
         return buf.raw[:n]
-
-
-def part_of_each_char(turn: str) -> list[str]:
-    """For every character of the turn: 'value' (argument value), 'key' (argument name), 'name' (tool
-    name), 'layout' (the turn header, the call markers, JSON punctuation) or 'text'.
-
-    Layout surprises the model in correct turns as much as in wrong ones, so it is kept apart."""
-    parts = ["text"] * len(turn)
-    header = re.match(r"\s*⟦[^⟧]*⟧\s*", turn)
-    if header:
-        parts[: header.end()] = ["layout"] * header.end()
-    for m in CALL_RE.finditer(turn):
-        parts[m.start() : m.start(1)] = ["layout"] * (m.start(1) - m.start())
-        parts[m.end(1) : m.start(2)] = ["layout"] * (m.start(2) - m.end(1))
-        parts[m.start(1) : m.end(1)] = ["name"] * (m.end(1) - m.start(1))
-        body = m.group(2)
-        parts[m.start(2) : m.end(2)] = ["layout"] * len(body)
-        for k in KEY_RE.finditer(body):
-            start = m.start(2) + k.start(1)
-            parts[start : start + len(k.group(1))] = ["key"] * len(k.group(1))
-        for v in VALUE_RE.finditer(body):
-            start = m.start(2) + v.start(1)
-            parts[start : start + len(v.group(1))] = ["value"] * len(v.group(1))
-    return parts
 
 
 def main() -> None:

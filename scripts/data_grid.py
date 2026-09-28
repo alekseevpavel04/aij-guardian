@@ -100,7 +100,9 @@ def checks2() -> dict[str, dict]:
         cut = ["--context-fraction", str(fraction), "--seed", str(seed)]
         v[f"base_contexts{fraction}_seed{seed}"] = {"sources": BASE, "extra": cut}
         v[f"all_contexts{fraction}_seed{seed}"] = {
-            "sources": ALL, "extra": cut, "against": f"base_contexts{fraction}_seed{seed}"
+            "sources": ALL,
+            "extra": cut,
+            "against": f"base_contexts{fraction}_seed{seed}",
         }
     return v
 
@@ -110,7 +112,12 @@ def checks3() -> dict[str, dict]:
     the linear head did not? Four amounts of data (strong955, base, all without the repeat sets, all) at three
     sizes of LightGBM; each run is also compared with strong955 at the same size (the 300x7 runs are in the grid,
     600x15 on base and all in checks2)."""
-    amounts = {"strong": STRONG, "base": BASE, "all_without_repeat_sets": [s for s in ALL if s not in ("korg", "horg")], "all": ALL}
+    amounts = {
+        "strong": STRONG,
+        "base": BASE,
+        "all_without_repeat_sets": [s for s in ALL if s not in ("korg", "horg")],
+        "all": ALL,
+    }
     v = {}
     for size in ("big", "huge"):
         for name, sources in amounts.items():
@@ -124,7 +131,15 @@ def run(name: str, spec: dict) -> None:
     out = ROOT / "results" / f"grid_{name}.json"
     if out.with_suffix(".scores.npz").exists():
         return
-    cmd = [sys.executable, "scripts/tau2ru_ruler.py", "--labels", "opus", "--quick", "--unc-skip", *spec.get("unc_skip", ["glm", "kglm"])]
+    cmd = [
+        sys.executable,
+        "scripts/tau2ru_ruler.py",
+        "--labels",
+        "opus",
+        "--quick",
+        "--unc-skip",
+        *spec.get("unc_skip", ["glm", "kglm"]),
+    ]
     cmd += ["--tag", f"grid_{name}", "--out", str(out), "--sim-total", str(spec.get("sim_total", 1.0))]
     cmd += ["--drop-repeats"] if spec.get("drop_repeats", True) else []
     for s in spec["sources"]:
@@ -175,7 +190,15 @@ def main() -> None:
     if not args.summary:
         for name, spec in variants.items():
             run(name, spec)
-    name = "data_checks3" if args.checks3 else "data_checks2" if args.checks2 else "data_checks" if args.checks else "data_grid"
+    name = (
+        "data_checks3"
+        if args.checks3
+        else "data_checks2"
+        if args.checks2
+        else "data_checks"
+        if args.checks
+        else "data_grid"
+    )
     out = ROOT / f"results/{name}.json"
     out.write_text(json.dumps(summary(variants), indent=1) + "\n", encoding="utf-8")
     print(f"-> {out}")
