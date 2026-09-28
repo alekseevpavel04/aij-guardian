@@ -36,12 +36,19 @@ def tasks() -> pd.Series:
 
 
 def compare(
-    a_name: str, b_name: str, teacher: str = "v1s", domain: str | None = None, key: str = "both_w1.0", repeats: int = 2000
+    a_name: str,
+    b_name: str,
+    teacher: str = "v1s",
+    domain: str | None = None,
+    key: str = "both_w1.0",
+    repeats: int = 2000,
+    b_key: str | None = None,
 ) -> dict:
     """`b_name` "reference" is the system without simulations that the run `a_name` saved with it; teacher
     "agreed" keeps only the contexts where v1s and Opus agree."""
     a = np.load(ROOT / "results" / f"{a_name}.scores.npz")
-    b = {"ids": a["ids"], key: a["reference"]} if b_name == "reference" else np.load(ROOT / "results" / f"{b_name}.scores.npz")
+    b_key = b_key or key
+    b = {"ids": a["ids"], b_key: a["reference"]} if b_name == "reference" else np.load(ROOT / "results" / f"{b_name}.scores.npz")
     if not (a["ids"] == b["ids"]).all():
         raise SystemExit("the two runs score different contexts")
     view = views()
@@ -53,7 +60,7 @@ def compare(
     truth = ids.map(found).to_numpy().astype(int)
     task = ids.map(tasks()).to_numpy()
     groups = [np.where(task == t)[0] for t in np.unique(task)]
-    sa, sb = a[key][keep], b[key][keep]
+    sa, sb = a[key][keep], b[b_key][keep]
 
     rng = np.random.default_rng(0)
     diffs, one_class = [], 0
@@ -65,8 +72,8 @@ def compare(
         diffs.append(auroc(truth[idx], sa[idx]) - auroc(truth[idx], sb[idx]))
     diffs = np.array(diffs)
     return {
-        "a": a_name,
-        "b": b_name,
+        "a": a_name if key == "both_w1.0" else f"{a_name}:{key}",
+        "b": b_name if b_key == "both_w1.0" else f"{b_name}:{b_key}",
         "domain": domain,
         "contexts": len(ids),
         "teacher": teacher,
@@ -88,13 +95,15 @@ def main() -> None:
     ap.add_argument("--a", required=True, help="results/<name>.scores.npz, the variant")
     ap.add_argument("--b", required=True, help="results/<name>.scores.npz to compare with, or `reference`")
     ap.add_argument("--key", default="both_w1.0")
+    ap.add_argument("--b-key", default=None, help="the score of run b to compare with (default: --key)")
     ap.add_argument("--repeats", type=int, default=2000)
     ap.add_argument("--domain", default=None, help="only the contexts of one domain")
     ap.add_argument("--teacher", choices=VIEWS, default="v1s", help="whose labels of the contexts")
     args = ap.parse_args()
 
-    result = compare(args.a, args.b, args.teacher, args.domain, args.key, args.repeats)
+    result = compare(args.a, args.b, args.teacher, args.domain, args.key, args.repeats, args.b_key)
     suffix = (f"__{args.domain}" if args.domain else "") + (f"__{args.teacher}" if args.teacher != "v1s" else "")
+    suffix += (f"__{args.key}" if args.key != "both_w1.0" else "") + (f"__{args.b_key}" if args.b_key else "")
     out = ROOT / "results" / f"paired_{args.a}__vs__{args.b}{suffix}.json"
     out.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(result))

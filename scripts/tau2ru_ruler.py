@@ -48,6 +48,11 @@ EMB = ROOT / "data/interim/embeddings"
 CJK = "[぀-ヿ㐀-鿿]"  # kana and CJK ideographs
 
 
+
+def logit(p: np.ndarray) -> np.ndarray:
+    p = np.clip(p, 1e-6, 1 - 1e-6)
+    return np.log(p / (1 - p))
+
 def simulation_labels(
     mode: str, rows: pd.DataFrame, opus_dir: Path, v1s_name: str, only_double: bool = False
 ) -> pd.Series:
@@ -337,6 +342,25 @@ def main() -> None:
     def system(b: np.ndarray, u: np.ndarray) -> np.ndarray:
         return ranks(b) + 0.5 * ranks(u) + 10 * fired
 
+    def stacked(b: np.ndarray, u: np.ndarray) -> np.ndarray:
+        """A probability per row instead of ranks within the file (what a fixed threshold needs): a logistic
+        regression on the heads' logits, for each held-out fold fitted on the other folds' out-of-fold scores."""
+        z = np.column_stack([logit(b / 3), logit(u)])  # head B sums three seeds' probabilities
+        out = np.zeros(len(y))
+        for fit, held in GroupKFold(FOLDS).split(z, y, tasks):
+            out[held] = LogisticRegression(C=1.0, max_iter=5000).fit(z[fit], y[fit]).predict_proba(z[held])[:, 1]
+        return out + fired  # the rules still label 1 on their own
+
+    def quantiles(b: np.ndarray, u: np.ndarray) -> np.ndarray:
+        """The same sum as system() with each head's rank taken against the other folds' out-of-fold scores
+        instead of the other rows of the file, so a row's score does not depend on its neighbours and a fixed
+        threshold can be put on it."""
+        out = np.zeros(len(y))
+        for fit, held in GroupKFold(FOLDS).split(b, y, tasks):
+            fb, fu = np.sort(b[fit]), np.sort(u[fit])
+            out[held] = np.searchsorted(fb, b[held]) / len(fb) + 0.5 * np.searchsorted(fu, u[held]) / len(fu)
+        return out + 10 * fired
+
     b_ref, u_ref = head_b("lightgbm", 0.0), uncertainty(0.0)
     reference = system(b_ref, u_ref)
     result["candidate"] = {
@@ -381,6 +405,8 @@ def main() -> None:
         }
         print(name, json.dumps(result["variants"][name]), flush=True)
         scores[name] = system(b, u)
+        scores[f"{name}_stacked"] = stacked(b, u)
+        scores[f"{name}_quantile"] = quantiles(b, u)
 
     if args.quick:  # the scale curve needs only the main variant
         report("both_w1.0", head_b("lightgbm", 1.0), uncertainty(1.0))
@@ -393,7 +419,14 @@ def main() -> None:
         report("logistic_head_b_w1.0_against_logistic", head_b("logistic", 1.0), u_ref, logistic_ref)
     out.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     # out-of-fold system scores per context, for comparing against the submissions (ruler_vs_test.py)
-    np.savez(out.with_suffix(".scores.npz"), ids=ruler.ctx.id.to_numpy().astype(str), reference=reference, **scores)
+    np.savez(
+        out.with_suffix(".scores.npz"),
+        ids=ruler.ctx.id.to_numpy().astype(str),
+        reference=reference,
+        reference_stacked=stacked(b_ref, u_ref),
+        reference_quantile=quantiles(b_ref, u_ref),
+        **scores,
+    )
 
 
 if __name__ == "__main__":
