@@ -1,0 +1,100 @@
+{
+  "labels": "opus",
+  "balance": "none",
+  "uncertainty_head_skips": [
+    "glm",
+    "kglm"
+  ],
+  "context_labels": "v1s",
+  "sources": [
+    [
+      "data/synthetic/tau2_ru_q36_rows.parquet",
+      "q4_tok_tau2q36",
+      "data/synthetic/opus_labels_tau2q36"
+    ],
+    [
+      "data/synthetic/tau2_ru_glm_rows.parquet",
+      "q4_tok_tau2glm",
+      "data/synthetic/opus_labels_tau2glm"
+    ],
+    [
+      "data/synthetic/tau2_ru_q36n_rows.parquet",
+      "q4_tok_tau2q36n",
+      "data/synthetic/opus_labels_tau2q36n"
+    ]
+  ],
+  "turns_dropped_for_chinese_words": 5,
+  "negative_share": 1.0,
+  "sim_total": 1.0,
+  "sim_domains": null,
+  "turns_dropped_as_repeats": 229,
+  "rows": 726,
+  "positives": 81,
+  "dialogues": 57,
+  "rows_of_organiser_tasks": 140,
+  "compared_with_contexts": {
+    "share_of_errors": [
+      0.112,
+      0.174
+    ],
+    "share_with_tool_call": [
+      0.362,
+      0.57
+    ],
+    "median_response_chars": [
+      276,
+      228
+    ],
+    "median_prompt_chars": [
+      27658,
+      29004
+    ],
+    "mean_token_logp": [
+      -1.056,
+      -1.196
+    ]
+  },
+  "variants": {
+    "both_w1.0": {
+      "head_b_alone": 0.9321,
+      "uncertainty_alone": 0.8068,
+      "system_minus_reference": {
+        "difference": 0.0029,
+        "ci95": [
+          -0.004,
+          0.008
+        ],
+        "share_above_zero": 0.805
+      },
+      "new_ruler_all_contexts": {
+        "v1s": {
+          "f1": 0.7089,
+          "f1_minus_reference": 0.0127,
+          "ci95": [
+            -0.029,
+            0.058
+          ],
+          "auroc": 0.943
+        },
+        "opus": {
+          "f1": 0.7602,
+          "f1_minus_reference": 0.0351,
+          "ci95": [
+            0.0,
+            0.077
+          ],
+          "auroc": 0.9281
+        }
+      }
+    }
+  },
+  "candidate": {
+    "head_b_alone": 0.9265,
+    "uncertainty_alone": 0.8113,
+    "system": 0.981,
+    "system_f1_at_test_share_all_contexts": {
+      "v1s": 0.6962,
+      "opus": 0.7251
+    }
+  }
+}

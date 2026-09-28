@@ -114,8 +114,6 @@ def checks3() -> dict[str, dict]:
     v = {}
     for size in ("big", "huge"):
         for name, sources in amounts.items():
-            if size == "big" and name in ("base", "all"):
-                continue
             v[f"{name}_lgbm_{size}"] = {"sources": sources, "extra": ["--lgbm-size", size]}
             if name != "strong":
                 v[f"{name}_lgbm_{size}"]["against"] = f"strong_lgbm_{size}"
