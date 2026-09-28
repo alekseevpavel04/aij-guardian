@@ -32,7 +32,13 @@ MODEL = Path("/tmp/q35")
 PROMPT = KIT / "data/raw/baseline/baseline/src/hallucination_detector/prompt.md"
 EMB = KIT / "data/interim/embeddings"
 # a T4 has no bfloat16 and no FlashAttention 2 (as in the probes, results/kaggle_token_probe.json)
-ENGINE = {"dtype": "float16", "attention_config": {"backend": "TRITON_ATTN"}, "gdn_prefill_backend": "triton"}
+# eager: compiling and capturing graphs took 9 of the first rehearsal's minutes and is not what is checked here
+ENGINE = {
+    "dtype": "float16",
+    "attention_config": {"backend": "TRITON_ATTN"},
+    "gdn_prefill_backend": "triton",
+    "enforce_eager": True,
+}
 MAX_LEN = 65536
 STARTED = time.time()
 RESULT: dict = {"model": MODEL_NAME}
@@ -197,7 +203,7 @@ def main() -> None:
             "--max-model-len",
             str(MAX_LEN),
             "--gpu-memory-utilization",
-            "0.8",
+            "0.7",
             "--engine-json",
             json.dumps(ENGINE),
         ],
@@ -235,7 +241,7 @@ def main() -> None:
         (KIT / "submission/model" / f.name).symlink_to(f)
     config_path = KIT / "submission/model/guardian.json"
     config = json.loads(config_path.read_text())
-    config |= {"max_model_len": MAX_LEN, "gpu_memory_utilization": 0.8, "engine": ENGINE, "final_minutes": 20}
+    config |= {"max_model_len": MAX_LEN, "gpu_memory_utilization": 0.7, "engine": ENGINE, "final_minutes": 20}
     config_path.write_text(json.dumps(config, indent=1))
     run(
         "predict",

@@ -72,8 +72,11 @@ def output_matrix(model_dir: Path):
     raise KeyError(f"no output matrix in {model_dir}")
 
 
-def turn_stats(states, w, ids: list[int], turn: list[int], chunk: int = 256) -> dict[str, list[float]]:
-    """Log-probability, entropy and top-two gap of each turn token; the state at position i predicts token i + 1."""
+def turn_stats(states, w, ids: list[int], turn: list[int], chunk: int = 64) -> dict[str, list[float]]:
+    """Log-probability, entropy and top-two gap of each turn token; the state at position i predicts token i + 1.
+
+    vLLM holds most of the card, so a chunk keeps two vocabulary-wide buffers at most (the log-probabilities and
+    the probabilities, 64 x 248k floats each): a Kaggle T4 ran out of memory with four such buffers of 256."""
     import torch
 
     before = torch.as_tensor([p - 1 for p in turn])
@@ -81,12 +84,14 @@ def turn_stats(states, w, ids: list[int], turn: list[int], chunk: int = 256) -> 
     logp, entropy, margin = [], [], []
     for a in range(0, len(turn), chunk):
         s = torch.as_tensor(states)[before[a : a + chunk]].to(device="cuda", dtype=torch.float32)
-        z = torch.log_softmax(s @ w.T, dim=-1)
+        z = s @ w.T
+        z.sub_(torch.logsumexp(z, dim=-1, keepdim=True))
+        logp += z[torch.arange(len(s), device="cuda"), target[a : a + chunk]].tolist()
         p = z.exp()
         top = torch.topk(p, 2, dim=-1).values
-        logp += z[torch.arange(len(s), device="cuda"), target[a : a + chunk]].tolist()
-        entropy += (-(p * z).sum(-1)).tolist()
         margin += (top[:, 0] - top[:, 1]).tolist()
+        entropy += (-p.mul_(z).sum(-1)).tolist()
+        del z, p
     return {"logp": logp, "entropy": entropy, "margin": margin}
 
 
