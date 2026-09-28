@@ -70,7 +70,9 @@ def save() -> None:
 
 
 def logprob_check(env: dict) -> None:
-    """vLLM's prompt_logprobs of the three shortest contexts, in a process of its own (one engine per process)."""
+    """vLLM's prompt_logprobs of the three shortest contexts, in a process of its own (one engine per process).
+    vLLM takes a log-softmax over the whole vocabulary for every prompt token of a step, 4.7 GiB for a context of
+    5000 tokens on the T4 (rehearsal 4), so the steps are cut to 1024 tokens."""
     code = f"""
 import json, sys
 sys.path.insert(0, "{KIT}/src")
@@ -84,7 +86,8 @@ rows = rows.assign(n=rows.prompt.str.len()).nsmallest(3, "n")
 tok = AutoTokenizer.from_pretrained("{MODEL}")
 prompt = open("{PROMPT}", encoding="utf-8").read()
 rendered = [render_tokens(tok, prompt, r.prompt, r.response) for r in rows.itertuples()]
-llm = LLM(model="{MODEL}", max_model_len={MAX_LEN}, gpu_memory_utilization=0.6, language_model_only=True,
+llm = LLM(model="{MODEL}", max_model_len={MAX_LEN}, gpu_memory_utilization=0.4, language_model_only=True,
+          max_num_batched_tokens=1024,
           **{ENGINE!r})
 out = llm.generate([TokensPrompt(prompt_token_ids=x.ids) for x in rendered],
                    SamplingParams(max_tokens=1, prompt_logprobs=0))
@@ -227,7 +230,10 @@ def main() -> None:
     RESULT["pass_tokens_per_second_with_engine_start"] = round(tokens / seconds)
     save()
 
-    logprob_check(env)
+    try:  # the reference is a check of the pass, not a step of it: the rehearsal goes on without it
+        logprob_check(env)
+    except RuntimeError as error:
+        RESULT["logprob_check_error"] = str(error)
     save()
 
     final = synthetic_heads()
