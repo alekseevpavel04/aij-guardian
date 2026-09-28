@@ -1,0 +1,121 @@
+"""Which simulation data trains the final system: a fixed grid of tau2ru_ruler.py runs and one summary.
+
+Every run pools labelled simulation sets (Opus labels), weighs them 1 against the fold's own rows in all and drops
+looping turns, unless the variant says otherwise. Each is compared, paired over dialogues, with the system without
+simulations and with the base set (strong955 + the banking sample) under three labellings of the organiser's
+contexts: the contexts where v1s and Opus agree (the main one), v1s, Opus. Leave-one-out and per-domain runs are
+also compared with the run on all sets.
+
+The rule for moving off the base set was fixed before the runs: only a difference whose interval
+on the agreed contexts lies above zero and whose sign v1s and Opus both share.
+
+    python scripts/data_grid.py            # runs what is missing (about 2 min each), then the summary
+    python scripts/data_grid.py --summary  # only the summary
+"""
+
+import argparse
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+from paired_variants import VIEWS, compare  # noqa: E402
+
+S = "data/synthetic"
+SOURCES = {
+    "q36": f"{S}/tau2_ru_q36_rows.parquet|q4_tok_tau2q36|{S}/opus_labels_tau2q36",
+    "glm": f"{S}/tau2_ru_glm_rows.parquet|q4_tok_tau2glm|{S}/opus_labels_tau2glm",
+    "q36n": f"{S}/tau2_ru_q36n_rows.parquet|q4_tok_tau2q36n|{S}/opus_labels_tau2q36n",
+    "kq36n": f"{S}/tau2_ru_kq36n_s1_rows.parquet|q4_tok_tau2kq36n|{S}/opus_labels_tau2kq36n",
+    "kq36": f"{S}/tau2_ru_kq36_s1_rows.parquet|q4_tok_tau2kq36|{S}/opus_labels_tau2kq36",
+    "kglm": f"{S}/tau2_ru_kglm_s300_rows.parquet|q4_tok_tau2kglm|{S}/opus_labels_tau2kglm",
+    "korg": f"{S}/tau2_ru_korg_rows.parquet|q4_tok_tau2korg|{S}/opus_labels_tau2korg",
+    "horg": f"{S}/tau2_ru_horg_rows.parquet|q4_tok_tau2horg|{S}/opus_labels_tau2horg",
+    "kbank": f"{S}/tau2_ru_kbank_s350_rows.parquet|q4_tok_tau2kbank|{S}/opus_labels_tau2kbank",
+}
+STRONG = ["q36", "glm", "q36n"]
+BASE = [*STRONG, "kbank"]
+ALL = list(SOURCES)
+DOMAINS = ("airline", "retail", "telecom", "banking_knowledge")
+
+
+def grid() -> dict[str, dict]:
+    v = {
+        "strong": {"sources": STRONG},
+        "base": {"sources": BASE},
+        "all": {"sources": ALL},
+        "all_without_repeat_sets": {"sources": [s for s in ALL if s not in ("korg", "horg")]},
+    }
+    v |= {f"all_minus_{s}": {"sources": [x for x in ALL if x != s]} for s in ALL}
+    v |= {f"only_{s}": {"sources": [s]} for s in ALL}
+    v |= {f"all_{d}": {"sources": ALL, "extra": ["--sim-domains", d]} for d in DOMAINS}
+    v |= {
+        "base_simtotal0.5": {"sources": BASE, "sim_total": 0.5},
+        "base_simtotal2": {"sources": BASE, "sim_total": 2.0},
+        "base_neg0.5": {"sources": BASE, "extra": ["--negative-share", "0.5"]},
+        "base_neg0.25": {"sources": BASE, "extra": ["--negative-share", "0.25"]},
+        "base_with_repeats": {"sources": BASE, "drop_repeats": False},
+        "base_context_labels_agreed": {"sources": BASE, "extra": ["--context-labels", "agreed"]},
+    }
+    return v
+
+
+def run(name: str, spec: dict) -> None:
+    out = ROOT / "results" / f"grid_{name}.json"
+    if out.with_suffix(".scores.npz").exists():
+        return
+    cmd = [sys.executable, "scripts/tau2ru_ruler.py", "--labels", "opus", "--quick", "--unc-skip", "glm", "kglm"]
+    cmd += ["--tag", f"grid_{name}", "--out", str(out), "--sim-total", str(spec.get("sim_total", 1.0))]
+    cmd += ["--drop-repeats"] if spec.get("drop_repeats", True) else []
+    for s in spec["sources"]:
+        cmd += ["--source", SOURCES[s]]
+    cmd += spec.get("extra", [])
+    with open(ROOT / f"logs/grid_{name}.log", "w", encoding="utf-8") as log:
+        subprocess.run(cmd, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT, check=True)
+    print(name, "done", flush=True)
+
+
+def summary(variants: dict[str, dict]) -> dict:
+    rows = {}
+    for name, spec in variants.items():
+        ruler = json.loads((ROOT / "results" / f"grid_{name}.json").read_text(encoding="utf-8"))
+        against = {"reference": "reference", "base": "grid_base"}
+        if name.startswith("all_"):
+            against["all"] = "grid_all"
+        rows[name] = {
+            "sources": spec["sources"],
+            "settings": {k: spec[k] for k in ("sim_total", "drop_repeats", "extra") if k in spec},
+            "rows": ruler["rows"],
+            "positives": ruler["positives"],
+            "dialogues": ruler["dialogues"],
+            "compared": {
+                label: {
+                    view: {k: r[k] for k in ("auroc_a", "auroc_b", "a_minus_b", "ci95", "share_above_zero")}
+                    for view in VIEWS
+                    for r in [compare(f"grid_{name}", b, view)]
+                }
+                for label, b in against.items()
+                if f"grid_{name}" != b
+            },
+        }
+        print(name, json.dumps(rows[name]["compared"].get("reference", {}).get("agreed")), flush=True)
+    return rows
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--summary", action="store_true", help="only the summary of the runs already made")
+    args = ap.parse_args()
+    variants = grid()
+    if not args.summary:
+        for name, spec in variants.items():
+            run(name, spec)
+    out = ROOT / "results/data_grid.json"
+    out.write_text(json.dumps(summary(variants), indent=1) + "\n", encoding="utf-8")
+    print(f"-> {out}")
+
+
+if __name__ == "__main__":
+    main()

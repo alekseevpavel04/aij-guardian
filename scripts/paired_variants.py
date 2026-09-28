@@ -9,6 +9,7 @@ dialogue-to-dialogue noise they share cancels in the difference.
 import argparse
 import json
 import sys
+from functools import cache
 from pathlib import Path
 
 import numpy as np
@@ -17,53 +18,58 @@ import pandas as pd
 from guardian.env import setup
 
 ROOT = Path(__file__).resolve().parents[1]
+CONTEXTS = ROOT / "data/synthetic/organizer_contexts.parquet"
 sys.path.insert(0, str(ROOT / "scripts"))
 from train_head_ru import TEACHERS, auroc, labels  # noqa: E402
 
+VIEWS = (*TEACHERS, "agreed")
 
-def main() -> None:
-    setup()
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--a", required=True, help="results/<name>.scores.npz, the variant")
-    ap.add_argument("--b", required=True, help="results/<name>.scores.npz, what it is compared with; `reference`: the system without simulations that run a saved with it")
-    ap.add_argument("--key", default="both_w1.0")
-    ap.add_argument("--repeats", type=int, default=2000)
-    ap.add_argument("--contexts", type=Path, default=ROOT / "data/synthetic/organizer_contexts.parquet")
-    ap.add_argument("--domain", default=None, help="only the contexts of one domain")
-    ap.add_argument("--teacher", choices=(*TEACHERS, "agreed"), default="v1s",
-                    help="whose labels of the contexts; agreed: only contexts where v1s and Opus agree")
-    args = ap.parse_args()
 
-    a = np.load(ROOT / "results" / f"{args.a}.scores.npz")
-    b = {"ids": a["ids"], args.key: a["reference"]} if args.b == "reference" else np.load(ROOT / "results" / f"{args.b}.scores.npz")
+@cache
+def views() -> dict[str, dict[str, int]]:
+    return {t: labels(TEACHERS[t].format(split="train")) | labels(TEACHERS[t].format(split="check")) for t in TEACHERS}
+
+
+@cache
+def tasks() -> pd.Series:
+    return pd.read_parquet(CONTEXTS).set_index("id").task
+
+
+def compare(
+    a_name: str, b_name: str, teacher: str = "v1s", domain: str | None = None, key: str = "both_w1.0", repeats: int = 2000
+) -> dict:
+    """`b_name` "reference" is the system without simulations that the run `a_name` saved with it; teacher
+    "agreed" keeps only the contexts where v1s and Opus agree."""
+    a = np.load(ROOT / "results" / f"{a_name}.scores.npz")
+    b = {"ids": a["ids"], key: a["reference"]} if b_name == "reference" else np.load(ROOT / "results" / f"{b_name}.scores.npz")
     if not (a["ids"] == b["ids"]).all():
         raise SystemExit("the two runs score different contexts")
-    tasks = pd.read_parquet(args.contexts).set_index("id").task
-    view = {t: labels(TEACHERS[t].format(split="train")) | labels(TEACHERS[t].format(split="check")) for t in TEACHERS}
-    found = view["v1s"] if args.teacher == "agreed" else view[args.teacher]
-    keep = np.array([args.domain is None or i.split("__")[1] == args.domain for i in a["ids"]])
-    if args.teacher == "agreed":
+    view = views()
+    found = view["v1s"] if teacher == "agreed" else view[teacher]
+    keep = np.array([domain is None or i.split("__")[1] == domain for i in a["ids"]])
+    if teacher == "agreed":
         keep &= np.array([view["v1s"][i] == view["opus"][i] for i in a["ids"]])
     ids = pd.Series(a["ids"][keep])
     truth = ids.map(found).to_numpy().astype(int)
-    groups = [np.where(ids.map(tasks).to_numpy() == t)[0] for t in np.unique(ids.map(tasks))]
-    sa, sb = a[args.key][keep], b[args.key][keep]
+    task = ids.map(tasks()).to_numpy()
+    groups = [np.where(task == t)[0] for t in np.unique(task)]
+    sa, sb = a[key][keep], b[key][keep]
 
     rng = np.random.default_rng(0)
     diffs, one_class = [], 0
-    for _ in range(args.repeats):
+    for _ in range(repeats):
         idx = np.concatenate([groups[k] for k in rng.integers(0, len(groups), len(groups))])
         if truth[idx].min() == truth[idx].max():  # a resample of a few dialogues can hold no error at all
             one_class += 1
             continue
         diffs.append(auroc(truth[idx], sa[idx]) - auroc(truth[idx], sb[idx]))
     diffs = np.array(diffs)
-    result = {
-        "a": args.a,
-        "b": args.b,
-        "domain": args.domain,
+    return {
+        "a": a_name,
+        "b": b_name,
+        "domain": domain,
         "contexts": len(ids),
-        "teacher": args.teacher,
+        "teacher": teacher,
         "errors": int(truth.sum()),
         "dialogues": len(groups),
         "auroc_a": round(float(auroc(truth, sa)), 4),
@@ -71,9 +77,23 @@ def main() -> None:
         "a_minus_b": round(float(auroc(truth, sa) - auroc(truth, sb)), 4),
         "ci95": [round(float(v), 4) for v in np.percentile(diffs, [2.5, 97.5])],
         "share_above_zero": round(float((diffs > 0).mean()), 3),
-        "repeats": args.repeats,
+        "repeats": repeats,
         "resamples_without_both_classes": one_class,
     }
+
+
+def main() -> None:
+    setup()
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--a", required=True, help="results/<name>.scores.npz, the variant")
+    ap.add_argument("--b", required=True, help="results/<name>.scores.npz to compare with, or `reference`")
+    ap.add_argument("--key", default="both_w1.0")
+    ap.add_argument("--repeats", type=int, default=2000)
+    ap.add_argument("--domain", default=None, help="only the contexts of one domain")
+    ap.add_argument("--teacher", choices=VIEWS, default="v1s", help="whose labels of the contexts")
+    args = ap.parse_args()
+
+    result = compare(args.a, args.b, args.teacher, args.domain, args.key, args.repeats)
     suffix = (f"__{args.domain}" if args.domain else "") + (f"__{args.teacher}" if args.teacher != "v1s" else "")
     out = ROOT / "results" / f"paired_{args.a}__vs__{args.b}{suffix}.json"
     out.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
