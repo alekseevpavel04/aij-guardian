@@ -43,16 +43,20 @@ model)
     $PY scripts/weights_fingerprint.py --model-dir "$MODEL" --check results/weights_fingerprint.json
     ;;
 pass)
-    # the contexts first: with them alone the ruler can already compare Q4 and FP8
-    $PY scripts/final_pass.py --model-dir "$MODEL" --system-prompt "$PROMPT" --out-dir "$EMB" \
-        --gpu-memory-utilization "$GPU_UTIL" --job \
-        data/rental/contexts.parquet:fp8_contexts \
-        data/rental/sim_q36.parquet:fp8_sim_q36 \
-        data/rental/sim_glm.parquet:fp8_sim_glm \
-        data/rental/sim_q36n.parquet:fp8_sim_q36n \
-        data/rental/sim_kbank_s350.parquet:fp8_sim_kbank \
-        data/rental/pairs.parquet:fp8_pairs \
-        data/rental/tau.parquet:fp8_tau 2>&1 | tee -a logs/rental_pass.log
+    # the contexts first: with them alone the ruler can already compare Q4 and FP8. With two cards the τ² rows
+    # (24 of the 52 million tokens) go to the second one in a pass of their own.
+    ARGS=(--model-dir "$MODEL" --system-prompt "$PROMPT" --out-dir "$EMB" --gpu-memory-utilization "$GPU_UTIL")
+    FIRST=(data/rental/contexts.parquet:fp8_contexts data/rental/sim_q36.parquet:fp8_sim_q36
+           data/rental/sim_glm.parquet:fp8_sim_glm data/rental/sim_q36n.parquet:fp8_sim_q36n
+           data/rental/sim_kbank_s350.parquet:fp8_sim_kbank data/rental/pairs.parquet:fp8_pairs)
+    if [ "$(nvidia-smi -L | wc -l)" -ge 2 ]; then
+        CUDA_VISIBLE_DEVICES=1 $PY scripts/final_pass.py "${ARGS[@]}" --job data/rental/tau.parquet:fp8_tau             > logs/rental_pass_tau.log 2>&1 &
+        TAU=$!
+        CUDA_VISIBLE_DEVICES=0 $PY scripts/final_pass.py "${ARGS[@]}" --job "${FIRST[@]}" 2>&1 | tee -a logs/rental_pass.log
+        wait $TAU
+    else
+        $PY scripts/final_pass.py "${ARGS[@]}" --job "${FIRST[@]}" data/rental/tau.parquet:fp8_tau 2>&1             | tee -a logs/rental_pass.log
+    fi
     ;;
 export)
     $PY scripts/tau2ru_ruler.py --labels opus --quick --unc-skip glm kglm --tag final_fp8 \
@@ -80,7 +84,8 @@ archive)
 timing)
     nvidia-smi --query-gpu=timestamp,memory.used --format=csv -l 5 > logs/rental_gpu.csv &
     SMI=$!
-    $PY submission/scripts/predict.py --input data/rental/timing.parquet \
+    # one card, as on the platform
+    CUDA_VISIBLE_DEVICES=0 $PY submission/scripts/predict.py --input data/rental/timing.parquet \
         --output submission_work/timing_predictions.parquet 2>&1 | tee logs/rental_timing.log
     kill $SMI
     cp submission/final_pass.log logs/rental_timing_pass.log
