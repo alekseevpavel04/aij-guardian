@@ -43,7 +43,7 @@ def files() -> list[Path]:
         out += sorted((ROOT / f"data/synthetic/opus_labels_tau2{name}").glob("*/opus.jsonl"))
     out += sorted((ROOT / "data/rental").glob("*"))
     out += sorted(p for p in (ROOT / "src/guardian").glob("*.py"))
-    out += sorted((ROOT / "scripts").glob("*.py"))
+    out += sorted((ROOT / "scripts").glob("*.py")) + [ROOT / "scripts/rental.sh"]
     return out
 
 
