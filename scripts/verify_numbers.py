@@ -410,6 +410,22 @@ for _name, _args in JUDGE_COMPARES.items():
     REQUIRES[f"judge_compare_{_name}.json"] = [DATA, *EXTERNAL]
 
 
+# the end of the contest: the choice of the threshold, labels from the τ² reference, a second feature
+# model, the judge from the same pass, the run time on the rented A100
+RENTAL = ROOT / "submission_work/rental"
+OOF = ROOT / "submission_work/final_fp8.oof.npz"
+EMB = ROOT / "data/interim/embeddings"
+for _name, _script, _needs in (
+    ("threshold_choice.json", "threshold_choice.py", [RENTAL, OOF]),
+    ("gold_labels.json", "gold_labels.py", [DATA, ROOT / "data/interim/labels", Path("D:/VScode_projects/tau2-bench")]),
+    ("model_swap.json", "model_swap.py", [EMB / "g4_tok_final_org.jsonl", EMB / "q4_tok_final_org.jsonl"]),
+    ("judge_signal.json", "judge_signal.py", [OOF, ROOT / "data/raw/baseline/baseline/model"]),
+    ("rental_timing.json", "rental_timing.py", [RENTAL / "logs"]),
+):
+    GENERATED[_name] = (_script, lambda tmp: ["--out", str(tmp / "x.json")])
+    REQUIRES[_name] = _needs
+
+
 def run(script: str, extra: list[str], tmp: Path) -> None:
     result = subprocess.run(
         [PYTHON, str(ROOT / "scripts" / script), *extra], capture_output=True, text=True, encoding="utf-8", cwd=ROOT
@@ -439,6 +455,7 @@ def first_difference(a: object, b: object, path: str = "") -> str | None:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--results", type=Path, default=ROOT / "results")
+    ap.add_argument("--only", nargs="+", default=None, help="check only these result files (the full run takes hours)")
     args = ap.parse_args()
 
     if not DATA.exists():
@@ -449,6 +466,8 @@ def main() -> None:
         tmp = Path(raw_tmp)
         done = set()
         for name, (script, extra) in GENERATED.items():
+            if args.only and name not in args.only:
+                continue
             missing = [path for path in REQUIRES.get(name, []) if not path.exists()]
             if missing:
                 print(f"skip {name}: needs {', '.join(str(path) for path in missing)}")

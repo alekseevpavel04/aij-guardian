@@ -193,7 +193,7 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--rental", type=Path, default=ROOT / "submission_work/rental")
     ap.add_argument("--final", type=Path, default=ROOT / "submission_work/final_fp8.json")
-    ap.add_argument("--repeats", type=int, default=400)
+    ap.add_argument("--repeats", type=int, default=300)
     ap.add_argument("--out", type=Path, default=ROOT / "results/threshold_choice.json")
     args = ap.parse_args()
 

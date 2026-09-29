@@ -1,0 +1,149 @@
+{
+ "contexts": 384,
+ "paired_against_the_system": {
+  "judge_agreed": {
+   "contexts": 343,
+   "errors": 53,
+   "auroc_a": 0.8789,
+   "auroc_b": 0.9866,
+   "a_minus_b": -0.1077,
+   "ci95": [
+    -0.1852,
+    -0.0457
+   ],
+   "share_above_zero": 0.0
+  },
+  "judge_v1s": {
+   "contexts": 384,
+   "errors": 67,
+   "auroc_a": 0.8476,
+   "auroc_b": 0.9367,
+   "a_minus_b": -0.0891,
+   "ci95": [
+    -0.1701,
+    -0.0304
+   ],
+   "share_above_zero": 0.0
+  },
+  "judge_opus": {
+   "contexts": 384,
+   "errors": 80,
+   "auroc_a": 0.8559,
+   "auroc_b": 0.9341,
+   "a_minus_b": -0.0782,
+   "ci95": [
+    -0.1367,
+    -0.0251
+   ],
+   "share_above_zero": 0.001
+  },
+  "system_judge0.25_agreed": {
+   "contexts": 343,
+   "errors": 53,
+   "auroc_a": 0.9867,
+   "auroc_b": 0.9866,
+   "a_minus_b": 0.0001,
+   "ci95": [
+    -0.0022,
+    0.0028
+   ],
+   "share_above_zero": 0.536
+  },
+  "system_judge0.25_v1s": {
+   "contexts": 384,
+   "errors": 67,
+   "auroc_a": 0.9384,
+   "auroc_b": 0.9367,
+   "a_minus_b": 0.0017,
+   "ci95": [
+    -0.0019,
+    0.0064
+   ],
+   "share_above_zero": 0.798
+  },
+  "system_judge0.25_opus": {
+   "contexts": 384,
+   "errors": 80,
+   "auroc_a": 0.9362,
+   "auroc_b": 0.9341,
+   "a_minus_b": 0.0021,
+   "ci95": [
+    -0.003,
+    0.007
+   ],
+   "share_above_zero": 0.793
+  },
+  "system_judge0.5_agreed": {
+   "contexts": 343,
+   "errors": 53,
+   "auroc_a": 0.9851,
+   "auroc_b": 0.9866,
+   "a_minus_b": -0.0015,
+   "ci95": [
+    -0.0061,
+    0.0025
+   ],
+   "share_above_zero": 0.252
+  },
+  "system_judge0.5_v1s": {
+   "contexts": 384,
+   "errors": 67,
+   "auroc_a": 0.9381,
+   "auroc_b": 0.9367,
+   "a_minus_b": 0.0014,
+   "ci95": [
+    -0.0047,
+    0.0078
+   ],
+   "share_above_zero": 0.678
+  },
+  "system_judge0.5_opus": {
+   "contexts": 384,
+   "errors": 80,
+   "auroc_a": 0.936,
+   "auroc_b": 0.9341,
+   "a_minus_b": 0.0019,
+   "ci95": [
+    -0.0058,
+    0.0104
+   ],
+   "share_above_zero": 0.691
+  },
+  "system_judge1.0_agreed": {
+   "contexts": 343,
+   "errors": 53,
+   "auroc_a": 0.9829,
+   "auroc_b": 0.9866,
+   "a_minus_b": -0.0037,
+   "ci95": [
+    -0.011,
+    0.0026
+   ],
+   "share_above_zero": 0.146
+  },
+  "system_judge1.0_v1s": {
+   "contexts": 384,
+   "errors": 67,
+   "auroc_a": 0.9382,
+   "auroc_b": 0.9367,
+   "a_minus_b": 0.0015,
+   "ci95": [
+    -0.0076,
+    0.0106
+   ],
+   "share_above_zero": 0.624
+  },
+  "system_judge1.0_opus": {
+   "contexts": 384,
+   "errors": 80,
+   "auroc_a": 0.9354,
+   "auroc_b": 0.9341,
+   "a_minus_b": 0.0013,
+   "ci95": [
+    -0.0102,
+    0.0142
+   ],
+   "share_above_zero": 0.6
+  }
+ }
+}

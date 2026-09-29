@@ -10,6 +10,7 @@ much a budget can buy for a given ranking quality, and that without better ranki
 """
 
 import argparse
+import csv
 import json
 from pathlib import Path
 
@@ -26,6 +27,7 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--forensics", type=Path, default=ROOT / "results/leaderboard_forensics.json")
     ap.add_argument("--out", type=Path, default=ROOT / "results/budget_model.json")
+    ap.add_argument("--leaderboard", type=Path, default=ROOT / "results/leaderboard_2026-09-29.csv")
     args = ap.parse_args()
 
     forensics = json.loads(args.forensics.read_text(encoding="utf-8"))
@@ -83,6 +85,18 @@ def main() -> None:
         best = max(f1s, key=f1s.get)
         by_auroc.append({"auroc": auc, "f1_at_172": round(f1s[172], 4), "best_k": best, "best_f1": round(f1s[best], 4)})
 
+    # the top ten of the public leaderboard on 29.09: the same model's reading of each team
+    leaderboard = []
+    with args.leaderboard.open(encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            tp = round(float(row["recall"]) * positives)
+            k = round(tp / float(row["precision"]))
+            dd = brentq(lambda x, tp=tp, k=k: tp_at(k, x) - tp, 0.01, 5)
+            leaderboard.append(
+                {"place": int(row["place"]), "f1": float(row["f1"]), "tp": tp, "k": k,
+                 "auroc": round(float(norm.cdf(dd / 2**0.5)), 3)}
+            )
+
     result = {
         "baseline_point": {"tp": baseline["true_positives"], "fp": baseline["false_positives"]},
         "positives": positives,
@@ -90,6 +104,7 @@ def main() -> None:
         "curves": curves,
         "implied_test_auroc": implied,
         "f1_by_auroc": by_auroc,
+        "leaderboard_2026_09_29": leaderboard,
     }
     args.out.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     for label, c in curves.items():

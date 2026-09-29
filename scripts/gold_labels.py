@@ -110,7 +110,7 @@ def main() -> None:
     labelled = [gold_label(r.id, r.prompt, r.response, writing) for r in valid.itertuples()]
     valid["gold"] = [g for g, _ in labelled]
     organiser_rows = [
-        {"id": r.id, "organiser": int(r.label), "gold": r.gold, "reasons": reasons}
+        {"id": r.id, "organiser": int(r.label), "gold": None if pd.isna(r.gold) else int(r.gold), "reasons": reasons}
         for r, (_, reasons) in zip(valid.itertuples(), labelled, strict=True)
     ]
 
@@ -137,6 +137,27 @@ def main() -> None:
             "vs_opus": agreement(contexts.gold, contexts.opus),
             "v1s_errors_on_call_turns": int(contexts.v1s[calls].sum()),
             "opus_errors_on_call_turns": int(contexts.opus[calls].sum()),
+        },
+        # how often each labelling calls a turn an error, beside the test's share (130 of 548, from the leaderboard)
+        "label_rates": {
+            "test_errors": [130, 548],
+            "organiser_46": {
+                "errors": int(valid.label.sum()),
+                "errors_on_call_turns": int((valid.label.astype(bool) & valid.response.str.contains("TOOL_CALL")).sum()),
+            },
+            **{
+                name: {
+                    "errors": int(y.sum()),
+                    "contexts": len(y),
+                    "share": round(float(y.mean()), 3),
+                    "errors_on_call_turns": int(y[calls].sum()),
+                }
+                for name, y in (
+                    ("v1s", contexts.v1s.astype(int)),
+                    ("opus", contexts.opus.astype(int)),
+                    ("either", (contexts.v1s.astype(int) | contexts.opus.astype(int))),
+                )
+            },
         },
     }
     args.out.write_text(json.dumps(result, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")

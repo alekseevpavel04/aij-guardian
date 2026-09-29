@@ -1,0 +1,13 @@
+{
+ "card": "A100 PCIe 80 GB (vast.ai)",
+ "engine": "vLLM 0.19.1, Qwen3.6-35B-A3B FP8, pooling of every position",
+ "rows": 548,
+ "rows_labelled_1": 102,
+ "total_seconds": 776.4,
+ "seconds_per_row": 1.417,
+ "engine_start_seconds": 191.0,
+ "pass_tokens_per_second": 13031,
+ "peak_gpu_memory_mib": 81089,
+ "limit_seconds": 1800,
+ "margin": 2.32
+}

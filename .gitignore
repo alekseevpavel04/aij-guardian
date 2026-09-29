@@ -25,3 +25,4 @@ submission/
 submissions/*.partial
 submission_work/
 data/rental/
+.vscode/
