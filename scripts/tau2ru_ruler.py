@@ -45,6 +45,7 @@ from pairs_effect import written  # noqa: E402
 from train_head_ru import at_share, auroc, vectors  # noqa: E402
 from turn_ruler import RULES  # noqa: E402
 from uncertainty_source_grid import features  # noqa: E402
+from gold_labels import gold_label, label_against, simulation_task, writing_tools  # noqa: E402
 
 EMB = ROOT / "data/interim/embeddings"
 CJK = "[぀-ヿ㐀-鿿]"  # kana and CJK ideographs
@@ -131,7 +132,12 @@ def main() -> None:
     ap.add_argument(
         "--drop-repeats", action="store_true", help="drop turns that nearly repeat the previous turn of their dialogue"
     )
-    ap.add_argument("--context-labels", choices=("v1s", "agreed", "both", "v1s_duplicated", "opus"), default="v1s")
+    ap.add_argument(
+        "--context-labels", choices=("v1s", "agreed", "both", "v1s_duplicated", "opus", "gold"), default="v1s"
+    )
+    ap.add_argument(
+        "--sim-gold", action="store_true", help="simulation turns with calls take the τ² reference label (gold_labels.py)"
+    )
     ap.add_argument("--fold-seed", type=int, default=None, help="another split of the dialogues into folds")
     ap.add_argument("--tau-weight", type=float, default=0.5, help="τ² rows weigh this share of the Russian rows")
     ap.add_argument(
@@ -194,6 +200,7 @@ def main() -> None:
         + ("" if args.tau_weight == 0.5 else f"_tau{args.tau_weight:g}")
         + ("_importance" if args.importance else "")
         + ("" if args.context_labels == "v1s" else f"_ctx_{args.context_labels}")
+        + ("_simgold" if args.sim_gold else "")
         + ("" if args.pair_share == 0.25 else f"_pairs{args.pair_share:g}")
         + ("" if args.lgbm_size == "default" else f"_lgbm_{args.lgbm_size}")
         + ("" if args.unc_c == 1.0 else f"_uncC{args.unc_c:g}")
@@ -205,6 +212,7 @@ def main() -> None:
     contexts = pd.read_parquet(args.contexts)
     sources = [tuple(x.split("|")) for x in args.source] or [(str(args.rows), args.prefix, str(args.opus_dir))]
     frames, sim_vecs, sim_feats, sim_logp, dropped = [], {}, {}, {}, 0
+    writing = writing_tools()
     for rows_path, prefix, opus_dir in sources:
         part = pd.read_parquet(rows_path)
         # Qwen3.6 at Q4 now and then slips Chinese words into a Russian sentence; the organiser's data has
@@ -213,6 +221,13 @@ def main() -> None:
         dropped += int(cjk.sum())
         part = part[~cjk].copy()
         part["label"] = simulation_labels(args.labels, part, Path(opus_dir), args.v1s, args.only_double_labelled)
+        if args.sim_gold:
+            gold = [
+                label_against(simulation_task(r.domain, r.task_id), r.domain, r.prompt, r.response, writing)[0]
+                for r in part.itertuples()
+            ]
+            # only turns that already had a label: the reference relabels, it does not add rows
+            part["label"] = pd.Series(gold, index=part.index, dtype=float).where(part.label.notna()).fillna(part.label)
         frames.append(part[part.label.notna()])
         # the token pass's final vectors equal the server's last-token vectors (cosine >= 0.995 on the contexts)
         sim_vecs |= vectors(f"{prefix}_final_org")
@@ -261,6 +276,9 @@ def main() -> None:
     ruler = Ruler(contexts, vecs, written(V3_V4, contexts), None)
     y, x, tasks, pairs = ruler.label["v1s"], ruler.x, ruler.tasks, ruler.pairs
     xu = np.stack([own[i] for i in ruler.ctx.id])
+    gold = [gold_label(r.id.removeprefix("org__"), r.prompt, r.response, writing)[0] for r in ruler.ctx.itertuples()]
+    gold_y = np.array([y[k] if g is None else g for k, g in enumerate(gold)]).astype(int)
+    result_gold = {"context_labels_changed_by_gold": int((gold_y != y).sum())}
     fired = np.array(
         [
             any(evidence(r.prompt, r.response, Context.from_prompt(r.prompt))[k] for k in RULES)
@@ -277,6 +295,7 @@ def main() -> None:
         "balance": args.balance,
         "uncertainty_head_skips": args.unc_skip,
         "context_labels": args.context_labels,
+        **result_gold,
         "sources": [list(x) for x in sources],
         "turns_dropped_for_chinese_words": dropped,
         "negative_share": args.negative_share,
@@ -343,6 +362,8 @@ def main() -> None:
             same, split = fit[agree[fit]], fit[~agree[fit]]
             rows = np.concatenate([same, split, split])
             return rows, y[rows], np.concatenate([np.ones(len(same)), np.full(2 * len(split), 0.5)])
+        if args.context_labels == "gold":  # turns with calls take the τ² reference label, the rest v1s
+            return fit, gold_y[fit], np.ones(len(fit))
         if args.context_labels == "opus":  # one labelling convention with the simulation rows
             return fit, ruler.label["opus"][fit], np.ones(len(fit))
         return fit, y[fit], np.ones(len(fit))

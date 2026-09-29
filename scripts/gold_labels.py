@@ -21,7 +21,7 @@ import pandas as pd
 from guardian.env import setup
 from guardian.parsing import parse_transcript
 from guardian.rules import Context, evidence
-from guardian.tau2_tasks import unique_task
+from guardian.tau2_tasks import tasks, unique_task
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
@@ -58,11 +58,20 @@ def matches(call_args: dict | None, expected: dict) -> bool:
 
 
 def gold_label(example_id: str, prompt: str, response: str, writing: dict[str, set[str]]) -> tuple[int | None, list]:
-    task = unique_task(example_id)
+    return label_against(unique_task(example_id), example_id.split("__")[0], prompt, response, writing)
+
+
+def simulation_task(domain: str, task_id: str) -> dict | None:
+    """A simulation keeps the full τ² task id, so its reference is never ambiguous."""
+    return next((t for t in tasks(domain) if str(t["id"]) == str(task_id)), None)
+
+
+def label_against(
+    task: dict | None, domain: str, prompt: str, response: str, writing: dict[str, set[str]]
+) -> tuple[int | None, list]:
     calls = [c for t in parse_transcript(response) for c in t.calls]
     if task is None or not calls:
         return None, []
-    domain = example_id.split("__")[0]
     expected = (task.get("evaluation_criteria") or {}).get("actions") or []
     found = evidence(prompt, response, Context.from_prompt(prompt))
     reasons = [f"rule {k}" for k in RULES if found[k]]
