@@ -46,9 +46,8 @@ def main() -> None:
         **count(rows),
         "by_writer_and_pair": {f"{w}_{p}": count(g) for (w, p), g in rows.groupby(["writer", "pair"])},
         "by_domain": {d: count(g) for d, g in rows.groupby("domain")},
-        "flagged": [
-            {"id": r.id, "reasoning_tail": (labelled[r.id].get("reasoning") or "")[-400:]} for r in flagged.itertuples()
-        ],
+        # ids only: the labeller's reasoning quotes the organiser's dialogues, which stay out of the repository
+        "flagged": [r.id for r in flagged.itertuples()],
     }
     args.out.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({k: v for k, v in result.items() if k != "flagged"}, ensure_ascii=False, indent=2))

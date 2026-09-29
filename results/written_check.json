@@ -40,21 +40,9 @@
     }
   },
   "flagged": [
-    {
-      "id": "pair__airline_02__airline__23::t4__28",
-      "reasoning_tail": "лларов**.\" -> Correct.\nEverything else is fine.\nResult: 1.\nI will formulate the reasoning.\n- The agent incorrectly states the flight number as `HAT024` instead of `HAT204` from the tool response. This contradicts the provided context data.\n- Therefore, it's a hallucination.\nOutput: 1.\nDone. \nLet's double check the exact wording in the prompt: \"HAT023 26 мая, HAT024 и HAT021 28 мая\". Context: `HAT2"
-    },
-    {
-      "id": "pair__banking_02a__banking_knowledge__task_068::t10__13",
-      "reasoning_tail": "any other issue. The agent calls `get_current_time`. That's fine.\nThe response contains a logical contradiction with the policy. So 1.\nI will formulate the reasoning.\n- The agent states that a checking account must be open for at least 14 days to open a savings account (correct per KB).\n- However, the agent then proposes opening the new checking account and savings account *before* closing the old"
-    },
-    {
-      "id": "pair__banking_02b__banking_knowledge__task_003::t3__3",
-      "reasoning_tail": "твие, запрещённое политикой при текущих данных...\"\nCalling with wrong argument (\"Gold Rewards Card\" instead of \"Platinum Rewards\") fits \"аргументы, которых нет в контексте\" / \"неподкреплённость\".\nLabel is definitely 1.\nProceeds. \nOutput matches. \n[Final Check of the Prompt]\nThe prompt asks to output only the label after reasoning.\nI will produce exactly that.\nDone. \n<output>\n<thought>\nАгент в ходе"
-    },
-    {
-      "id": "pair__banking_03f__banking_knowledge__task_018::t5__10",
-      "reasoning_tail": "\"do not translate or transliterate them\", but the user asked for it. The user's request overrides? Or the system instruction is absolute. Usually, system instructions are absolute. But the user's suggestion makes it contextually grounded. \"Может быть, стоит попробовать другой вариант написания моего имени?\" -> Agent tries \"Fatima Al-Hassan\". This is grounded in context. So maybe it's 0.\nThe rule \""
-    }
+    "pair__airline_02__airline__23::t4__28",
+    "pair__banking_02a__banking_knowledge__task_068::t10__13",
+    "pair__banking_02b__banking_knowledge__task_003::t3__3",
+    "pair__banking_03f__banking_knowledge__task_018::t5__10"
   ]
 }
