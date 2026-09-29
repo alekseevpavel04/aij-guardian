@@ -56,14 +56,24 @@ def main() -> None:
         cut = brentq(lambda c: positives * norm.sf(c - dd) + negatives * norm.sf(c) - k, -10, 10)
         return positives * norm.sf(cut - dd)
 
-    # which test AUROC a submission's (TP, k) implies, and the F1 each AUROC gives at our budget
+    # which test AUROC a submission's (TP, k) implies, and the F1 that ranking would give at other budgets;
+    # submission 7 shows only F1 = 0.491935, and 2 TP / (k + 130) = 61 / 124 leaves TP 61 of k 118
+    # (the next solution, 122 of 366, would be a recall of 0.94)
     implied = {}
     for name, tp, k in (
         ("cascade_think0", 71, 173),
         ("baseline", baseline["true_positives"], baseline["true_positives"] + baseline["false_positives"]),
+        ("head_b", 77, 170),
+        ("head_b_without_pairs", 75, 170),
+        ("final_threshold", 61, 118),
     ):
         dd = brentq(lambda x, tp=tp, k=k: tp_at(k, x) - tp, 0.01, 5)
-        implied[name] = round(float(norm.cdf(dd / 2**0.5)), 3)
+        implied[name] = {
+            "tp": tp,
+            "k": k,
+            "auroc": round(float(norm.cdf(dd / 2**0.5)), 3),
+            "f1_at_k": {kk: round(2 * tp_at(kk, dd) / (kk + positives), 3) for kk in (118, 140, 170, 200)},
+        }
     by_auroc = []
     for auc in (0.70, 0.75, 0.78, 0.80, 0.82, 0.85, 0.87, 0.90):
         dd = float(2**0.5 * norm.ppf(auc))
