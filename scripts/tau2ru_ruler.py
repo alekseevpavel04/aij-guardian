@@ -137,6 +137,7 @@ def main() -> None:
     ap.add_argument(
         "--importance", action="store_true", help="weigh simulation rows by how much they look like the contexts"
     )
+    ap.add_argument("--unc-c", type=float, default=1.0, help="regularisation of the uncertainty head")
     ap.add_argument("--pair-share", type=float, default=0.25, help="share of the contexts whose written pairs train B")
     ap.add_argument(
         "--lgbm-size",
@@ -195,6 +196,7 @@ def main() -> None:
         + ("" if args.context_labels == "v1s" else f"_ctx_{args.context_labels}")
         + ("" if args.pair_share == 0.25 else f"_pairs{args.pair_share:g}")
         + ("" if args.lgbm_size == "default" else f"_lgbm_{args.lgbm_size}")
+        + ("" if args.unc_c == 1.0 else f"_uncC{args.unc_c:g}")
         + ("_domain_match" if args.domain_match else "")
         + ("" if args.context_fraction == 1.0 else f"_contexts{args.context_fraction:g}_seed{args.seed}")
     )
@@ -436,7 +438,7 @@ def main() -> None:
         yf = np.concatenate([labels, s.label.to_numpy()]).astype(int)
         wf = np.concatenate([weights, sim_weights(s, sim_weight, float(weights.sum()))])
         sc = StandardScaler().fit(xf)
-        return sc, LogisticRegression(C=1.0, max_iter=5000).fit(sc.transform(xf), yf, sample_weight=wf)
+        return sc, LogisticRegression(C=args.unc_c, max_iter=5000).fit(sc.transform(xf), yf, sample_weight=wf)
 
     def uncertainty(sim_weight: float) -> np.ndarray:
         scores = np.zeros(len(y))
