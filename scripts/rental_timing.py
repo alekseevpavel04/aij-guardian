@@ -23,7 +23,9 @@ def main() -> None:
     args = ap.parse_args()
 
     summary = (args.logs / "rental_timing.log").read_text(encoding="utf-8")
-    rows, predicted, seconds = map(float, re.search(r"(\d+) rows, (\d+) predicted 1, .* ([\d.]+) s \(", summary).groups())
+    rows, predicted, seconds = map(
+        float, re.search(r"(\d+) rows, (\d+) predicted 1, .* ([\d.]+) s \(", summary).groups()
+    )
     worker = (args.logs / "rental_timing_pass.log").read_text(encoding="utf-8", errors="replace")
     engine = float(re.search(r"engine up in (\d+) s", worker).group(1))
     last = re.findall(r"(\d+)/(\d+) rows, (\d+) tokens/s, (\d+) s", worker)[-1]

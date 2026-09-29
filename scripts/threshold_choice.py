@@ -170,10 +170,17 @@ def flipped_shape(score: np.ndarray, fired: np.ndarray, y: np.ndarray, repeats: 
     p_7 = min(grid, key=lambda p: abs(grid[p][118] - 61))
 
     def summary(p: float) -> dict:
-        return {"p": p} | {f"f1_at_{k}": round(2 * grid[p][k] / (k + POSITIVES), 4) for k in ks} | {
-            "tp_at_118": round(grid[p][118], 1)}
+        return (
+            {"p": p}
+            | {f"f1_at_{k}": round(2 * grid[p][k] / (k + POSITIVES), 4) for k in ks}
+            | {"tp_at_118": round(grid[p][118], 1)}
+        )
 
-    return {"fitted_on_head_b_at_170": summary(p_b), "fitted_on_submission_7_at_118": summary(p_7), "actual_tp_at_118": 61}
+    return {
+        "fitted_on_head_b_at_170": summary(p_b),
+        "fitted_on_submission_7_at_118": summary(p_7),
+        "actual_tp_at_118": 61,
+    }
 
 
 def timing_scores(rental: Path, final: Path) -> tuple[np.ndarray, np.ndarray]:
@@ -199,8 +206,11 @@ def main() -> None:
 
     d7 = separation(61, 118)
     band = {}
-    for name, d in (("submission_7", d7), ("minus_0.02", 2**0.5 * norm.ppf(auroc_of(d7) - 0.02)),
-                    ("plus_0.02", 2**0.5 * norm.ppf(auroc_of(d7) + 0.02))):
+    for name, d in (
+        ("submission_7", d7),
+        ("minus_0.02", 2**0.5 * norm.ppf(auroc_of(d7) - 0.02)),
+        ("plus_0.02", 2**0.5 * norm.ppf(auroc_of(d7) + 0.02)),
+    ):
         band[name] = {"auroc": round(auroc_of(d), 3)} | plateau(f1_curve(d))
     curve7 = f1_curve(d7)
     band["submission_7"]["f1_at_k"] = {k: round(curve7[k], 4) for k in (118, 140, 160, 170, 180, 190, 200, 220, 250)}
@@ -229,9 +239,15 @@ def main() -> None:
         "backtest": backtest(),
         "test_curve": band,
         "home": home,
-        "timing_rows": {"rows": len(s), "rules": int(rules.sum()), "sent_threshold": sent,
-                        "flagged_at_sent": int((rules | (s >= sent)).sum()), "test_flagged_at_sent": 118,
-                        "scale": round(scale, 4), "threshold_for_test_flags": to_threshold},
+        "timing_rows": {
+            "rows": len(s),
+            "rules": int(rules.sum()),
+            "sent_threshold": sent,
+            "flagged_at_sent": int((rules | (s >= sent)).sum()),
+            "test_flagged_at_sent": 118,
+            "scale": round(scale, 4),
+            "threshold_for_test_flags": to_threshold,
+        },
     }
     args.out.write_text(json.dumps(result, indent=1) + "\n", encoding="utf-8")
     print(json.dumps(result, indent=1))

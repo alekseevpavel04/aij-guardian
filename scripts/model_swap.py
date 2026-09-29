@@ -1,4 +1,4 @@
-"""Another model in place of Qwen3.6-35B-A3B as the source of features, on the organiser's contexts alone.
+"""Another model in place of Qwen3.6-35B-A3B as the source of features, on the organiser's contexts.
 
 The submitted system reads two things from one pass of the model over a row: the last-token state (head B) and the
 token probabilities of the agent's turn (the uncertainty head). Both come from scripts/embed_llama.py for either
@@ -45,7 +45,10 @@ def scores(prefix: str, contexts: pd.DataFrame) -> dict[str, np.ndarray]:
     x, y, tasks = ruler.x, ruler.label["v1s"], ruler.tasks
     xu = np.stack([own[i] for i in ruler.ctx.id])
     fired = np.array(
-        [any(evidence(r.prompt, r.response, Context.from_prompt(r.prompt))[k] for k in RULES) for r in ruler.ctx.itertuples()]
+        [
+            any(evidence(r.prompt, r.response, Context.from_prompt(r.prompt))[k] for k in RULES)
+            for r in ruler.ctx.itertuples()
+        ]
     )
     b, u = np.zeros(len(y)), np.zeros(len(y))
     for fit, held in GroupKFold(FOLDS).split(x, y, tasks):
@@ -78,7 +81,7 @@ def main() -> None:
         found = scores(prefix, contexts)
         names[prefix] = f"model_swap_{prefix}"
         np.savez(ROOT / "results" / f"{names[prefix]}.scores.npz", **found)
-    result = {"a": args.a, "b": args.b, "contexts": int(len(found["ids"])), "paired": {}}
+    result = {"a": args.a, "b": args.b, "contexts": len(found["ids"]), "paired": {}}
     for key in KEYS:
         for view in ("agreed", "v1s", "opus"):
             result["paired"][f"{key}_{view}"] = compare(

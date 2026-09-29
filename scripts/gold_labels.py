@@ -143,7 +143,9 @@ def main() -> None:
             "test_errors": [130, 548],
             "organiser_46": {
                 "errors": int(valid.label.sum()),
-                "errors_on_call_turns": int((valid.label.astype(bool) & valid.response.str.contains("TOOL_CALL")).sum()),
+                "errors_on_call_turns": int(
+                    (valid.label.astype(bool) & valid.response.str.contains("TOOL_CALL")).sum()
+                ),
             },
             **{
                 name: {
@@ -161,8 +163,13 @@ def main() -> None:
         },
     }
     args.out.write_text(json.dumps(result, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
-    print(json.dumps({k: {kk: vv for kk, vv in v.items() if kk != "rows" or isinstance(vv, int)} for k, v in result.items()},
-                     indent=1, ensure_ascii=False))
+    print(
+        json.dumps(
+            {k: {kk: vv for kk, vv in v.items() if kk != "rows" or isinstance(vv, int)} for k, v in result.items()},
+            indent=1,
+            ensure_ascii=False,
+        )
+    )
     for r in organiser_rows:
         if r["organiser"] != r["gold"]:
             print(r["id"], "organiser", r["organiser"], "gold", r["gold"], r["reasons"])

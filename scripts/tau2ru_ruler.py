@@ -38,6 +38,7 @@ from guardian.tau2_tasks import CUT, data_id
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from context_ruler import FOLDS, V3_V4, C, Ruler  # noqa: E402
+from gold_labels import gold_label, label_against, simulation_task, writing_tools  # noqa: E402
 from head_combos import ranks  # noqa: E402
 from head_models import lgbm  # noqa: E402
 from judge_eval import load  # noqa: E402
@@ -45,7 +46,6 @@ from pairs_effect import written  # noqa: E402
 from train_head_ru import at_share, auroc, vectors  # noqa: E402
 from turn_ruler import RULES  # noqa: E402
 from uncertainty_source_grid import features  # noqa: E402
-from gold_labels import gold_label, label_against, simulation_task, writing_tools  # noqa: E402
 
 EMB = ROOT / "data/interim/embeddings"
 CJK = "[぀-ヿ㐀-鿿]"  # kana and CJK ideographs
@@ -136,7 +136,7 @@ def main() -> None:
         "--context-labels", choices=("v1s", "agreed", "both", "v1s_duplicated", "opus", "gold"), default="v1s"
     )
     ap.add_argument(
-        "--sim-gold", action="store_true", help="simulation turns with calls take the τ² reference label (gold_labels.py)"
+        "--sim-gold", action="store_true", help="simulation turns with calls take the τ² reference label"
     )
     ap.add_argument("--fold-seed", type=int, default=None, help="another split of the dialogues into folds")
     ap.add_argument("--tau-weight", type=float, default=0.5, help="τ² rows weigh this share of the Russian rows")

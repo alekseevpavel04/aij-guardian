@@ -6,7 +6,8 @@ at no cost in platform time. Its rank against the same score on the 384 organise
 rental) is added at weight 0.25; the threshold is then set to flag as many of the rental's 548 timing rows as
 submission 8 did (149), so the test result compares with 0.4956 and 0.5 at about the same number of flags.
 
-    python scripts/add_judge.py --final submission_work/final_fp8_gold.json --out submission_work/final_fp8_gold_judge.json
+    python scripts/add_judge.py --final submission_work/final_fp8_gold.json \
+        --out submission_work/final_fp8_gold_judge.json
 """
 
 import argparse
@@ -32,7 +33,7 @@ def judge_direction(model_dir: Path) -> np.ndarray:
     (one,), (zero,) = tokenizer.encode("1", add_special_tokens=False), tokenizer.encode("0", add_special_tokens=False)
     for path in sorted(glob.glob(str(model_dir / "*.safetensors"))):
         with safe_open(path, "pt") as f:
-            if "lm_head.weight" in f.keys():
+            if "lm_head.weight" in f.keys():  # noqa: SIM118 (a safetensors handle, not a dict)
                 rows = f.get_slice("lm_head.weight")
                 return (rows[one : one + 1].float().numpy()[0] - rows[zero : zero + 1].float().numpy()[0]).astype(
                     np.float64
