@@ -1,0 +1,187 @@
+{
+ "a": "g4_tok",
+ "b": "q4_tok",
+ "contexts": 384,
+ "paired": {
+  "system_agreed": {
+   "a": "model_swap_g4_tok:system",
+   "b": "model_swap_q4_tok:system",
+   "domain": null,
+   "contexts": 343,
+   "teacher": "agreed",
+   "errors": 53,
+   "dialogues": 40,
+   "metric": "auroc",
+   "auroc_a": 0.9408,
+   "auroc_b": 0.978,
+   "a_minus_b": -0.0372,
+   "ci95": [
+    -0.0638,
+    -0.0133
+   ],
+   "share_above_zero": 0.0,
+   "repeats": 2000,
+   "resamples_without_both_classes": 0
+  },
+  "system_v1s": {
+   "a": "model_swap_g4_tok:system",
+   "b": "model_swap_q4_tok:system",
+   "domain": null,
+   "contexts": 384,
+   "teacher": "v1s",
+   "errors": 67,
+   "dialogues": 40,
+   "metric": "auroc",
+   "auroc_a": 0.8872,
+   "auroc_b": 0.9362,
+   "a_minus_b": -0.049,
+   "ci95": [
+    -0.0995,
+    -0.0063
+   ],
+   "share_above_zero": 0.012,
+   "repeats": 2000,
+   "resamples_without_both_classes": 0
+  },
+  "system_opus": {
+   "a": "model_swap_g4_tok:system",
+   "b": "model_swap_q4_tok:system",
+   "domain": null,
+   "contexts": 384,
+   "teacher": "opus",
+   "errors": 80,
+   "dialogues": 40,
+   "metric": "auroc",
+   "auroc_a": 0.8941,
+   "auroc_b": 0.9012,
+   "a_minus_b": -0.0071,
+   "ci95": [
+    -0.031,
+    0.0184
+   ],
+   "share_above_zero": 0.287,
+   "repeats": 2000,
+   "resamples_without_both_classes": 0
+  },
+  "head_b_agreed": {
+   "a": "model_swap_g4_tok:head_b",
+   "b": "model_swap_q4_tok:head_b",
+   "domain": null,
+   "contexts": 343,
+   "teacher": "agreed",
+   "errors": 53,
+   "dialogues": 40,
+   "metric": "auroc",
+   "auroc_a": 0.8459,
+   "auroc_b": 0.9128,
+   "a_minus_b": -0.0669,
+   "ci95": [
+    -0.1191,
+    -0.0197
+   ],
+   "share_above_zero": 0.001,
+   "repeats": 2000,
+   "resamples_without_both_classes": 0
+  },
+  "head_b_v1s": {
+   "a": "model_swap_g4_tok:head_b",
+   "b": "model_swap_q4_tok:head_b",
+   "domain": null,
+   "contexts": 384,
+   "teacher": "v1s",
+   "errors": 67,
+   "dialogues": 40,
+   "metric": "auroc",
+   "auroc_a": 0.8034,
+   "auroc_b": 0.8834,
+   "a_minus_b": -0.08,
+   "ci95": [
+    -0.1414,
+    -0.0196
+   ],
+   "share_above_zero": 0.005,
+   "repeats": 2000,
+   "resamples_without_both_classes": 0
+  },
+  "head_b_opus": {
+   "a": "model_swap_g4_tok:head_b",
+   "b": "model_swap_q4_tok:head_b",
+   "domain": null,
+   "contexts": 384,
+   "teacher": "opus",
+   "errors": 80,
+   "dialogues": 40,
+   "metric": "auroc",
+   "auroc_a": 0.813,
+   "auroc_b": 0.8454,
+   "a_minus_b": -0.0324,
+   "ci95": [
+    -0.0657,
+    0.0034
+   ],
+   "share_above_zero": 0.041,
+   "repeats": 2000,
+   "resamples_without_both_classes": 0
+  },
+  "head_u_agreed": {
+   "a": "model_swap_g4_tok:head_u",
+   "b": "model_swap_q4_tok:head_u",
+   "domain": null,
+   "contexts": 343,
+   "teacher": "agreed",
+   "errors": 53,
+   "dialogues": 40,
+   "metric": "auroc",
+   "auroc_a": 0.7368,
+   "auroc_b": 0.8113,
+   "a_minus_b": -0.0745,
+   "ci95": [
+    -0.1363,
+    -0.0136
+   ],
+   "share_above_zero": 0.013,
+   "repeats": 2000,
+   "resamples_without_both_classes": 0
+  },
+  "head_u_v1s": {
+   "a": "model_swap_g4_tok:head_u",
+   "b": "model_swap_q4_tok:head_u",
+   "domain": null,
+   "contexts": 384,
+   "teacher": "v1s",
+   "errors": 67,
+   "dialogues": 40,
+   "metric": "auroc",
+   "auroc_a": 0.7079,
+   "auroc_b": 0.7735,
+   "a_minus_b": -0.0656,
+   "ci95": [
+    -0.1188,
+    -0.0089
+   ],
+   "share_above_zero": 0.014,
+   "repeats": 2000,
+   "resamples_without_both_classes": 0
+  },
+  "head_u_opus": {
+   "a": "model_swap_g4_tok:head_u",
+   "b": "model_swap_q4_tok:head_u",
+   "domain": null,
+   "contexts": 384,
+   "teacher": "opus",
+   "errors": 80,
+   "dialogues": 40,
+   "metric": "auroc",
+   "auroc_a": 0.7427,
+   "auroc_b": 0.7518,
+   "a_minus_b": -0.0091,
+   "ci95": [
+    -0.0519,
+    0.0554
+   ],
+   "share_above_zero": 0.373,
+   "repeats": 2000,
+   "resamples_without_both_classes": 0
+  }
+ }
+}
