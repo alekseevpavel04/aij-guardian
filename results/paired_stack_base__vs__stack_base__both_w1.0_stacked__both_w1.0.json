@@ -1,0 +1,19 @@
+{
+  "a": "stack_base:both_w1.0_stacked",
+  "b": "stack_base",
+  "domain": null,
+  "contexts": 384,
+  "teacher": "v1s",
+  "errors": 67,
+  "dialogues": 40,
+  "auroc_a": 0.9329,
+  "auroc_b": 0.9407,
+  "a_minus_b": -0.0078,
+  "ci95": [
+    -0.0233,
+    0.0033
+  ],
+  "share_above_zero": 0.096,
+  "repeats": 2000,
+  "resamples_without_both_classes": 0
+}

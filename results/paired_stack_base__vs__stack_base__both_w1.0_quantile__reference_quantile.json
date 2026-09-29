@@ -1,0 +1,19 @@
+{
+  "a": "stack_base:both_w1.0_quantile",
+  "b": "stack_base:reference_quantile",
+  "domain": null,
+  "contexts": 384,
+  "teacher": "v1s",
+  "errors": 67,
+  "dialogues": 40,
+  "auroc_a": 0.9409,
+  "auroc_b": 0.9366,
+  "a_minus_b": 0.0043,
+  "ci95": [
+    -0.0084,
+    0.0189
+  ],
+  "share_above_zero": 0.709,
+  "repeats": 2000,
+  "resamples_without_both_classes": 0
+}
