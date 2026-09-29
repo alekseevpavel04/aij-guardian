@@ -120,6 +120,7 @@ def build(
     threshold: float | None = None,
     calibration: Path | None = None,
     final: Path | None = None,
+    final_share: float | None = None,
 ) -> None:
     if out_dir.exists():
         shutil.rmtree(out_dir)
@@ -150,6 +151,8 @@ def build(
         exported = json.loads(final.read_text(encoding="utf-8"))
         config |= FINAL | {"checks": exported["checks"], "prompt": "judge_prompt.md"}
         shutil.copy(final, out_dir / "model/final.json")
+        if final_share is not None:
+            config["share"] = final_share
         (out_dir / "model/judge_prompt.md").write_text(prompt.read_text(encoding="utf-8"), encoding="utf-8")
     if strategy in ("cascade", "head"):
         config |= CASCADE | {"share": share, "prompt": "judge_prompt.md", "thinking_tokens": thinking_tokens}
@@ -234,6 +237,7 @@ def main() -> None:
     ap.add_argument("--threshold", type=float, default=None, help="head: per-row threshold on the home scale")
     ap.add_argument("--calibration", type=Path, default=None, help="head: calibration rows with home scores")
     ap.add_argument("--share", type=float, default=0.3, help="cascade: share of rows the judge labels 1")
+    ap.add_argument("--final-share", type=float, default=None, help="final: top share instead of the threshold")
     ap.add_argument("--prompt", type=Path, default=ROOT / "configs/prompts/judge_v1.md")
     ap.add_argument("--model-dir", type=Path, default=MODEL_DIR)
     ap.add_argument("--thinking-tokens", type=int, default=0, help="cascade: reasoning budget, 0 for none")
@@ -261,6 +265,7 @@ def main() -> None:
         args.threshold,
         args.calibration,
         args.final,
+        args.final_share,
     )
     if args.no_zip:
         print(f"folder {args.out}, no archive")
@@ -273,10 +278,10 @@ def main() -> None:
         suffix += f"_{args.head.stem}_{args.prompt.stem}_share{args.share}"
         suffix += "_fallback_rules" if args.fallback == "rules" else ""
         suffix += f"_threshold{args.threshold}" if args.threshold is not None else ""
+    if args.strategy == "final" and args.final_share is not None:
+        suffix += f"_share{args.final_share}"
     name = f"guardian_{args.strategy}{suffix}.zip"
     archive = args.archive or ROOT / "submissions" / name
-    if args.strategy == "final":
-        suffix += f"_{args.final.stem}"
     if args.strategy in ("cascade", "head", "final"):
         shutil.copyfile(weights_base(args.model_dir), archive)
         zip_dir(args.out, archive, mode="a")

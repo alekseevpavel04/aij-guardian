@@ -18,7 +18,9 @@ with "fallback": "rules" it falls back to the rules alone, whose score on the te
 With the `final` strategy (DECISIONS 46, 47) one pass of the same model per row (scripts/final_pass.py, in a
 process of its own with a deadline) gives head B its last-token vector and the uncertainty head the turn's token
 probabilities; each row is labelled 1 when a rule fires or its score reaches the threshold, on its own, never as
-a share of the file (guardian.final). Rows the pass has not scored by the deadline get the rules' label.
+a share of the file (guardian.final). Rows the pass has not scored by the deadline get the rules' label. A config
+with "share" labels the top share of scored rows instead: once, to see the heads' ranking under the same budget as
+submissions 5 and 6, not as the final rule.
 """
 
 import json
@@ -170,7 +172,7 @@ def final(rows: list[dict], config: dict, started: float) -> list[int] | None:
     import numpy as np
 
     from guardian import journal
-    from guardian.cascade import combine, rule_labels
+    from guardian.cascade import combine, rule_labels, top_share
     from guardian.extract import decode
     from guardian.final import Final
     from guardian.serving import stop
@@ -228,11 +230,17 @@ def final(rows: list[dict], config: dict, started: float) -> list[int] | None:
         np.stack([vectors[str(i)] for i in scored]),
         np.stack([features(stats[str(i)], parts[str(i)]) for i in scored]),
     )
-    flags = [0] * len(rows)
+    by_row: list[float | None] = [None] * len(rows)
     for i, s in zip(scored, scores, strict=True):
-        flags[i] = int(s >= model.threshold)
+        by_row[i] = float(s)
+    if config.get("share") is not None:
+        flags = top_share(by_row, config["share"])
+        rule = f"top {config['share']}"
+    else:
+        flags = [int(s is not None and s >= model.threshold) for s in by_row]
+        rule = f"threshold {model.threshold}"
     labels = combine(rules, flags)
-    print(f"threshold {model.threshold}: {sum(flags)} flagged; with the rules {sum(labels)}", file=sys.stderr)
+    print(f"{rule}: {sum(flags)} flagged; with the rules {sum(labels)}", file=sys.stderr)
     return labels
 
 

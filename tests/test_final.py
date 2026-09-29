@@ -88,7 +88,7 @@ for row in rows[:{scored}]:
 """
 
 
-def final_archive(tmp_path: Path, scored: int) -> tuple[Path, Path]:
+def final_archive(tmp_path: Path, scored: int, share: float | None = None) -> tuple[Path, Path]:
     """The submission's scripts and package with heads of a toy shape: head B reads a vector of 4 equal numbers
     (the response length), so the longer response scores higher; the uncertainty head is flat."""
     root = tmp_path / "archive"
@@ -122,16 +122,18 @@ def final_archive(tmp_path: Path, scored: int) -> tuple[Path, Path]:
         "checks": [],
         "prompt": "judge_prompt.md",
     }
+    if share is not None:
+        config["share"] = share
     (root / "model/guardian.json").write_text(json.dumps(config))
     fake = tmp_path / "fake_pass.py"
     fake.write_text(FAKE_PASS.format(src=str(ROOT / "src"), scored=scored))
     return root, fake
 
 
-def run_predict(tmp_path: Path, scored: int, responses: list[str]) -> list[int]:
+def run_predict(tmp_path: Path, scored: int, responses: list[str], share: float | None = None) -> list[int]:
     import pandas as pd
 
-    root, fake = final_archive(tmp_path, scored)
+    root, fake = final_archive(tmp_path, scored, share)
     rows = pd.DataFrame(
         {"id": [f"r{i}" for i in range(len(responses))], "prompt": ["p"] * len(responses), "response": responses}
     )
@@ -165,3 +167,9 @@ def test_rows_the_pass_did_not_score_get_the_rules_label(tmp_path):
 
 def test_a_pass_that_scored_nothing_falls_back_to_the_rules(tmp_path):
     assert run_predict(tmp_path, 0, ["x" * 35, "x" * 35]) == [0, 0]
+
+
+def test_a_configured_share_replaces_the_threshold(tmp_path):
+    # both rows score below the threshold; the top half of two tied rows takes both (ties at the cut go in)
+    assert run_predict(tmp_path, 2, ["x" * 5, "x" * 5]) == [0, 0]
+    assert run_predict(tmp_path / "share", 2, ["x" * 5, "x" * 5], share=0.5) == [1, 1]
