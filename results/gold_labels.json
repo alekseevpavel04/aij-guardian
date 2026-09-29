@@ -1,0 +1,364 @@
+{
+ "organiser_46": {
+  "rows_with_a_gold_label": 21,
+  "vs_organiser": {
+   "rows": 21,
+   "same": 17,
+   "gold_1_other_1": 17,
+   "gold_1_other_0": 2,
+   "gold_0_other_1": 2,
+   "gold_0_other_0": 0
+  },
+  "rows": [
+   {
+    "id": "airline__10::t19",
+    "organiser": 0,
+    "gold": NaN,
+    "reasons": []
+   },
+   {
+    "id": "airline__10::t21",
+    "organiser": 0,
+    "gold": NaN,
+    "reasons": []
+   },
+   {
+    "id": "airline__21::t7",
+    "organiser": 1,
+    "gold": 1.0,
+    "reasons": [
+     "update_reservation_flights with other arguments",
+     "update_reservation_baggages with other arguments"
+    ]
+   },
+   {
+    "id": "airline__23::t10",
+    "organiser": 1,
+    "gold": 1.0,
+    "reasons": [
+     "rule missing_required_argument",
+     "book_reservation with other arguments",
+     "book_reservation with other arguments",
+     "book_reservation with other arguments"
+    ]
+   },
+   {
+    "id": "airline__24::t14",
+    "organiser": 0,
+    "gold": NaN,
+    "reasons": []
+   },
+   {
+    "id": "airline__3::t4",
+    "organiser": 0,
+    "gold": NaN,
+    "reasons": []
+   },
+   {
+    "id": "airline__44::t22",
+    "organiser": 1,
+    "gold": 1.0,
+    "reasons": [
+     "update_reservation_flights with other arguments",
+     "update_reservation_flights with other arguments",
+     "cancel_reservation not in the reference",
+     "cancel_reservation not in the reference"
+    ]
+   },
+   {
+    "id": "airline__47::t1",
+    "organiser": 0,
+    "gold": NaN,
+    "reasons": []
+   },
+   {
+    "id": "airline__5::t1",
+    "organiser": 0,
+    "gold": NaN,
+    "reasons": []
+   },
+   {
+    "id": "airline__7::t6",
+    "organiser": 1,
+    "gold": 0.0,
+    "reasons": []
+   },
+   {
+    "id": "airline__8::t7",
+    "organiser": 1,
+    "gold": NaN,
+    "reasons": []
+   },
+   {
+    "id": "airline__9::t6",
+    "organiser": 1,
+    "gold": 1.0,
+    "reasons": [
+     "cancel_reservation not in the reference",
+     "transfer_to_human_agents not in the reference"
+    ]
+   },
+   {
+    "id": "banking_knowledge__task_003::t7",
+    "organiser": 1,
+    "gold": 1.0,
+    "reasons": [
+     "transfer_to_human_agents not in the reference"
+    ]
+   },
+   {
+    "id": "banking_knowledge__task_005::t6",
+    "organiser": 1,
+    "gold": 1.0,
+    "reasons": [
+     "log_verification with other arguments"
+    ]
+   },
+   {
+    "id": "banking_knowledge__task_018::t6",
+    "organiser": 1,
+    "gold": 1.0,
+    "reasons": [
+     "transfer_to_human_agents not in the reference"
+    ]
+   },
+   {
+    "id": "banking_knowledge__task_033::t2",
+    "organiser": 0,
+    "gold": NaN,
+    "reasons": []
+   },
+   {
+    "id": "banking_knowledge__task_051::t15",
+    "organiser": 1,
+    "gold": 0.0,
+    "reasons": []
+   },
+   {
+    "id": "banking_knowledge__task_057::t2",
+    "organiser": 0,
+    "gold": NaN,
+    "reasons": []
+   },
+   {
+    "id": "banking_knowledge__task_063::t8",
+    "organiser": 0,
+    "gold": 1.0,
+    "reasons": [
+     "transfer_to_human_agents not in the reference"
+    ]
+   },
+   {
+    "id": "banking_knowledge__task_068::t11",
+    "organiser": 1,
+    "gold": 1.0,
+    "reasons": [
+     "rule unsupported_argument_value",
+     "call_discoverable_agent_tool with other arguments"
+    ]
+   },
+   {
+    "id": "banking_knowledge__task_080::t30",
+    "organiser": 0,
+    "gold": NaN,
+    "reasons": []
+   },
+   {
+    "id": "banking_knowledge__task_081::t35",
+    "organiser": 0,
+    "gold": 1.0,
+    "reasons": [
+     "transfer_to_human_agents with other arguments"
+    ]
+   },
+   {
+    "id": "banking_knowledge__task_083::t10",
+    "organiser": 1,
+    "gold": 1.0,
+    "reasons": [
+     "rule unknown_tool"
+    ]
+   },
+   {
+    "id": "retail__106::t3",
+    "organiser": 1,
+    "gold": 1.0,
+    "reasons": [
+     "rule unsupported_argument_value"
+    ]
+   },
+   {
+    "id": "retail__108::t1",
+    "organiser": 0,
+    "gold": NaN,
+    "reasons": []
+   },
+   {
+    "id": "retail__12::t4",
+    "organiser": 0,
+    "gold": NaN,
+    "reasons": []
+   },
+   {
+    "id": "retail__14::t1",
+    "organiser": 0,
+    "gold": NaN,
+    "reasons": []
+   },
+   {
+    "id": "retail__27::t10",
+    "organiser": 1,
+    "gold": 1.0,
+    "reasons": [
+     "return_delivered_order_items not in the reference"
+    ]
+   },
+   {
+    "id": "retail__29::t13",
+    "organiser": 1,
+    "gold": NaN,
+    "reasons": []
+   },
+   {
+    "id": "retail__36::t10",
+    "organiser": 1,
+    "gold": 1.0,
+    "reasons": [
+     "rule no_op_replacement",
+     "modify_pending_order_items with other arguments"
+    ]
+   },
+   {
+    "id": "retail__47::t12",
+    "organiser": 0,
+    "gold": NaN,
+    "reasons": []
+   },
+   {
+    "id": "retail__48::t4",
+    "organiser": 1,
+    "gold": 1.0,
+    "reasons": [
+     "rule repeated_failed_call"
+    ]
+   },
+   {
+    "id": "retail__78::t1",
+    "organiser": 0,
+    "gold": NaN,
+    "reasons": []
+   },
+   {
+    "id": "retail__87::t6",
+    "organiser": 0,
+    "gold": NaN,
+    "reasons": []
+   },
+   {
+    "id": "telecom__mms_issueairplane_mode_on-bad_network_preference-bad_wifi_calling-break_app_sms_p::t7",
+    "organiser": 0,
+    "gold": NaN,
+    "reasons": []
+   },
+   {
+    "id": "telecom__mms_issueairplane_mode_on-bad_network_preference-bad_wifi_calling-data_usage_exce::t7",
+    "organiser": 1,
+    "gold": NaN,
+    "reasons": []
+   },
+   {
+    "id": "telecom__mms_issueairplane_mode_on-bad_network_preference-break_apn_mms_setting-break_app_::t10",
+    "organiser": 1,
+    "gold": NaN,
+    "reasons": []
+   },
+   {
+    "id": "telecom__mms_issueairplane_mode_on-bad_network_preference-break_app_both_permissions-data_::t12",
+    "organiser": 0,
+    "gold": NaN,
+    "reasons": []
+   },
+   {
+    "id": "telecom__mms_issueairplane_mode_on-bad_wifi_calling-break_app_both_permissions-data_mode_o::t15",
+    "organiser": 0,
+    "gold": NaN,
+    "reasons": []
+   },
+   {
+    "id": "telecom__mms_issueairplane_mode_on-break_app_both_permissionsPERSONA_Hard::t8",
+    "organiser": 0,
+    "gold": NaN,
+    "reasons": []
+   },
+   {
+    "id": "telecom__mms_issuebad_network_preference-bad_wifi_calling-break_apn_mms_setting-break_app_::t7",
+    "organiser": 0,
+    "gold": NaN,
+    "reasons": []
+   },
+   {
+    "id": "telecom__mms_issuebreak_apn_mms_setting-user_abroad_roaming_enabled_offPERSONA_Hard::t27",
+    "organiser": 1,
+    "gold": 1.0,
+    "reasons": [
+     "transfer_to_human_agents not in the reference"
+    ]
+   },
+   {
+    "id": "telecom__mobile_data_issueairplane_mode_on-bad_network_preference-bad_vpn-data_saver_mode_::t7",
+    "organiser": 0,
+    "gold": NaN,
+    "reasons": []
+   },
+   {
+    "id": "telecom__mobile_data_issuebad_network_preference-bad_vpn-data_mode_off-data_saver_mode_onP::t6",
+    "organiser": 1,
+    "gold": 1.0,
+    "reasons": [
+     "rule unknown_tool",
+     "rule repeated_failed_call"
+    ]
+   },
+   {
+    "id": "telecom__service_issueairplane_mode_on-break_apn_settings-lock_sim_card_pin-overdue_bill_s::t15",
+    "organiser": 1,
+    "gold": 1.0,
+    "reasons": [
+     "rule unknown_tool"
+    ]
+   },
+   {
+    "id": "telecom__service_issuebreak_apn_settings-contract_end_suspension-lock_sim_card_pin-unseat_::t13",
+    "organiser": 1,
+    "gold": 1.0,
+    "reasons": [
+     "resume_line not in the reference"
+    ]
+   }
+  ]
+ },
+ "contexts": {
+  "rows": 384,
+  "turns_with_calls": 219,
+  "rows_with_a_gold_label": 190,
+  "gold_errors": 26,
+  "vs_v1s": {
+   "rows": 190,
+   "same": 180,
+   "gold_1_other_1": 20,
+   "gold_1_other_0": 6,
+   "gold_0_other_1": 4,
+   "gold_0_other_0": 160
+  },
+  "vs_opus": {
+   "rows": 190,
+   "same": 183,
+   "gold_1_other_1": 23,
+   "gold_1_other_0": 3,
+   "gold_0_other_1": 4,
+   "gold_0_other_0": 160
+  },
+  "v1s_errors_on_call_turns": 29,
+  "opus_errors_on_call_turns": 32
+ }
+}
