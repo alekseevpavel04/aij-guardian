@@ -89,3 +89,26 @@ def test_verdict_tokens_are_read_through_markdown_wrappers_after_an_answer_prefi
     assert p_one([("**1", -0.2), ("0", -2.0)], markdown=True) > 0.5
     # the quick judge reads bare digits only, as in the submitted cascade
     assert p_one([("**1", -0.2), ("0", -2.0)]) == 0.0
+
+
+GEMMA4 = Path("D:/VScode_projects/llm-models/gemma-4-26b-a4b/gemma-4-26B-A4B-it-UD-Q4_K_M.gguf")
+
+
+@pytest.mark.skipif(not GEMMA4.exists(), reason="needs the Gemma 4 GGUF for its chat template")
+def test_gemma4_render_matches_the_template_in_the_gguf():
+    import json
+
+    from gguf import GGUFReader
+    from jinja2.sandbox import ImmutableSandboxedEnvironment
+
+    from guardian.judge import render_gemma4
+
+    field = GGUFReader(GEMMA4).fields["tokenizer.chat_template"]
+    template = bytes(field.parts[field.data[0]]).decode("utf-8")
+    env = ImmutableSandboxedEnvironment(extensions=["jinja2.ext.loopcontrols"])
+    env.filters["tojson"] = lambda x, **_: json.dumps(x, ensure_ascii=False)
+    messages = [{"role": "system", "content": "S"}, {"role": "user", "content": user_text("P", "R")}]
+    expected = env.from_string(template).render(
+        messages=messages, add_generation_prompt=True, bos_token="<bos>", enable_thinking=False
+    )
+    assert render_gemma4("S", "P", "R") == expected

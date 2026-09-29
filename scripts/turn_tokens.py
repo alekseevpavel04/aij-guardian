@@ -19,7 +19,7 @@ import pandas as pd
 
 from guardian import journal
 from guardian.env import setup
-from guardian.judge import render
+from guardian.judge import RENDERERS
 from guardian.uncertainty import part_of_each_char
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -66,6 +66,8 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--contexts", type=Path, default=ROOT / "data/synthetic/organizer_contexts.parquet")
     ap.add_argument("--prefix", default="q4_tok")
+    ap.add_argument("--gguf", type=Path, default=GGUF)
+    ap.add_argument("--chat", choices=sorted(RENDERERS), default="qwen", help="chat template of the model in --gguf")
     args = ap.parse_args()
 
     frame = pd.read_parquet(args.contexts).set_index("id")
@@ -73,13 +75,13 @@ def main() -> None:
     stats = {
         r["id"]: r for r in journal.read(ROOT / "data/interim/embeddings" / f"{args.prefix}_uncertainty_org.jsonl")
     }
-    vocab = Vocab(GGUF)
+    vocab = Vocab(args.gguf)
     out = ROOT / "data/interim/embeddings" / f"{args.prefix}_parts_org.jsonl"
     out.unlink(missing_ok=True)
     mismatched = 0
     for rid, r in stats.items():
         row = frame.loc[rid]
-        text = render(system_prompt, row.prompt, row.response, thinking=False)
+        text = RENDERERS[args.chat](system_prompt, row.prompt, row.response)
         cut = text.rindex("<response>\n") + len("<response>\n")
         before = len(vocab.tokenize(text[:cut]))
         tokens = vocab.tokenize(text[: cut + len(row.response)])[before:]

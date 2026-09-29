@@ -31,7 +31,7 @@ import pandas as pd
 
 from guardian import journal
 from guardian.env import setup
-from guardian.judge import render
+from guardian.judge import RENDERERS
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
@@ -161,6 +161,9 @@ class Llama:
         cp.embeddings = True
         cp.pooling_type = 0  # LLAMA_POOLING_TYPE_NONE
         cp.flash_attn_type = 1
+        # a sliding-window model (Gemma 4) would otherwise keep the window layers' cache for the whole context,
+        # 15 GB at 76k tokens; the chunks only ever look back one window. No effect on a model without one (Qwen)
+        cp.swa_full = False
         lib.llama_init_from_model.restype = C.c_void_p
         lib.llama_init_from_model.argtypes = [C.c_void_p, ContextParams]
         self.ctx = lib.llama_init_from_model(self.model, cp)
@@ -240,6 +243,7 @@ def main() -> None:
     ap.add_argument("--prefix", required=True)
     ap.add_argument("--gguf", type=Path, default=GGUF)
     ap.add_argument("--system-prompt", type=Path, default=BASELINE_PROMPT)
+    ap.add_argument("--chat", choices=sorted(RENDERERS), default="qwen", help="chat template of the model in --gguf")
     ap.add_argument("--n-ctx", type=int, default=76000)
     ap.add_argument("--batch", type=int, default=2048)
     ap.add_argument("--threads", type=int, default=6)
@@ -266,7 +270,7 @@ def main() -> None:
     started = time.monotonic()
     for i, row in enumerate(todo.itertuples(), 1):
         t0 = time.monotonic()
-        text = render(system_prompt, row.prompt, row.response, thinking=False)
+        text = RENDERERS[args.chat](system_prompt, row.prompt, row.response)
         cut = text.rindex("<response>\n") + len("<response>\n")
         tokens = llama.tokenize(text)
         before = len(llama.tokenize(text[:cut]))

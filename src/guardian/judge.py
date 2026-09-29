@@ -41,6 +41,25 @@ def render(system_prompt: str, prompt: str, response: str, thinking: bool, refer
     return text if thinking else text + CLOSE_THINK
 
 
+def render_gemma4(system_prompt: str, prompt: str, response: str) -> str:
+    """The same chat in the Gemma 4 template (chat_template.jinja of google/gemma-4-26B-A4B-it), thinking off.
+
+    Only the token pass of a candidate replacement model uses it (scripts/embed_llama.py --chat gemma4); the
+    tokenizer is called without special tokens added, so the BOS token is written here.
+    """
+    return (
+        f"<bos><|turn>system\n{system_prompt}<turn|>\n"
+        f"<|turn>user\n{user_text(prompt, response)}<turn|>\n"
+        "<|turn>model\n<|channel>thought\n<channel|>"
+    )
+
+
+RENDERERS = {
+    "qwen": lambda system_prompt, prompt, response: render(system_prompt, prompt, response, thinking=False),
+    "gemma4": render_gemma4,
+}
+
+
 def p_one(top: list[tuple[str, float]], markdown: bool = False) -> float | None:
     """P("1") from the top log-probabilities of the verdict position, renormalised over "1" and "0".
 
