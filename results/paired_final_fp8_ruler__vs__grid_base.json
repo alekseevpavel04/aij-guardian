@@ -1,0 +1,20 @@
+{
+  "a": "final_fp8_ruler",
+  "b": "grid_base",
+  "domain": null,
+  "contexts": 384,
+  "teacher": "v1s",
+  "errors": 67,
+  "dialogues": 40,
+  "metric": "auroc",
+  "auroc_a": 0.9366,
+  "auroc_b": 0.9407,
+  "a_minus_b": -0.0041,
+  "ci95": [
+    -0.0175,
+    0.0066
+  ],
+  "share_above_zero": 0.258,
+  "repeats": 2000,
+  "resamples_without_both_classes": 0
+}

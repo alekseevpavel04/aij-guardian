@@ -1,0 +1,63 @@
+{
+ "oof": "submission_work/final_fp8.oof.npz",
+ "teacher": "opus",
+ "rows": 548,
+ "draws": 1000,
+ "shares": {
+  "0.12": {
+   "f1_fixed_share": 0.5006,
+   "f1_threshold": 0.6705,
+   "threshold_minus_share": 0.17,
+   "ci95": [
+    0.0994,
+    0.2371
+   ],
+   "flags_per_error_fixed_share": 2.57,
+   "flags_per_error_threshold": 1.16
+  },
+  "0.17": {
+   "f1_fixed_share": 0.6136,
+   "f1_threshold": 0.7185,
+   "threshold_minus_share": 0.1049,
+   "ci95": [
+    0.0433,
+    0.1666
+   ],
+   "flags_per_error_fixed_share": 1.86,
+   "flags_per_error_threshold": 1.01
+  },
+  "0.2372": {
+   "f1_fixed_share": 0.7346,
+   "f1_threshold": 0.7565,
+   "threshold_minus_share": 0.0219,
+   "ci95": [
+    -0.0352,
+    0.073
+   ],
+   "flags_per_error_fixed_share": 1.38,
+   "flags_per_error_threshold": 0.91
+  },
+  "0.3": {
+   "f1_fixed_share": 0.8154,
+   "f1_threshold": 0.7788,
+   "threshold_minus_share": -0.0366,
+   "ci95": [
+    -0.0796,
+    0.0072
+   ],
+   "flags_per_error_fixed_share": 1.14,
+   "flags_per_error_threshold": 0.87
+  },
+  "0.35": {
+   "f1_fixed_share": 0.8391,
+   "f1_threshold": 0.79,
+   "threshold_minus_share": -0.0492,
+   "ci95": [
+    -0.0873,
+    -0.0166
+   ],
+   "flags_per_error_fixed_share": 1.0,
+   "flags_per_error_threshold": 0.83
+  }
+ }
+}

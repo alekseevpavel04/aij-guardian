@@ -1,0 +1,9 @@
+{
+ "rows_compared": 502,
+ "vector_cosine_min": 0.974392,
+ "vector_cosine_median": 0.993779,
+ "turn_logp_max_abs_diff_median": 1.12197,
+ "turn_logp_max_abs_diff_max": 21.16773,
+ "same_token_counts": 502,
+ "same_parts": 502
+}
