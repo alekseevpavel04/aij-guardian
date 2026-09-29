@@ -34,7 +34,8 @@ guard)
     ;;
 setup)
     $PY -m pip install -r configs/rental_requirements.txt 2>&1 | tail -3
-    $PY -m pip install -e . 2>&1 | tail -1
+    # the project pins Python 3.11 for home; the code runs on the image's 3.12
+    $PY -m pip install -e . --no-deps --ignore-requires-python 2>&1 | tail -1
     $PY -c "import vllm, lightgbm, sklearn; print('vllm', vllm.__version__, 'lightgbm', lightgbm.__version__, 'sklearn', sklearn.__version__)"
     nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv
     ;;
