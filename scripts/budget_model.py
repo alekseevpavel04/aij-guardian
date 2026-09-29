@@ -58,7 +58,8 @@ def main() -> None:
 
     # which test AUROC a submission's (TP, k) implies, and the F1 that ranking would give at other budgets;
     # submission 7 shows only F1 = 0.491935, and 2 TP / (k + 130) = 61 / 124 leaves TP 61 of k 118
-    # (the next solution, 122 of 366, would be a recall of 0.94)
+    # (the next solution, 122 of 366, would be a recall of 0.94); submission 8 (F1 0.495575) leaves 56 of 96, 84 of
+    # 209 or 112 of 322, and only 84 of 209 fits a lower threshold than submission 7's with about 170 flags expected
     implied = {}
     for name, tp, k in (
         ("cascade_think0", 71, 173),
@@ -66,6 +67,7 @@ def main() -> None:
         ("head_b", 77, 170),
         ("head_b_without_pairs", 75, 170),
         ("final_threshold", 61, 118),
+        ("final_threshold_1.117", 84, 209),
     ):
         dd = brentq(lambda x, tp=tp, k=k: tp_at(k, x) - tp, 0.01, 5)
         implied[name] = {
