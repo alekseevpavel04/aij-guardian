@@ -41,6 +41,24 @@ def test_a_row_is_ranked_against_the_reference_not_against_its_file():
     assert rank_against(reference, np.array([0.25])).tolist() == [0.5]
 
 
+def test_the_judge_adds_its_rank_against_the_contexts_at_its_weight():
+    class Const:
+        def __init__(self, value):
+            self.value = value
+
+        def proba(self, x):
+            return np.full(len(x), self.value)
+
+    base = Final([Const(0.5)], Const(0.5), np.array([0.0, 1.0]), np.array([0.0, 1.0]), 0.5, 1.0)
+    judged = Final(
+        [Const(0.5)], Const(0.5), np.array([0.0, 1.0]), np.array([0.0, 1.0]), 0.5, 1.0,
+        judge_direction=np.array([1.0, -1.0]), reference_j=np.array([-1.0, 0.0, 1.0, 2.0]), weight_j=0.25,
+    )
+    vectors = np.array([[3.0, 0.0], [0.0, 3.0]])  # judge scores 3 (above every context) and -3 (below every one)
+    u = np.zeros((2, 36))
+    assert (judged.score(vectors, u) - base.score(vectors, u)).tolist() == [0.25, 0.0]
+
+
 def test_a_rule_or_the_threshold_labels_a_row():
     model = Final([], None, np.zeros(1), np.zeros(1), 0.5, 1.0)
     assert model.labels(np.array([0.2, 1.2, 0.4]), [0, 0, 1]) == [0, 1, 1]

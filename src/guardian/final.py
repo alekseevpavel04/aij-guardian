@@ -135,6 +135,11 @@ class Final:
     reference_u: np.ndarray
     weight_u: float
     threshold: float
+    # the judge's verdict read off the same last state: state . (output row of "1" - row of "0"), ranked against the
+    # contexts' own judge scores; absent in the archives of submissions 7-9
+    judge_direction: np.ndarray | None = None
+    reference_j: np.ndarray | None = None
+    weight_j: float = 0.0
 
     @classmethod
     def load(cls, path: Path) -> "Final":
@@ -149,13 +154,19 @@ class Final:
             np.sort(np.asarray(d["reference_u"], dtype=np.float64)),
             float(d["weight_u"]),
             float(d["threshold"]),
+            np.asarray(d["judge_direction"], dtype=np.float64) if "judge_direction" in d else None,
+            np.sort(np.asarray(d["reference_j"], dtype=np.float64)) if "reference_j" in d else None,
+            float(d.get("weight_j", 0.0)),
         )
 
     def score(self, vectors: np.ndarray, uncertainty: np.ndarray) -> np.ndarray:
         """The system score of each row without the rules: vectors (n, hidden), uncertainty features (n, 36)."""
         b = sum(h.proba(vectors) for h in self.head_b)
         u = self.head_u.proba(uncertainty)
-        return rank_against(self.reference_b, b) + self.weight_u * rank_against(self.reference_u, u)
+        score = rank_against(self.reference_b, b) + self.weight_u * rank_against(self.reference_u, u)
+        if self.judge_direction is not None:
+            score = score + self.weight_j * rank_against(self.reference_j, vectors @ self.judge_direction)
+        return score
 
     def labels(self, scores: np.ndarray, fired: list[int]) -> list[int]:
         return [int(f or s >= self.threshold) for s, f in zip(scores, fired, strict=True)]
