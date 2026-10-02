@@ -35,7 +35,7 @@ from judge_eval import load  # noqa: E402
 from pairs_effect import written  # noqa: E402
 from train_head_ru import PAIR_VECTORS, TEACHERS, auroc, labels, vectors  # noqa: E402
 
-GGUF = Path("D:/VScode_projects/llm-models/qwen3.6-35b-a3b/Qwen3.6-35B-A3B-Q4_K_M.gguf")
+GGUF = Path("D:/VScode_projects/assets/llm/qwen3.6-35b-a3b/Qwen3.6-35B-A3B-Q4_K_M.gguf")
 C = 0.003
 DRAWS = 3
 FOLDS = 5

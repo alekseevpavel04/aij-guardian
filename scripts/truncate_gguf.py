@@ -16,7 +16,7 @@ import gguf
 
 from guardian.env import setup
 
-SOURCE = Path("D:/VScode_projects/llm-models/qwen3.6-35b-a3b/Qwen3.6-35B-A3B-Q4_K_M.gguf")
+SOURCE = Path("D:/VScode_projects/assets/llm/qwen3.6-35b-a3b/Qwen3.6-35B-A3B-Q4_K_M.gguf")
 
 
 def truncate(source: Path, layers: int, out: Path) -> None:

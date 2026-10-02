@@ -37,8 +37,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from embed_rows import BASELINE_PROMPT, encode  # noqa: E402
 
-LIB = Path("D:/VScode_projects/llama.cpp/b11052")
-GGUF = Path("D:/VScode_projects/llm-models/qwen3.6-35b-a3b/Qwen3.6-35B-A3B-Q4_K_M.gguf")
+LIB = Path("D:/VScode_projects/assets/tools/llama.cpp/b11052")
+GGUF = Path("D:/VScode_projects/assets/llm/qwen3.6-35b-a3b/Qwen3.6-35B-A3B-Q4_K_M.gguf")
 KINDS = ("turn_mean", "turn_last", "history_end", "final")
 
 

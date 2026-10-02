@@ -91,7 +91,7 @@ def test_verdict_tokens_are_read_through_markdown_wrappers_after_an_answer_prefi
     assert p_one([("**1", -0.2), ("0", -2.0)]) == 0.0
 
 
-GEMMA4 = Path("D:/VScode_projects/llm-models/gemma-4-26b-a4b/gemma-4-26B-A4B-it-UD-Q4_K_M.gguf")
+GEMMA4 = Path("D:/VScode_projects/assets/llm/gemma-4-26b-a4b/gemma-4-26B-A4B-it-UD-Q4_K_M.gguf")
 
 
 @pytest.mark.skipif(not GEMMA4.exists(), reason="needs the Gemma 4 GGUF for its chat template")

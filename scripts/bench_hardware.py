@@ -24,8 +24,8 @@ from pathlib import Path
 from guardian.env import setup
 
 ROOT = Path(__file__).resolve().parents[1]
-LLAMA_BENCH = Path(r"D:\VScode_projects\llama.cpp\b11052\llama-bench.exe")
-GGUF = Path(r"D:\VScode_projects\llm-models\qwen3-8b\Qwen3-8B-Q4_K_M.gguf")
+LLAMA_BENCH = Path(r"D:\VScode_projects\assets\tools\llama.cpp\b11052\llama-bench.exe")
+GGUF = Path(r"D:\VScode_projects\assets\llm\qwen3-8b\Qwen3-8B-Q4_K_M.gguf")
 ROW_RE = re.compile(r"\|\s*(pp|tg)(\d+)\s*\|\s*([\d.]+)\s*±")
 
 

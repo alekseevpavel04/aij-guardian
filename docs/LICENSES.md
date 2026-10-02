@@ -8,11 +8,11 @@
 
 | Модель | Repo | Параметров | Лицензия | Статус | Есть локально |
 |---|---|---:|---|---|---|
-| USER2-base | `deepvk/USER2-base` | 149M | apache-2.0 | допустима | да, `hf-cache` |
+| USER2-base | `deepvk/USER2-base` | 149M | apache-2.0 | допустима | да, `assets/huggingface` |
 | RuModernBERT-base | `deepvk/RuModernBERT-base` | 150M | apache-2.0 | допустима | нет |
-| bge-m3 | `BAAI/bge-m3` | 568M | mit | допустима | да, `hf-cache` |
-| FRIDA | `ai-forever/FRIDA` | 823M | mit | допустима | да, `hf-cache` |
-| multilingual-e5-* | `intfloat/multilingual-e5-{small,base,large}` | 118M-560M | mit | допустима | да, `hf-cache` |
+| bge-m3 | `BAAI/bge-m3` | 568M | mit | допустима | да, `assets/huggingface` |
+| FRIDA | `ai-forever/FRIDA` | 823M | mit | допустима | да, `assets/huggingface` |
+| multilingual-e5-* | `intfloat/multilingual-e5-{small,base,large}` | 118M-560M | mit | допустима | да, `assets/huggingface` |
 | Qwen3-8B | `Qwen/Qwen3-8B` | 8B | apache-2.0 | допустима | да, GGUF Q4_K_M |
 | Qwen3.6-35B-A3B-FP8 | `Qwen/Qwen3.6-35B-A3B-FP8` (в бейзлайне организатора) | 35B, 3B активных | apache-2.0 (карточка и `LICENSE` в архиве бейзлайна, 21.09.2026) | допустима | да, `data/raw/baseline/baseline/model` |
 | YandexGPT-5-Lite-8B-instruct | `yandex/YandexGPT-5-Lite-8B-instruct` | 8B | `other` (собственная лицензия Яндекса) | **не проверена, читать текст лицензии до использования** | да, GGUF Q4_K_M |
