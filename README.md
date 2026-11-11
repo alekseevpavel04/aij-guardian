@@ -2,7 +2,8 @@
 
 ![AI Journey 2026](https://img.shields.io/badge/AI_Journey_2026-Guardian_of_Truth-2563eb)
 ![public F1](https://img.shields.io/badge/public_F1-0.513-ea580c)
-![leaderboard](https://img.shields.io/badge/leaderboard-8th_on_29.09-0f172a)
+![private test](https://img.shields.io/badge/private_test-42nd_of_180-0f172a)
+![public leaderboard](https://img.shields.io/badge/public_leaderboard-8th_on_29.09-64748b)
 ![python](https://img.shields.io/badge/python-3.11-3776ab)
 ![license](https://img.shields.io/badge/license-MIT-16a34a)
 
@@ -16,6 +17,7 @@
 
 | | |
 |---|---|
+| **Итог на приватном тесте** | **42-е место из 180** в финальной таблице 11.11.2026 ([final_standings.json](results/final_standings.json)) |
 | **F1 на публичном тесте** | **0.513**: 77 верных из 170 пометок при 130 ошибках в тесте; 8-е место в таблице на 29.09.2026 |
 | **Бейзлайн организатора** | 0.490 на том же тесте, та же модель в роли судьи |
 | **Время на платформе** | 776 с на 548 строк на A100 вместе с запуском движка: запас 2.3× к лимиту 30 минут |
