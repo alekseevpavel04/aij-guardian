@@ -17,6 +17,7 @@ from guardian.env import setup
 from guardian.metrics import counts_from_published
 
 ROOT = Path(__file__).resolve().parents[1]
+MAX_LISTED = 100  # thousands of pairs say nothing about the counts
 COLUMNS = ["date", "archive_sha256", "strategy", "f1", "precision", "recall", "note"]
 
 
@@ -55,7 +56,11 @@ def main() -> None:
         entry = {k: s[k] for k in COLUMNS}
         if not s["precision"] or not s["recall"]:
             candidates = candidates_from_f1(s["f1"], positives, rows)
-            out.append(entry | {"counts": None, "why_no_counts": "only F1 known", "candidates": candidates})
+            extra = {"candidates": candidates}
+            if len(candidates) > MAX_LISTED:
+                # F1 of exactly 0.5 fits thousands of pairs (k = 4 TP - positives): only their number is kept
+                extra = {"candidates_count": len(candidates)}
+            out.append(entry | {"counts": None, "why_no_counts": "only F1 known"} | extra)
             previous = None
             continue
         try:
